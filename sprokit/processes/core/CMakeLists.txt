@@ -5,7 +5,7 @@ project( kwiver_processes )
 
 set( sources
   register_processes.cxx
-  
+
   associate_detections_to_tracks_process.cxx
   close_loops_process.cxx
   compute_association_matrix_process.cxx
@@ -13,10 +13,10 @@ set( sources
   compute_stereo_depth_map_process.cxx
   compute_track_descriptors_process.cxx
   detect_features_if_keyframe_process.cxx
-  detect_features_process.cxx  
+  detect_features_process.cxx
   detected_object_output_process.cxx
   detected_object_input_process.cxx
-  detected_object_filter_process.cxx  
+  detected_object_filter_process.cxx
   draw_detected_object_set_process.cxx
   draw_tracks_process.cxx
   extract_descriptors_process.cxx
@@ -33,6 +33,8 @@ set( sources
   read_object_track_process.cxx
   read_track_descriptor_process.cxx
   refine_detections_process.cxx
+  serializer_process.cxx
+  deserializer_process.cxx
   split_image_process.cxx
   stabilize_image_process.cxx
   track_features_process.cxx
@@ -49,7 +51,7 @@ set( private_headers
   compute_stereo_depth_map_process.h
   compute_track_descriptors_process.h
   detect_features_if_keyframe_process.h
-  detect_features_process.h  
+  detect_features_process.h
   detected_object_output_process.h
   detected_object_input_process.h
   detected_object_filter_process.h
@@ -69,6 +71,8 @@ set( private_headers
   read_object_track_process.h
   read_track_descriptor_process.h
   refine_detections_process.h
+  serializer_process.h
+  deserializer_process.h
   split_image_process.h
   stabilize_image_process.h
   track_features_process.h

@@ -75,3 +75,5 @@ endif()
 if( KWIVER_ENABLE_PYTHON )
   kwiver_create_python_plugin_init( kwiver/arrows )
 endif()
+
+add_subdirectory( serialize )
