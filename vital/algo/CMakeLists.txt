@@ -60,6 +60,7 @@ set( public_headers
   video_input.h
   write_object_track_set.h
   write_track_descriptor_set.h
+  blur_image.h
   )
 
 set( sources
@@ -116,6 +117,7 @@ set( sources
   video_input.cxx
   write_object_track_set.cxx
   write_track_descriptor_set.cxx
+  blur_image.cxx
 )
 
 kwiver_install_headers(

@@ -22,6 +22,7 @@ set(vxl_headers_public
   triangulate_landmarks.h
   vil_image_memory.h
   vidl_ffmpeg_video_input.h
+  blur_image.h
   )
 
 kwiver_install_headers(
@@ -54,6 +55,7 @@ set(vxl_sources
   triangulate_landmarks.cxx
   vil_image_memory.cxx
   vidl_ffmpeg_video_input.cxx
+  blur_image.cxx
   )
 
 kwiver_add_library( kwiver_algo_vxl
@@ -70,6 +72,7 @@ target_link_libraries( kwiver_algo_vxl
                        vgl_algo
                        vpgl_algo
                        kwiversys
+                       vil_algo
   )
 
 algorithms_create_plugin( kwiver_algo_vxl
