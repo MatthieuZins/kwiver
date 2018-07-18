@@ -2,11 +2,13 @@
 set(SOURCE "main.cpp"
            "how_to_part_01_images.cpp"
            "how_to_part_02_detections.cpp"
+           "example.cpp"
 )
 
 set(kwiver_examples_libraries vital_algo
                               kwiver_algo_ocv
                               kwiver_algo_vxl
+                              vil_algo
                               kwiversys )
 
 if(fletch_ENABLED_YAMLCPP)

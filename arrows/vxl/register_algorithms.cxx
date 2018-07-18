@@ -49,6 +49,7 @@
 #include <arrows/vxl/triangulate_landmarks.h>
 #include <arrows/vxl/match_features_constrained.h>
 #include <arrows/vxl/vidl_ffmpeg_video_input.h>
+#include <arrows/vxl/blur_image.h>
 
 
 namespace kwiver {
@@ -85,6 +86,13 @@ register_factories( kwiver::vital::plugin_loader& vpm )
     .add_attribute( kwiver::vital::plugin_factory::PLUGIN_ORGANIZATION, "Kitware Inc." )
     ;
 
+  fact = vpm.ADD_ALGORITHM( "vxl", kwiver::arrows::vxl::blur_image);
+  fact->add_attribute( kwiver::vital::plugin_factory::PLUGIN_DESCRIPTION,
+                       "Blur an image using VXL." )
+    .add_attribute( kwiver::vital::plugin_factory::PLUGIN_MODULE_NAME, module_name )
+    .add_attribute( kwiver::vital::plugin_factory::PLUGIN_VERSION, "1.0" )
+    .add_attribute( kwiver::vital::plugin_factory::PLUGIN_ORGANIZATION, "Kitware Inc." )
+    ;
 
   fact = vpm.ADD_ALGORITHM( "vxl_plane", kwiver::arrows::vxl::estimate_canonical_transform );
   fact->add_attribute( kwiver::vital::plugin_factory::PLUGIN_DESCRIPTION,
