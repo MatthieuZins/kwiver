@@ -23,7 +23,6 @@ blur_image::~blur_image()
 /// Blur image
 kwiver::vital::image_container_sptr blur_image::blur(vital::image_container_sptr img) const
 {
-    std::cout << "OCV blur : " << img->get_image().data_ << std::endl;
     cv::Mat mat = ocv::image_container_to_ocv_matrix(*img.get(), ocv::image_container::RGB_COLOR);
     cv::Mat blurred;
     cv::GaussianBlur(mat, blurred, cv::Size(5, 5), 1.2);

@@ -21,7 +21,6 @@ blur_image::~blur_image()
 
 vital::image_container_sptr blur_image::blur(vital::image_container_sptr img) const
 {
-    std::cout << "VXL blur : " << img->get_image().data_ << std::endl;
     vil_image_view<vxl_byte> image = vxl::image_container::vital_to_vxl(img->get_image());
     vil_image_view<vxl_byte> blurred_copy, blurred;
     vil_gauss_filter_2d(image, blurred, 1.2, 3, 1.2, 3);

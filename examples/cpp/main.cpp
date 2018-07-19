@@ -28,16 +28,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <ctime>
+#include <cstdlib>
 // Predefine methods that show off various functionality in kwiver
 void how_to_part_01_images();
 void how_to_part_02_detections();
 void test();
+void test_depth();
+void test_track();
 
 int main()
 {
+    srand(time(0));
   // use comments to execute a particular method
 
 //  how_to_part_01_images();
 //  how_to_part_02_detections();
-    test();
+//    test();
+
+//    test_depth();
+    test_track();
 }
