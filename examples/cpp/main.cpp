@@ -31,11 +31,13 @@
 // Predefine methods that show off various functionality in kwiver
 void how_to_part_01_images();
 void how_to_part_02_detections();
+void test_uv_parameterization();
 
 int main()
 {
   // use comments to execute a particular method
+  test_uv_parameterization();
 
-  how_to_part_01_images();
-  how_to_part_02_detections();
+//  how_to_part_01_images();
+//  how_to_part_02_detections();
 }
