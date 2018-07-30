@@ -37,6 +37,7 @@
 
 #include <arrows/ocv/image_container.h>
 #include <arrows/core/mesh_uv_parameterization.h>
+#include <arrows/core/mesh_io.h>
 
 void test_uv_parameterization()
 {
@@ -54,46 +55,24 @@ void test_uv_parameterization()
     std::cout << "ymin, ymax: " << bounds[2] << " " << bounds[3] << std::endl;
 
 
-    std::vector<Eigen::Vector3d> verts = {
-        {-0.500000, -0.500000, -0.500000},
-        {-0.500000, -0.500000, 0.500000},
-        {-0.500000, 0.500000, -0.500000},
-        {-0.500000, 0.500000, 0.500000},
-        {0.500000 ,-0.500000, -0.500000},
-        {0.500000 ,-0.500000, 0.500000},
-        {0.500000 ,0.500000 ,-0.500000},
-        {0.500000 ,0.500000 ,0.500000}
-    };
-    std::vector< std::vector<unsigned int> > faces = {
-        {1, 2, 3},
-        {4, 3, 2},
-        {5, 7, 6},
-        {8, 6, 7},
-        {1, 5, 2},
-        {6, 2, 5},
-        {3, 4, 7},
-        {8, 7, 4},
-        {1, 3, 5},
-        {7, 5, 3},
-        {2, 6, 4},
-        {8, 4, 6}
-    };
-    std::unique_ptr<kwiver::vital::mesh_vertex_array_base> vertices_array_ptr(new kwiver::vital::mesh_vertex_array<3>(verts));
+    kwiver::arrows::core::mesh_io mesh_io;
+//    kwiver::vital::mesh_sptr mesh = mesh_io.load("/media/matthieu/DATA/core3D-data/AOI4/meshes/AOI4_Purdue.obj");
+    kwiver::vital::mesh_sptr mesh = mesh_io.load("/home/matthieu/cube.obj");
 
-    std::unique_ptr<kwiver::vital::mesh_face_array_base> faces_array_ptr(new kwiver::vital::mesh_face_array(faces));
 
-    kwiver::vital::mesh_sptr mesh(new kwiver::vital::mesh(std::move(vertices_array_ptr),
-                                                          std::move(faces_array_ptr)));
+    std::cout << "mesh vertices: " << mesh->num_verts() << std::endl;
+    std::cout << "mesh faces: " << mesh->num_faces() << std::endl;
 
-    param = kwiver::arrows::core::parameterize(mesh, 0.01, 400, 5, 10);
-    for (auto f: param.face_mapping)
-    {
-        std::cout << "face: " << std::endl;
-        std::cout << param.tcoords[f[0]] << std::endl;
-        std::cout << param.tcoords[f[1]] << std::endl;
-        std::cout << param.tcoords[f[2]] << std::endl;
-    }
+    param = kwiver::arrows::core::parameterize(mesh, 0.25, 8000, 5, 10);
+//    for (auto f: param.face_mapping)
+//    {
+//        std::cout << "face: " << std::endl;
+//        std::cout << param.tcoords[f[0]] << std::endl;
+//        std::cout << param.tcoords[f[1]] << std::endl;
+//        std::cout << param.tcoords[f[2]] << std::endl;
+//    }
     param.get_bounds(bounds);
+    std::cout << "parameterization bounds: " << std::endl;
     std::cout << "xmin, xmax: " << bounds[0] << " " << bounds[1] << std::endl;
     std::cout << "ymin, ymax: " << bounds[2] << " " << bounds[3] << std::endl;
 

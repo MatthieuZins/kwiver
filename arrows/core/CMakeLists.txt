@@ -32,6 +32,7 @@ set( plugin_core_headers
   match_features_fundamental_matrix.h
   match_features_homography.h
   match_tracks.h
+  mesh_io.h
   mesh_uv_parameterization.h
   read_object_track_set_kw18.h
   read_track_descriptor_set_csv.h
@@ -102,6 +103,7 @@ set( plugin_core_sources
   match_features_fundamental_matrix.cxx
   match_features_homography.cxx
   match_tracks.cxx
+  mesh_io.cxx
   mesh_uv_parameterization.cxx
   read_object_track_set_kw18.cxx
   read_track_descriptor_set_csv.cxx
