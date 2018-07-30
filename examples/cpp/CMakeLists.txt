@@ -2,6 +2,7 @@
 set(SOURCE "main.cpp"
            "how_to_part_01_images.cpp"
            "how_to_part_02_detections.cpp"
+           "test_texture_atlas.cpp"
 )
 
 set(kwiver_examples_libraries vital_algo

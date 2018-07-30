@@ -51,6 +51,9 @@ typedef Eigen::Vector2d tcoord_t;
 // Typedef for a vector of texture coordinates
 typedef std::vector<tcoord_t> tcoords_t;
 
+/**
+ * @brief The uv_parameterization_t struct
+ */
 struct KWIVER_ALGO_CORE_EXPORT uv_parameterization_t
 {
     tcoords_t tcoords;
@@ -59,6 +62,9 @@ struct KWIVER_ALGO_CORE_EXPORT uv_parameterization_t
     void get_bounds(double bounds[4]) const;
 };
 
+/**
+ * @brief The triangle_t struct represents  a mesh face in the texture atlas
+ */
 struct triangle_t
 {
     Eigen::Vector2d a;
@@ -76,6 +82,15 @@ struct triangle_t
     }
 };
 
+/**
+ * @brief parameterize
+ * @param mesh
+ * @param resolution [in] resolution used (mesh unit / pixel)
+ * @param max_width [in] maximal parameterization width (in pixels)
+ * @param interior_margin [in] horizontal or vertical margin between triangles (in pixels)
+ * @param exterior_margin [in] horizontal or vertical margin at the borders (in pixels)
+ * @return
+ */
 KWIVER_ALGO_CORE_EXPORT
 uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolution,
                                    unsigned int max_width, unsigned int interior_margin,

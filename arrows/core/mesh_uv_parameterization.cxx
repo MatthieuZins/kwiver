@@ -66,16 +66,8 @@ void uv_parameterization_t::get_bounds(double bounds[4]) const
 }
 
 
-/**
- * @brief parameterize
- * @param mesh
- * @param resolution [in] resolution used (mesh unit / pixel)
- * @param max_width [in] maximal parameterization width (in pixels)
- * @param interior_margin [in] horizontal or vertical margin between triangles (in pixels)
- * @param exterior_margin [in] horizontal or vertical margin at the borders (in pixels)
- * @return
- */
-uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolution /* mesh unit/pixel */,
+/// Compute a UV parameterization of the mesh in the form of a rectangular texture atas
+uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolution,
                                    unsigned int max_width, unsigned int interior_margin,
                                    unsigned int exterior_margin)
 {
