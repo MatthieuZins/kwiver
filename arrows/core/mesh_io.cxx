@@ -7,7 +7,7 @@
 kwiver::vital::mesh_sptr kwiver::arrows::core::mesh_io::load(const std::string &filename) const
 {
     std::vector<Eigen::Vector3d> verts;
-    std::vector< std::vector<unsigned int> > faces;
+    std::vector< kwiver::vital::mesh_regular_face<3> > faces;
     std::ifstream input_file(filename);
     std::string line;
     while (std::getline(input_file, line))
@@ -32,7 +32,7 @@ kwiver::vital::mesh_sptr kwiver::arrows::core::mesh_io::load(const std::string &
                 std::stringstream extractor(line.substr(1));
                 unsigned int v1, v2, v3;
                 extractor >> v1 >> v2 >> v3;
-                faces.push_back({v1, v2, v3});
+                faces.push_back(kwiver::vital::mesh_regular_face<3>({v1-1, v2-1, v3-1}));
             }
             else
             {
@@ -41,7 +41,7 @@ kwiver::vital::mesh_sptr kwiver::arrows::core::mesh_io::load(const std::string &
         }
     }
     std::unique_ptr<kwiver::vital::mesh_vertex_array_base> vertices_array_ptr(new kwiver::vital::mesh_vertex_array<3>(verts));
-    std::unique_ptr<kwiver::vital::mesh_face_array_base> faces_array_ptr(new kwiver::vital::mesh_face_array(faces));
+    std::unique_ptr<kwiver::vital::mesh_face_array_base> faces_array_ptr(new kwiver::vital::mesh_regular_face_array<3>(faces));
     kwiver::vital::mesh_sptr mesh(new kwiver::vital::mesh(std::move(vertices_array_ptr),
                                                           std::move(faces_array_ptr)));
     return mesh;

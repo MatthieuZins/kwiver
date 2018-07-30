@@ -32,12 +32,13 @@
 void how_to_part_01_images();
 void how_to_part_02_detections();
 void test_uv_parameterization();
+void test_depthmap();
 
 int main()
 {
   // use comments to execute a particular method
-  test_uv_parameterization();
-
+//  test_uv_parameterization();
+  test_depthmap();
 //  how_to_part_01_images();
 //  how_to_part_02_detections();
 }
