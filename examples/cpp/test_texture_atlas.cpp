@@ -30,6 +30,7 @@
 
 #include <vital/types/image_container.h>
 
+#include <vital/plugin_loader/plugin_manager.h>
 #include <opencv2/opencv_modules.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -111,26 +112,39 @@ void test_depthmap()
 {
     kwiver::arrows::core::compute_mesh_depthmap depthmap_generator;
     kwiver::arrows::core::mesh_io mesh_io;
-    kwiver::vital::mesh_sptr mesh =  mesh_io.load("/home/matthieu/cube.obj");
+//    kwiver::vital::mesh_sptr mesh =  mesh_io.load("/home/matthieu/cube.obj");
+    kwiver::vital::mesh_sptr mesh =  mesh_io.load("/home/matthieu/AOI_centered.obj");
 
-    Eigen::Vector3d center(-4, 0, -4);
-    kwiver::vital::rotation_d rotation(-0.785398, Eigen::Vector3d(0,1,0));
+//    Eigen::Vector3d center(4, 0, -4);
+//    kwiver::vital::rotation_d rotation(0.785398, Eigen::Vector3d(0, 1, 0));
+    Eigen::Vector3d center(0, -300, 300);
+    kwiver::vital::rotation_d orientation(3.14, Eigen::Vector3d(0, 1, 0));
+    kwiver::vital::rotation_d r(-0.78, Eigen::Vector3d(1, 0, 0));
+    orientation = orientation * r;
 
     kwiver::vital::camera_intrinsics_sptr camera_intrinsic(new kwiver::vital::simple_camera_intrinsics(500, {500, 500}));
-    kwiver::vital::camera_perspective_sptr camera(new kwiver::vital::simple_camera_perspective(center, rotation, camera_intrinsic));
+    kwiver::vital::camera_perspective_sptr camera(new kwiver::vital::simple_camera_perspective(center, orientation.inverse(), camera_intrinsic));
 
 
 
     std::pair<kwiver::vital::image_container_sptr,
               kwiver::vital::image_container_sptr> depthmap_pair = depthmap_generator.compute(mesh, camera, 1000, 1000);
+    std::cout << "done." << std::endl;
 
     cv::Mat image = kwiver::arrows::ocv::image_container_to_ocv_matrix(*depthmap_pair.first,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
-    cv::threshold(image, image, 7, 0, cv::THRESH_TRUNC);
+    cv::threshold(image, image, 600, 0, cv::THRESH_TRUNC);
     cv::normalize(image, image, 0, 255, cv::NORM_MINMAX);
     image.convertTo(image, CV_8U);
     cv::imwrite("depthmap.png", image);
 
-//    kwiver::vital::algo::image_io_sptr image_io = kwiver::vital::algo::image_io::create("ocv");
-//    image_io->save("depthmap.png", depthmap_pair.first);
+
+    cv::Mat id_image = kwiver::arrows::ocv::image_container_to_ocv_matrix(*depthmap_pair.second, kwiver::arrows::ocv::image_container::OTHER_COLOR);
+    id_image.convertTo(id_image, CV_32F);
+    cv::threshold(id_image, id_image, 600, 0, cv::THRESH_TRUNC);
+    cv::normalize(id_image, id_image, 0, 255, cv::NORM_MINMAX);
+    id_image.convertTo(id_image, CV_8U);
+    cv::imwrite("id_depthmap.png", id_image);
+}
+
 
 }

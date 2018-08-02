@@ -57,20 +57,12 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
     kwiver::vital::plugin_manager::instance().load_all_plugins();
 
     int utm_zone = 0;
-    // --- project points on camera ---
-    // create a vector of mesh points
+
     unsigned int nb_vertices = mesh->num_verts();
-//    std::vector<Eigen::Vector3d> vertices(nb_vertices);
-//    double tmp[3];
-//    for (unsigned int i=0; i < nb_vertices; ++i)
-//    {
-//        mesh->GetPoint(i, tmp);
-//        vertices[i] = Eigen::Map<Eigen::Vector3d>(tmp);
-//    }
 
     kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
 
-    // project all points
+    // project all points on image
     std::vector<Eigen::Vector2d> points_uvs(nb_vertices);
     if (utm_zone > 0)
     {
@@ -85,7 +77,6 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
         for (auto pt3d : vertices)
         {
             points_uvs[i++] = camera->project(pt3d);
-            std::cout << points_uvs[i-1] << std::endl;
         }
     }
 
@@ -97,10 +88,9 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
     for (int i=0; i < vertices.size(); ++i)
     {
         points_depth[i] = dynamic_cast<kwiver::vital::camera_perspective*>(camera.get())->depth(vertices[i]);
-        std::cout << "depth " << points_depth[i] << std::endl;
     }
 
-    // Initialize the z_buffer with max double and id_map with -1
+    // Initialize z_buffer with max double and id_buffer with -1
     kwiver::vital::image_of<double> z_buffer(width, height, 1);
     kwiver::vital::image_of<int> id_map(width, height, 1);
     for (int i=0; i < height; ++i)
@@ -112,8 +102,8 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
         }
     }
 
+    // Write faces on z_buffer and id_map with depth test
     vital::mesh_regular_face_array<3>& faces = dynamic_cast< vital::mesh_regular_face_array<3>& >(mesh->faces());
-
     for (int f_id=0; f_id < faces.size(); ++f_id)
     {
         vital::mesh_regular_face<3> f = faces[f_id];
@@ -121,16 +111,21 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
         const Eigen::Vector2d& b_uv = points_uvs[f[1]];
         const Eigen::Vector2d& c_uv = points_uvs[f[2]];
 
+        // skip the face if the three points are outside the image
+        if ((a_uv[0] < 0 || a_uv[0] >= width || a_uv[1] < 0 || a_uv[1] >= height) &&
+            (b_uv[0] < 0 || b_uv[0] >= width || b_uv[1] < 0 || b_uv[1] >= height) &&
+            (c_uv[0] < 0 || c_uv[0] >= width || c_uv[1] < 0 || c_uv[1] >= height))
+            continue;
+
         double a_depth = points_depth[f[0]];
         double b_depth = points_depth[f[1]];
         double c_depth = points_depth[f[2]];
 
-
+        // the rasterization is done over the face bounding box
         int u_min = static_cast<int>(std::floor(std::min(a_uv[0], std::min(b_uv[0], c_uv[0]))));
         int u_max = static_cast<int>(std::ceil(std::max(a_uv[0], std::max(b_uv[0], c_uv[0]))));
         int v_min = static_cast<int>(std::floor(std::min(a_uv[1], std::min(b_uv[1], c_uv[1]))));
         int v_max = static_cast<int>(std::ceil(std::max(a_uv[1], std::max(b_uv[1], c_uv[1]))));
-
         for (int v=v_min; v<=v_max; ++v)
         {
             for (int u=u_min; u<=u_max; ++u)
