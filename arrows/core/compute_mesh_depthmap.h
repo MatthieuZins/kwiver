@@ -21,7 +21,7 @@ public:
     virtual ~compute_mesh_depthmap() {}
 
     virtual std::pair<kwiver::vital::image_container_sptr, kwiver::vital::image_container_sptr>
-    compute(kwiver::vital::mesh_sptr mesh, kwiver::vital::camera_sptr camera, int width, int height);
+    compute(kwiver::vital::mesh_sptr mesh, kwiver::vital::camera_sptr camera, int width, int height, int utm_zone);
 };
 
 }

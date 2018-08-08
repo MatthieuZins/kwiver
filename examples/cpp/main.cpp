@@ -33,12 +33,18 @@ void how_to_part_01_images();
 void how_to_part_02_detections();
 void test_uv_parameterization();
 void test_depthmap();
+void test_proj4();
+void test_rpc_camera();
+void test_open_tif();
 
 int main()
 {
   // use comments to execute a particular method
 //  test_uv_parameterization();
+//    test_proj4();
   test_depthmap();
+//  test_open_tif();
+//  test_rpc_camera();
 //  how_to_part_01_images();
 //  how_to_part_02_detections();
 }

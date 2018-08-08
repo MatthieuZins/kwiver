@@ -100,6 +100,12 @@ public:
   /// Project a 2D image back to a 3D point in space
   virtual vector_3d back_project( const vector_2d& image_pt, double elev ) const;
 
+  /// Compute the distance of the 3D point to the image plane
+  /**
+   *  Points with negative depth are behind the camera
+   */
+  virtual double depth(const vector_3d& pt, int utm_zone) const;
+
 protected:
   camera_rpc();
 

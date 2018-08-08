@@ -35,6 +35,7 @@
  */
 
 #include <vital/types/camera_rpc.h>
+#include <vital/types/geodesy.h>
 #include <vital/io/eigen_io.h>
 #include <Eigen/Geometry>
 
@@ -115,6 +116,53 @@ camera_rpc
   }
 
   return rslt.cwiseProduct( this->world_scale() ) + this->world_offset();
+}
+
+double camera_rpc::depth(const vector_3d& pt, int utm_zone) const
+{
+    matrix_2x3d A;
+    rpc_matrix rpc_coeffs = this->rpc_coeffs();
+    A << rpc_coeffs(0, 1), rpc_coeffs(0, 2), rpc_coeffs(0, 3),
+         rpc_coeffs(2, 1), rpc_coeffs(2, 2), rpc_coeffs(2, 3);
+    vector_2d b;
+    b << -rpc_coeffs(0, 0), -rpc_coeffs(2, 0);
+    vector_3d pt1 = A.jacobiSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b);
+    vector_3d samp_vector(rpc_coeffs(0, 1), rpc_coeffs(0, 2), rpc_coeffs(0, 3));
+    vector_3d line_vector(rpc_coeffs(2, 1), rpc_coeffs(2, 2), rpc_coeffs(2, 3));
+
+    // optical axis direction
+    vector_3d n = samp_vector.cross(line_vector);
+    n.normalize();
+
+    // take a second point on the this axis
+    vector_3d pt2 = pt1 + 1000*n;
+
+    // transform to world scale
+    vector_3d pt1_latlong = pt1.cwiseProduct(this->world_scale()) + this->world_offset();
+    vector_3d pt2_latlong = pt2.cwiseProduct(this->world_scale()) + this->world_offset();
+
+    // transform to UTM
+    vector_2d pt1_utm_xy = kwiver::vital::geo_conv(vector_2d(pt1_latlong[0], pt1_latlong[1]),
+            kwiver::vital::SRID::lat_lon_WGS84, kwiver::vital::SRID::UTM_WGS84_north + utm_zone);
+    vector_2d pt2_utm_xy = kwiver::vital::geo_conv(vector_2d(pt2_latlong[0], pt2_latlong[1]),
+            kwiver::vital::SRID::lat_lon_WGS84, kwiver::vital::SRID::UTM_WGS84_north + utm_zone);
+
+    vector_3d pt1_utm = {pt1_utm_xy[0], pt1_utm_xy[1], pt1_latlong[2]};
+    vector_3d pt2_utm = {pt2_utm_xy[0], pt2_utm_xy[1], pt2_latlong[2]};
+
+    // get optical axis in utm
+    vector_3d axis = pt2_utm - pt1_utm;
+    axis.normalize();
+
+    // force axis z-component to be negative
+    if (axis[2] > 0) {
+        axis *= -1;
+    }
+
+    // force satellite position to be at z = 700km
+    double k = (700000 - pt1_utm[2]) / axis[2];
+    vector_3d sat_pos = pt1_utm + k * axis;
+    return (pt - sat_pos).dot(axis);
 }
 
 Eigen::Matrix<double, 20, 1>

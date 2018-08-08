@@ -1,6 +1,8 @@
 #include "compute_mesh_depthmap.h"
 
 #include <vital/types/camera_perspective.h>
+#include <vital/types/camera_rpc.h>
+#include <vital/types/geodesy.h>
 #include <vital/types/image.h>
 #include <vital/plugin_loader/plugin_manager.h>
 
@@ -52,11 +54,9 @@ Eigen::Vector3d barycentric_coordinates(const Eigen::Vector2d& p,
 
 std::pair<vital::image_container_sptr, vital::image_container_sptr>
 compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr camera,
-                               int width, int height)
+                               int width, int height, int utm_zone)
 {
     kwiver::vital::plugin_manager::instance().load_all_plugins();
-
-    int utm_zone = 0;
 
     unsigned int nb_vertices = mesh->num_verts();
 
@@ -66,10 +66,15 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
     std::vector<Eigen::Vector2d> points_uvs(nb_vertices);
     if (utm_zone > 0)
     {
-//        // it utm is valid, the mesh points are first transformed to latlong coordinates
-//        std::vector<Eigen::Vector3d> vertices_latlong(nb_vertices);
-//        convert_points_from_UTM_to_WGS84(vertices, vertices_latlong, utm_zone);
-//        camera.project_points(vertices_latlong, points_uvs);
+        // if utm is valid, the mesh points are first transformed to lat/long coordinates
+        int i=0;
+        for (auto pt3d : vertices)
+        {
+            vital::vector_2d pt2d_latlong = vital::geo_conv({pt3d[0], pt3d[1]},
+                                                            kwiver::vital::SRID::UTM_WGS84_north + utm_zone,
+                                                            kwiver::vital::SRID::lat_lon_WGS84);
+            points_uvs[i++] = camera->project({pt2d_latlong[0], pt2d_latlong[1], pt3d[2]});
+        }
     }
     else
     {
@@ -82,12 +87,17 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
 
     // Compute the points depth
     std::vector<double> points_depth(nb_vertices);
-//    std::pair<Eigen::Vector3d, Eigen::Vector3d> axis_and_position = camera.get_optical_axis_and_position(utm_zone);
-//    Eigen::Vector3d axis = axis_and_position.first;
-//    Eigen::Vector3d position = axis_and_position.second;    // a possible camera position
     for (int i=0; i < vertices.size(); ++i)
     {
-        points_depth[i] = dynamic_cast<kwiver::vital::camera_perspective*>(camera.get())->depth(vertices[i]);
+        if (utm_zone > 0)
+        {
+            points_depth[i] = dynamic_cast<kwiver::vital::camera_rpc*>(camera.get())->depth(vertices[i], utm_zone);
+
+        }
+        else
+        {
+            points_depth[i] = dynamic_cast<kwiver::vital::camera_perspective*>(camera.get())->depth(vertices[i]);
+        }
     }
 
     // Initialize z_buffer with max double and id_buffer with -1

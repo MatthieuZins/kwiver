@@ -28,9 +28,11 @@
 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <sstream>
 #include <vital/types/image_container.h>
 
 #include <vital/plugin_loader/plugin_manager.h>
+
 #include <opencv2/opencv_modules.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -42,6 +44,12 @@
 #include <arrows/ocv/image_container.h>
 
 #include <vital/types/camera_perspective.h>
+#include <vital/algo/image_io.h>
+
+#include <vital/types/geodesy.h>
+#include <vital/types/camera_rpc.h>
+
+#include <vital/types/image_container.h>
 #include <vital/algo/image_io.h>
 
 void test_uv_parameterization()
@@ -107,32 +115,113 @@ void test_uv_parameterization()
     cv::imwrite("parameterization.png", image);
 }
 
+kwiver::vital::camera_rpc_sptr
+load_camera_from_tif_image(const std::string& filename)
+{
+//    std::string filename("/media/matthieu/DATA/core3D-data/AOI1/images/pansharpen/rescaled/01JAN17WV031200017JAN01163905-P1BS-501073324070_01_P001_________AAE_0AAAAABPABM0_pansharpen_4.tif");
+    kwiver::vital::algo::image_io_sptr image_io = kwiver::vital::algo::image_io::create("gdal");
+
+    kwiver::vital::image_container_sptr img = image_io->load(filename);
+    kwiver::vital::metadata_sptr md = img->get_metadata();
+
+    kwiver::vital::camera_rpc_sptr cam(new kwiver::vital::simple_camera_rpc);
+    kwiver::vital::simple_camera_rpc* cam_pt = dynamic_cast<kwiver::vital::simple_camera_rpc*>(cam.get());
+    kwiver::vital::vector_3d world_scale;
+    kwiver::vital::vector_3d world_offset;
+    kwiver::vital::vector_2d image_scale;
+    kwiver::vital::vector_2d image_offset;
+
+    world_scale[0] = md->find(kwiver::vital::VITAL_META_RPC_LONG_SCALE).as_double();
+    world_scale[1] = md->find(kwiver::vital::VITAL_META_RPC_LAT_SCALE).as_double();
+    world_scale[2] = md->find(kwiver::vital::VITAL_META_RPC_HEIGHT_SCALE).as_double();
+
+    world_offset[0] = md->find(kwiver::vital::VITAL_META_RPC_LONG_OFFSET).as_double();
+    world_offset[1] = md->find(kwiver::vital::VITAL_META_RPC_LAT_OFFSET).as_double();
+    world_offset[2] = md->find(kwiver::vital::VITAL_META_RPC_HEIGHT_OFFSET).as_double();
+
+    image_scale[0] = md->find(kwiver::vital::VITAL_META_RPC_COL_SCALE).as_double();
+    image_scale[1] = md->find(kwiver::vital::VITAL_META_RPC_ROW_SCALE).as_double();
+
+    image_offset[0] = md->find(kwiver::vital::VITAL_META_RPC_COL_OFFSET).as_double();
+    image_offset[1] = md->find(kwiver::vital::VITAL_META_RPC_ROW_OFFSET).as_double();
+
+    kwiver::vital::rpc_matrix rpc_coeffs;
+    std::stringstream ss;
+    ss << md->find(kwiver::vital::VITAL_META_RPC_COL_NUM_COEFF).as_string();
+    for (int i=0; i < 20; ++i)
+    {
+        ss >> rpc_coeffs(0, i);
+    }
+    ss.clear();
+    ss << md->find(kwiver::vital::VITAL_META_RPC_COL_DEN_COEFF).as_string();
+    for (int i=0; i < 20; ++i)
+    {
+        ss >> rpc_coeffs(1, i);
+    }
+    ss.clear();
+    ss << md->find(kwiver::vital::VITAL_META_RPC_ROW_NUM_COEFF).as_string();
+    for (int i=0; i < 20; ++i)
+    {
+        ss >> rpc_coeffs(2, i);
+    }
+    ss.clear();
+    ss << md->find(kwiver::vital::VITAL_META_RPC_ROW_DEN_COEFF).as_string();
+    for (int i=0; i < 20; ++i)
+    {
+        ss >> rpc_coeffs(3, i);
+    }
+
+    cam_pt->set_world_scale(world_scale);
+    cam_pt->set_world_offset(world_offset);
+    cam_pt->set_image_scale(image_scale);
+    cam_pt->set_image_offset(image_offset);
+    cam_pt->set_rpc_coeffs(rpc_coeffs);
+
+    return cam;
+}
 
 void test_depthmap()
 {
+    kwiver::vital::plugin_manager::instance().load_all_plugins();
     kwiver::arrows::core::compute_mesh_depthmap depthmap_generator;
     kwiver::arrows::core::mesh_io mesh_io;
 //    kwiver::vital::mesh_sptr mesh =  mesh_io.load("/home/matthieu/cube.obj");
-    kwiver::vital::mesh_sptr mesh =  mesh_io.load("/home/matthieu/AOI_centered.obj");
+//    kwiver::vital::mesh_sptr mesh =  mesh_io.load("/home/matthieu/AOI1_centered.obj");
+    kwiver::vital::mesh_sptr mesh =  mesh_io.load("/media/matthieu/DATA/core3D-data/AOI4/meshes/AOI4_cropped.obj");
 
-//    Eigen::Vector3d center(4, 0, -4);
-//    kwiver::vital::rotation_d rotation(0.785398, Eigen::Vector3d(0, 1, 0));
-    Eigen::Vector3d center(0, -300, 300);
+
+    // Perspective camera
+    Eigen::Vector3d center(0, 0, 300);
+//    Eigen::Vector3d mesh_offset(747572.5, 4407386.0, 226.0009);   //WPAFB
+    Eigen::Vector3d mesh_offset(436213.25, 3354848.5, 53.4106);     //JACKSONVILLE
+    center += mesh_offset;
     kwiver::vital::rotation_d orientation(3.14, Eigen::Vector3d(0, 1, 0));
-    kwiver::vital::rotation_d r(-0.78, Eigen::Vector3d(1, 0, 0));
-    orientation = orientation * r;
-
-    kwiver::vital::camera_intrinsics_sptr camera_intrinsic(new kwiver::vital::simple_camera_intrinsics(500, {500, 500}));
+    kwiver::vital::camera_intrinsics_sptr camera_intrinsic(new kwiver::vital::simple_camera_intrinsics(500, {500*4, 4*500}));
     kwiver::vital::camera_perspective_sptr camera(new kwiver::vital::simple_camera_perspective(center, orientation.inverse(), camera_intrinsic));
 
+    // RPC camera
+    kwiver::vital::camera_rpc_sptr cam = load_camera_from_tif_image("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/26APR15WV031200015APR26162435-P1BS-501504472050_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
 
 
     std::pair<kwiver::vital::image_container_sptr,
-              kwiver::vital::image_container_sptr> depthmap_pair = depthmap_generator.compute(mesh, camera, 1000, 1000);
+              kwiver::vital::image_container_sptr> depthmap_pair = depthmap_generator.compute(mesh, cam, 4077, 4606, 17);
     std::cout << "done." << std::endl;
 
     cv::Mat image = kwiver::arrows::ocv::image_container_to_ocv_matrix(*depthmap_pair.first,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
-    cv::threshold(image, image, 600, 0, cv::THRESH_TRUNC);
+    std::cout << "image type " << image.type() << std::endl;
+    cv::Mat mask;
+    cv::threshold(image, mask, std::numeric_limits<double>::max() / 2, 1, cv::THRESH_BINARY_INV);
+    double min, max;
+    cv::minMaxLoc(mask, &min, &max, 0, 0);
+    std::cout << "mask min max " << min << " " << max << std::endl;
+    mask.convertTo(mask, CV_8U);
+    std::cout << "mask type " << mask.type() << std::endl;
+    cv::minMaxLoc(image, &min, &max, 0, 0, mask);
+    std::cout << "min max " << min << " " << max << std::endl;
+    image -= min;
+    image /= (max-min);
+    image *= 255;
+    cv::threshold(image, image, 255, 0, cv::THRESH_TRUNC);
     cv::normalize(image, image, 0, 255, cv::NORM_MINMAX);
     image.convertTo(image, CV_8U);
     cv::imwrite("depthmap.png", image);
@@ -147,4 +236,52 @@ void test_depthmap()
 }
 
 
+void test_proj4()
+{
+    kwiver::vital::plugin_manager::instance().load_all_plugins();
+
+    std::cout << "id: " << kwiver::vital::get_geo_conv()->id() << std::endl;
+
+
+    kwiver::vital::vector_2d utm_pt = kwiver::vital::geo_conv({-84.0822,   39.7774}, kwiver::vital::SRID::lat_lon_WGS84, kwiver::vital::SRID::UTM_WGS84_north + 16);       // WGS to UTM
+
+    std::cout << utm_pt << "\n-------------------------------------------\n" << std::endl;
+}
+
+void test_rpc_camera()
+{
+    kwiver::vital::simple_camera_rpc cam;
+//    std::cout << "camera depth " << cam.depth({10, 10, 10}) << std::endl;
+
+    kwiver::vital::vector_3d world_scale = {0.1015, 0.0698, 501};
+    kwiver::vital::vector_3d world_offset = {-84.1053,  39.7924, 232. };
+    kwiver::vital::vector_2d image_scale = {21250.0, 19634.0};
+    kwiver::vital::vector_2d image_offset = {-3261.0, -3226.0};
+
+    kwiver::vital::rpc_matrix rpc_coeffs;
+    rpc_coeffs << -0.007731984547, 1.036371350555, 0.000571564184, -0.031336997087, 9.308693e-05, 1.5846718e-05, 0.000133194972, 0.00013056833, 0.000155796844, -1.99407e-07, 7.2351e-08, -1.73472e-07, -4.67971e-07, -1.43193e-07, 4.63809e-07, -0.000537782633, 3.1469e-08, -1.0968e-08, 2.0036943e-05, 4.728e-09, 1, -0.005567722482, -0.004714976925, -0.000641270901, -4.7638374e-05, 9.98384e-07, -9.379604e-06, 8.103659e-06, 0.000101390522, -2.862e-08, -2.70038e-07, 5.414e-09, 3.286629e-06, 3.031e-09, -6.88826e-07, 1.3444285e-05, -1.5802e-08, 1.7427e-08, 2.61646e-07, -9.001e-09, 0.019378390535, 0.099345828828, -1.10886666603, 0.010913032364, -0.000174576673, 1.909662e-06, -1.0480013e-05, -0.000826373775, -0.000226533588, -6.42252e-07, -2.0936e-08, -1.5105e-07, 2.209486e-06, 9.829e-09, -3.09441e-07, -1.2454048e-05, -4.31497e-07, -1.4832e-08, 1.53232e-07, 1.24e-09, 1, -0.012471867109, -0.00374336399, -0.001312895399, 0.000274800697, -2.43118e-06, 2.1717097e-05, -1.017716e-06, -0.001379345582, 3.81162e-07, 1.15705e-07, -1.055e-09, 1.8679136e-05, -1.352e-08, 2.5352e-08, -0.000216295644, 4.1381e-08, -2.9282e-08, 3.478123e-06, -4.9e-11;
+
+//    std::cout << "rpc_coeffs: " << rpc_coeffs << std::endl;
+    cam.set_image_offset(image_offset);
+    cam.set_image_scale(image_scale);
+    cam.set_world_offset(world_offset);
+    cam.set_world_scale(world_scale);
+    cam.set_rpc_coeffs(rpc_coeffs);
+
+    kwiver::vital::vector_3d mesh_center = {749375.413584, 4407077.61724, 240.546514};
+    std::cout << "distance to mesh center: " << cam.depth(mesh_center, 16) << std::endl;
+}
+
+
+void test_open_tif()
+{
+    std::string filename("/media/matthieu/DATA/core3D-data/AOI1/images/pansharpen/rescaled/01JAN17WV031200017JAN01163905-P1BS-501073324070_01_P001_________AAE_0AAAAABPABM0_pansharpen_4.tif");
+    kwiver::vital::algo::image_io_sptr image_io = kwiver::vital::algo::image_io::create("gdal");
+
+    kwiver::vital::image_container_sptr img = image_io->load(filename);
+    kwiver::vital::metadata_sptr md = img->get_metadata();
+    for(auto item: *(md.get()))
+    {
+        std::cout << item.second->name() << std::endl;
+    }
 }
