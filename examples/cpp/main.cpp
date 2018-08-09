@@ -36,13 +36,15 @@ void test_depthmap();
 void test_proj4();
 void test_rpc_camera();
 void test_open_tif();
+void test_generate_triangles_map();
 
 int main()
 {
   // use comments to execute a particular method
 //  test_uv_parameterization();
 //    test_proj4();
-  test_depthmap();
+//  test_depthmap();
+    test_generate_triangles_map();
 //  test_open_tif();
 //  test_rpc_camera();
 //  how_to_part_01_images();

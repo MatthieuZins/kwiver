@@ -1,5 +1,6 @@
 #include "compute_mesh_depthmap.h"
 
+#include <arrows/core/atlas_processing.h>
 #include <vital/types/camera_perspective.h>
 #include <vital/types/camera_rpc.h>
 #include <vital/types/geodesy.h>
@@ -17,39 +18,6 @@ namespace core {
 compute_mesh_depthmap::compute_mesh_depthmap()
 {
 
-}
-
-bool is_point_inside_triangle(const Eigen::Vector2d& p,
-                              const Eigen::Vector2d& a,
-                              const Eigen::Vector2d& b,
-                              const Eigen::Vector2d& c)
-{
-    Eigen::Vector2d AB = b - a;
-    Eigen::Vector2d AC = c - a;
-    Eigen::Vector2d AP = p - a;
-
-    double inv_total_area = 1.0 / (AB[0]*AC[1]-AB[1]*AC[0]);
-    double area_1 = inv_total_area * (AB[0]*AP[1]-AB[1]*AP[0]);
-    double area_2 = inv_total_area * (AP[0]*AC[1]-AP[1]*AC[0]);
-
-    return area_1>=0 && area_2>=0 && (area_1+area_2)<=1;
-}
-
-
-Eigen::Vector3d barycentric_coordinates(const Eigen::Vector2d& p,
-                                        const Eigen::Vector2d& a,
-                                        const Eigen::Vector2d& b,
-                                        const Eigen::Vector2d& c)
-{
-    Eigen::Matrix3d abc;
-    abc << a, b, c, 1, 1, 1;
-    double det_inv = 1.0 / abc.determinant();
-
-    Eigen::Vector3d res;
-    res(0) = ((b(1)-c(1)) * (p(0)-c(0)) - (b(0) - c(0)) * (p(1) - c(1))) * det_inv;
-    res(1) = ((c(1)-a(1)) * (p(0)-c(0)) - (c(0) - a(0)) * (p(1) - c(1))) * det_inv;
-    res(2) = 1.0 - res(0) - res(1);
-    return res;
 }
 
 std::pair<vital::image_container_sptr, vital::image_container_sptr>

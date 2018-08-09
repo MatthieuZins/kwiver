@@ -1,6 +1,7 @@
 # Build / Install Plugin containing core algorithm implementations
 
 set( plugin_core_headers
+  atlas_processing.h
   associate_detections_to_tracks_threshold.h
   class_probablity_filter.h
   close_loops_appearance_indexed.h
@@ -73,6 +74,7 @@ kwiver_install_headers(
   )
 
 set( plugin_core_sources
+  atlas_processing.cxx
   associate_detections_to_tracks_threshold.cxx
   class_probablity_filter.cxx
   close_loops_appearance_indexed.cxx

@@ -52,6 +52,8 @@
 #include <vital/types/image_container.h>
 #include <vital/algo/image_io.h>
 
+#include <arrows/core/atlas_processing.h>
+
 void test_uv_parameterization()
 {
     kwiver::arrows::core::uv_parameterization_t param;
@@ -76,7 +78,7 @@ void test_uv_parameterization()
     std::cout << "mesh vertices: " << mesh->num_verts() << std::endl;
     std::cout << "mesh faces: " << mesh->num_faces() << std::endl;
 
-    param = kwiver::arrows::core::parameterize(mesh, 0.25, 8000, 5, 10);
+    param = kwiver::arrows::core::parameterize(mesh, 0.025, 8000, 5, 3);
 //    for (auto f: param.face_mapping)
 //    {
 //        std::cout << "face: " << std::endl;
@@ -284,4 +286,25 @@ void test_open_tif()
     {
         std::cout << item.second->name() << std::endl;
     }
+}
+
+void test_generate_triangles_map()
+{
+    kwiver::arrows::core::mesh_io mesh_io;
+    kwiver::vital::mesh_sptr mesh = mesh_io.load("/home/matthieu/cube.obj");
+//    kwiver::vital::mesh_sptr mesh = mesh_io.load("/media/matthieu/DATA/core3D-data/AOI4/meshes/AOI4_Purdue.obj");
+
+    kwiver::arrows::core::uv_parameterization_t param;
+    param = kwiver::arrows::core::parameterize(mesh, 0.025, 8000, 5, 3);
+    kwiver::vital::image_container_sptr map = kwiver::arrows::core::generate_triangles_map(param, 3);
+    cv::Mat cv_map = kwiver::arrows::ocv::image_container_to_ocv_matrix(*(map.get()), kwiver::arrows::ocv::image_container::OTHER_COLOR);
+    double min, max;
+    cv::minMaxLoc(cv_map, &min, &max, 0, 0);
+    cv_map.convertTo(cv_map, CV_32F);
+    std::cout << "cv_map type " << cv_map.type() << std::endl;
+    cv_map -= min;
+    cv_map /= (max-min);
+    cv_map *= 255;
+    cv_map.convertTo(cv_map, CV_8U);
+    cv::imwrite("triangle_map.png", cv_map);
 }
