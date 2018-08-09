@@ -104,17 +104,24 @@ public:
   /**
    *  Points with negative depth are behind the camera
    */
-  virtual double depth(const vector_3d& pt, int utm_zone) const;
+  virtual double depth(const vector_3d& pt) const;
+
+  // Get the UTM zone
+  unsigned int get_utm_zone() const { return utm_zone; }
 
 protected:
-  camera_rpc();
+  camera_rpc(unsigned int utm=0);
 
   // Compute the Jacobian of the RPC at the given normalized world point
   // Currently this only computes the 2x2 Jacobian for X and Y parameters.
   // This function also returns the normalized projected point
   virtual void jacobian( const vector_3d& pt, matrix_2x2d& J, vector_2d& norm_pt ) const = 0;
 
+  std::pair<vector_3d, vector_3d> get_center_and_axis() const;
+
   kwiver::vital::logger_handle_t m_logger;
+
+  unsigned int utm_zone;
 
 };
 
@@ -128,7 +135,8 @@ class VITAL_EXPORT simple_camera_rpc :
 {
 public:
   /// Default Constructor - creates identity camera
-  simple_camera_rpc ( ) :
+  simple_camera_rpc ( unsigned int utm=0) :
+    camera_rpc(utm),
     world_scale_(1.0, 1.0, 1.0),
     world_offset_(0.0, 0.0, 0.0),
     image_scale_(1.0, 1.0),
@@ -192,7 +200,6 @@ public:
   void set_world_offset(vector_3d& offset) { world_offset_ = offset; }
   void set_image_scale(vector_2d& scale) { image_scale_ = scale; }
   void set_image_offset(vector_2d& offset) { image_offset_ = offset; }
-
 protected:
 
   virtual void jacobian( const vector_3d& pt, matrix_2x2d& J, vector_2d& norm_pt ) const;

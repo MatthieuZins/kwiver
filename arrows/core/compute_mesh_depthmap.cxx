@@ -24,8 +24,6 @@ std::pair<vital::image_container_sptr, vital::image_container_sptr>
 compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr camera,
                                int width, int height, int utm_zone)
 {
-    kwiver::vital::plugin_manager::instance().load_all_plugins();
-
     unsigned int nb_vertices = mesh->num_verts();
 
     kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
@@ -55,11 +53,11 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
 
     // Compute the points depth
     std::vector<double> points_depth(nb_vertices);
-    for (int i=0; i < vertices.size(); ++i)
+    for (unsigned int i=0; i < vertices.size(); ++i)
     {
         if (utm_zone > 0)
         {
-            points_depth[i] = dynamic_cast<kwiver::vital::camera_rpc*>(camera.get())->depth(vertices[i], utm_zone);
+            points_depth[i] = dynamic_cast<kwiver::vital::camera_rpc*>(camera.get())->depth(vertices[i]);
 
         }
         else
@@ -82,7 +80,7 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
 
     // Write faces on z_buffer and id_map with depth test
     vital::mesh_regular_face_array<3>& faces = dynamic_cast< vital::mesh_regular_face_array<3>& >(mesh->faces());
-    for (int f_id=0; f_id < faces.size(); ++f_id)
+    for (unsigned int f_id=0; f_id < faces.size(); ++f_id)
     {
         vital::mesh_regular_face<3> f = faces[f_id];
         const Eigen::Vector2d& a_uv = points_uvs[f[0]];

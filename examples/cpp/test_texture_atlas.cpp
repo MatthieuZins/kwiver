@@ -53,6 +53,7 @@
 #include <vital/algo/image_io.h>
 
 #include <arrows/core/atlas_processing.h>
+#include <arrows/core/compute_mesh_cameras_ratings.h>
 
 void test_uv_parameterization()
 {
@@ -118,7 +119,7 @@ void test_uv_parameterization()
 }
 
 kwiver::vital::camera_rpc_sptr
-load_camera_from_tif_image(const std::string& filename)
+load_camera_from_tif_image(const std::string& filename, unsigned int utm_zone)
 {
 //    std::string filename("/media/matthieu/DATA/core3D-data/AOI1/images/pansharpen/rescaled/01JAN17WV031200017JAN01163905-P1BS-501073324070_01_P001_________AAE_0AAAAABPABM0_pansharpen_4.tif");
     kwiver::vital::algo::image_io_sptr image_io = kwiver::vital::algo::image_io::create("gdal");
@@ -126,7 +127,7 @@ load_camera_from_tif_image(const std::string& filename)
     kwiver::vital::image_container_sptr img = image_io->load(filename);
     kwiver::vital::metadata_sptr md = img->get_metadata();
 
-    kwiver::vital::camera_rpc_sptr cam(new kwiver::vital::simple_camera_rpc);
+    kwiver::vital::camera_rpc_sptr cam(new kwiver::vital::simple_camera_rpc(utm_zone));
     kwiver::vital::simple_camera_rpc* cam_pt = dynamic_cast<kwiver::vital::simple_camera_rpc*>(cam.get());
     kwiver::vital::vector_3d world_scale;
     kwiver::vital::vector_3d world_offset;
@@ -202,7 +203,7 @@ void test_depthmap()
     kwiver::vital::camera_perspective_sptr camera(new kwiver::vital::simple_camera_perspective(center, orientation.inverse(), camera_intrinsic));
 
     // RPC camera
-    kwiver::vital::camera_rpc_sptr cam = load_camera_from_tif_image("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/26APR15WV031200015APR26162435-P1BS-501504472050_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
+    kwiver::vital::camera_rpc_sptr cam = load_camera_from_tif_image("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/26APR15WV031200015APR26162435-P1BS-501504472050_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif", 17);
 
 
     std::pair<kwiver::vital::image_container_sptr,
@@ -210,16 +211,12 @@ void test_depthmap()
     std::cout << "done." << std::endl;
 
     cv::Mat image = kwiver::arrows::ocv::image_container_to_ocv_matrix(*depthmap_pair.first,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
-    std::cout << "image type " << image.type() << std::endl;
     cv::Mat mask;
     cv::threshold(image, mask, std::numeric_limits<double>::max() / 2, 1, cv::THRESH_BINARY_INV);
     double min, max;
     cv::minMaxLoc(mask, &min, &max, 0, 0);
-    std::cout << "mask min max " << min << " " << max << std::endl;
     mask.convertTo(mask, CV_8U);
-    std::cout << "mask type " << mask.type() << std::endl;
     cv::minMaxLoc(image, &min, &max, 0, 0, mask);
-    std::cout << "min max " << min << " " << max << std::endl;
     image -= min;
     image /= (max-min);
     image *= 255;
@@ -271,7 +268,7 @@ void test_rpc_camera()
     cam.set_rpc_coeffs(rpc_coeffs);
 
     kwiver::vital::vector_3d mesh_center = {749375.413584, 4407077.61724, 240.546514};
-    std::cout << "distance to mesh center: " << cam.depth(mesh_center, 16) << std::endl;
+    std::cout << "distance to mesh center: " << cam.depth(mesh_center) << std::endl;
 }
 
 
@@ -307,4 +304,61 @@ void test_generate_triangles_map()
     cv_map *= 255;
     cv_map.convertTo(cv_map, CV_8U);
     cv::imwrite("triangle_map.png", cv_map);
+}
+
+void test_mesh_cameras_ratings()
+{
+    kwiver::vital::plugin_manager::instance().load_all_plugins();
+
+    kwiver::arrows::core::mesh_io mesh_io;
+//    kwiver::vital::mesh_sptr mesh = mesh_io.load("/media/matthieu/DATA/core3D-data/AOI4/meshes/AOI4_Purdue.obj");
+    kwiver::vital::mesh_sptr mesh = mesh_io.load("/home/matthieu/cube.obj");
+
+
+    // Perspective camera
+    Eigen::Vector3d center1(0, 0, 2);
+    kwiver::vital::rotation_d orientation1(3.14159265359, Eigen::Vector3d(0, 1, 0));
+    kwiver::vital::camera_intrinsics_sptr camera_intrinsic(new kwiver::vital::simple_camera_intrinsics(500, {500, 500}));
+    kwiver::vital::camera_perspective_sptr cam1(new kwiver::vital::simple_camera_perspective(center1, orientation1.inverse(), camera_intrinsic));
+
+    Eigen::Vector3d center2(2, 0, 2);
+    kwiver::vital::rotation_d orientation2(3.14159265359 + 0.785, Eigen::Vector3d(0, 1, 0));
+    kwiver::vital::camera_perspective_sptr cam2(new kwiver::vital::simple_camera_perspective(center2, orientation2.inverse(), camera_intrinsic));
+
+    Eigen::Vector3d center3(0, -2, 2);
+    kwiver::vital::rotation_d orientation3(3.14, Eigen::Vector3d(0, 1, 0));
+    kwiver::vital::rotation_d orientation32(-0.785, Eigen::Vector3d(1, 0, 0));
+    orientation3 = orientation3 * orientation32;
+    kwiver::vital::camera_perspective_sptr cam3(new kwiver::vital::simple_camera_perspective(center3, orientation3.inverse(), camera_intrinsic));
+
+    kwiver::vital::camera_sptr_list cameras = {cam1, cam2, cam3};
+
+    std::vector< std::vector<double> > ratings;
+    kwiver::arrows::core::compute_mesh_cameras_ratings(mesh, cameras, ratings);
+
+    for (int i=0; i < cameras.size(); ++i)
+    {
+        std::cout << "cam" << i << " : ";
+        for (int j=0; j < mesh->num_faces(); ++j)
+        {
+            std::cout << ratings[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+
+
+    kwiver::vital::mesh_sptr mesh2 = mesh_io.load("/media/matthieu/DATA/core3D-data/AOI4/meshes/AOI4_cropped.obj");
+
+    kwiver::vital::camera_rpc_sptr cam21 = load_camera_from_tif_image("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01MAY15WV031200015MAY01160357-P1BS-500648062030_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif", 17);
+    kwiver::vital::camera_rpc_sptr cam22 = load_camera_from_tif_image("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/05JUL15WV031100015JUL05162954-P1BS-500648062020_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif", 17);
+    kwiver::vital::camera_rpc_sptr cam23 = load_camera_from_tif_image("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/26APR15WV031200015APR26162435-P1BS-501504472050_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif", 17);
+
+    std::vector< std::vector<double> > ratings2;
+    kwiver::arrows::core::compute_mesh_cameras_ratings(mesh2, {cam21, cam22, cam23}, ratings2);
+
+    for (int j=0; j < mesh2->num_faces(); ++j)
+    {
+        std::cout << ratings2[0][j] << " ";
+    }
+    std::cout << std::endl;
 }

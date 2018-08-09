@@ -10,6 +10,7 @@ set( plugin_core_headers
   close_loops_keyframe.h
   close_loops_multi_method.h
   compute_association_matrix_from_features.h
+  compute_mesh_cameras_ratings.h
   compute_mesh_depthmap.h
   compute_ref_homography_core.h
   convert_image_bypass.h
@@ -83,6 +84,7 @@ set( plugin_core_sources
   close_loops_keyframe.cxx
   close_loops_multi_method.cxx
   compute_association_matrix_from_features.cxx
+  compute_mesh_cameras_ratings.cxx
   compute_mesh_depthmap.cxx
   compute_ref_homography_core.cxx
   convert_image_bypass.cxx

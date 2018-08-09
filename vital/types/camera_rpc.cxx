@@ -46,8 +46,9 @@ namespace vital {
 
 
 camera_rpc
-::camera_rpc()
-  : m_logger( kwiver::vital::get_logger( "vital.camera_rpc" ) )
+::camera_rpc(unsigned int utm)
+  : m_logger( kwiver::vital::get_logger( "vital.camera_rpc" ) ),
+    utm_zone(utm)
 {
 }
 
@@ -118,7 +119,15 @@ camera_rpc
   return rslt.cwiseProduct( this->world_scale() ) + this->world_offset();
 }
 
-double camera_rpc::depth(const vector_3d& pt, int utm_zone) const
+double camera_rpc::depth(const vector_3d& pt) const
+{
+    std::pair<vector_3d, vector_3d> sat_pos_and_axis = this->get_center_and_axis();
+    const vector_3d& sat_pos = sat_pos_and_axis.first;
+    const vector_3d& axis = sat_pos_and_axis.second;
+    return (pt - sat_pos).dot(axis);
+}
+
+std::pair<vector_3d, vector_3d> camera_rpc::get_center_and_axis() const
 {
     matrix_2x3d A;
     rpc_matrix rpc_coeffs = this->rpc_coeffs();
@@ -143,9 +152,9 @@ double camera_rpc::depth(const vector_3d& pt, int utm_zone) const
 
     // transform to UTM
     vector_2d pt1_utm_xy = kwiver::vital::geo_conv(vector_2d(pt1_latlong[0], pt1_latlong[1]),
-            kwiver::vital::SRID::lat_lon_WGS84, kwiver::vital::SRID::UTM_WGS84_north + utm_zone);
+            kwiver::vital::SRID::lat_lon_WGS84, kwiver::vital::SRID::UTM_WGS84_north + this->utm_zone);
     vector_2d pt2_utm_xy = kwiver::vital::geo_conv(vector_2d(pt2_latlong[0], pt2_latlong[1]),
-            kwiver::vital::SRID::lat_lon_WGS84, kwiver::vital::SRID::UTM_WGS84_north + utm_zone);
+            kwiver::vital::SRID::lat_lon_WGS84, kwiver::vital::SRID::UTM_WGS84_north + this->utm_zone);
 
     vector_3d pt1_utm = {pt1_utm_xy[0], pt1_utm_xy[1], pt1_latlong[2]};
     vector_3d pt2_utm = {pt2_utm_xy[0], pt2_utm_xy[1], pt2_latlong[2]};
@@ -162,8 +171,10 @@ double camera_rpc::depth(const vector_3d& pt, int utm_zone) const
     // force satellite position to be at z = 700km
     double k = (700000 - pt1_utm[2]) / axis[2];
     vector_3d sat_pos = pt1_utm + k * axis;
-    return (pt - sat_pos).dot(axis);
+
+    return std::pair<vector_3d, vector_3d>(sat_pos, axis);
 }
+
 
 Eigen::Matrix<double, 20, 1>
 camera_rpc
