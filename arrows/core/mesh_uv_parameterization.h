@@ -93,8 +93,8 @@ struct triangle_t
  */
 KWIVER_ALGO_CORE_EXPORT
 uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolution,
-                                   unsigned int max_width, unsigned int interior_margin,
-                                   unsigned int exterior_margin);
+                                   int max_width, int interior_margin,
+                                   int exterior_margin);
 
 }
 }

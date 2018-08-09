@@ -68,8 +68,7 @@ void uv_parameterization_t::get_bounds(double bounds[4]) const
 
 /// Compute a UV parameterization of the mesh in the form of a rectangular texture atas
 uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolution,
-                                   unsigned int max_width, unsigned int interior_margin,
-                                   unsigned int exterior_margin)
+                                   int max_width, int interior_margin, int exterior_margin)
 {
     std::vector<triangle_t> triangles(mesh->num_faces());
     const mesh_face_array_base& faces = mesh->faces();
@@ -160,13 +159,12 @@ uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolut
     double current_y = 0.0;
     double next_y = 0.0;
 
-    current_x = -interior_margin;    // initialized to -margin so that the next chart is added at 0
-
+    current_x = -interior_margin;    // initialized to -interior_margin so that
+                                     // the first triangle is set at x=0. The exterior is added at the end
     double bounds[4];
     for (int i=0; i < static_cast<int>(triangles.size()); ++i)
     {
         triangles[i].get_bounds(bounds);
-
         current_x += -bounds[0] + interior_margin;
         if (current_x + bounds[1] > max_width)
         {
