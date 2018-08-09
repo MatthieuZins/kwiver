@@ -38,6 +38,7 @@ void test_rpc_camera();
 void test_open_tif();
 void test_generate_triangles_map();
 void test_mesh_cameras_ratings();
+void test_rasterize();
 
 int main()
 {
@@ -47,7 +48,8 @@ int main()
 //  test_depthmap();
 //    test_generate_triangles_map();
 //    test_depthmap();
-    test_mesh_cameras_ratings();
+//    test_mesh_cameras_ratings();
+    test_rasterize();
 //  test_open_tif();
 //  test_rpc_camera();
 //  how_to_part_01_images();

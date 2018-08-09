@@ -74,6 +74,12 @@ public:
   /// Project a 3D point into a 2D image point
   virtual vector_2d project( const vector_3d& pt ) const = 0;
 
+  /// Compute the distance of the 3D point to the image plane
+  /**
+   *  Points with negative depth are behind the camera
+   */
+  virtual double depth(const vector_3d& pt) const = 0;
+
 protected:
   camera() {};
 };

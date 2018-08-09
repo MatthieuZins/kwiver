@@ -362,3 +362,63 @@ void test_mesh_cameras_ratings()
     }
     std::cout << std::endl;
 }
+
+void test_rasterize()
+{
+    kwiver::vital::plugin_manager::instance().load_all_plugins();
+
+    std::string mesh_filename = ("/media/matthieu/DATA/core3D-data/AOI_D4_(Nick)/triangulated/66.obj");
+    std::string image_filename = ("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01MAY15WV031200015MAY01160357-P1BS-500648062030_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif");
+
+    // mesh
+    kwiver::arrows::core::mesh_io mesh_io;
+    kwiver::vital::mesh_sptr mesh = mesh_io.load(mesh_filename);
+
+    kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
+    kwiver::vital::vector_3d mesh_offset = {435530.547508, 3354095.61004, -36.844062};
+    for (int i=0; i < vertices.size(); ++i)
+    {
+        vertices[i] += mesh_offset;
+    }
+
+    // uv parameterization
+    kwiver::arrows::core::uv_parameterization_t param = kwiver::arrows::core::parameterize(mesh, 0.3, 8000, 5, 5);
+
+    // camera
+    kwiver::vital::camera_rpc_sptr camera = load_camera_from_tif_image(image_filename, 17);
+
+    // image
+    kwiver::vital::algo::image_io_sptr image_io = kwiver::vital::algo::image_io::create("gdal");
+    kwiver::vital::image_container_sptr image = image_io->load(image_filename);
+
+    kwiver::vital::image_container_sptr id_map = kwiver::arrows::core::generate_triangles_map(param, 5);
+    cv::Mat cv_map = kwiver::arrows::ocv::image_container_to_ocv_matrix(*(id_map.get()), kwiver::arrows::ocv::image_container::OTHER_COLOR);
+    double min, max;
+    cv::minMaxLoc(cv_map, &min, &max, 0, 0);
+    cv_map.convertTo(cv_map, CV_32F);
+    std::cout << "cv_map type " << cv_map.type() << std::endl;
+    cv_map -= min;
+    cv_map /= (max-min);
+    cv_map *= 255;
+    cv_map.convertTo(cv_map, CV_8U);
+    cv::imwrite("triangle_map.png", cv_map);
+
+
+    kwiver::arrows::core::compute_mesh_depthmap depthmap_generator;
+    auto depthmaps = depthmap_generator.compute(mesh, camera, image->width(), image->height(), 17);
+
+    kwiver::vital::image_container_sptr texture = kwiver::arrows::core::rasterize(mesh, param, id_map, image, camera, depthmaps.first);
+
+    cv::Mat cv_tex = kwiver::arrows::ocv::image_container_to_ocv_matrix(*(texture.get()),
+                                                                        kwiver::arrows::ocv::image_container::OTHER_COLOR);
+    std::cout << "cv_tex channels " << cv_tex.channels() << std::endl;
+    std::vector<cv::Mat> splitted;
+    cv::split(cv_tex, splitted);
+    std::vector<cv::Mat> rgb_splitted = {splitted[4], splitted[2], splitted[1]};
+    cv::Mat rgb_tex;
+    cv::merge(rgb_splitted, rgb_tex);
+    cv::minMaxLoc(rgb_tex, &min, &max, 0, 0);
+    std::cout << "min max " << min << " " << max << std::endl;
+    rgb_tex.convertTo(rgb_tex, CV_8U);
+    cv::imwrite("texture.png", rgb_tex);
+}

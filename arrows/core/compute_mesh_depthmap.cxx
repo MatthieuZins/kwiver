@@ -55,15 +55,7 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
     std::vector<double> points_depth(nb_vertices);
     for (unsigned int i=0; i < vertices.size(); ++i)
     {
-        if (utm_zone > 0)
-        {
-            points_depth[i] = dynamic_cast<kwiver::vital::camera_rpc*>(camera.get())->depth(vertices[i]);
-
-        }
-        else
-        {
-            points_depth[i] = dynamic_cast<kwiver::vital::camera_perspective*>(camera.get())->depth(vertices[i]);
-        }
+        points_depth[i] = camera->depth(vertices[i]);
     }
 
     // Initialize z_buffer with max double and id_buffer with -1
