@@ -96,7 +96,7 @@ void dilate_atlas(image& atlas, image_of<bool> _mask, int nb_iter)
                     {
                         for (int d=0; d < depth; ++d)
                         {
-                            atlas.at<T>(c, r) = static_cast<float>(values[d]) / nb;
+                            atlas.at<T>(c, r, d) = static_cast<float>(values[d]) / nb;
                         }
                         tmp(c, r) = true;
                     }
@@ -133,18 +133,51 @@ void dilate_atlas(image& atlas, image_of<bool> _mask, int nb_iter)
                     {
                         for (int d=0; d < depth; ++d)
                         {
-                            atlas.at<T>(c, r) = static_cast<float>(values[d]) / nb;
+                            atlas.at<T>(c, r, d) = static_cast<float>(values[d]) / nb;
                         }
                         tmp(c, r) = true;
                     }
                 }
             }
         }
-
         mask.copy_from(tmp);
     }
 }
 
+
+template <class Type>
+Type get_interpolated_pixel(const vital::image& image,  double u, double v, unsigned int depth)
+{
+   // bilateral interpolation
+   int rounded_u = std::round(u);
+   int rounded_v = std::round(v);
+   if (rounded_u >= 0 && rounded_u < image.width()
+           && rounded_v >= 0 && rounded_v < image.height())
+   {
+       // if on image border => no interpolation
+       if (u < 0 || v < 0 || u > image.width()-1 || v > image.height()-1)
+       {
+           return image.at<Type>(rounded_u, rounded_v, depth);
+       }
+
+       int x1 = std::floor(u);
+       int y1 = std::floor(v);
+
+       double dx = u-x1;
+       double dy = v-y1;
+
+       // cast to Vec<int, nb_bands> because of the substractions done in the interpolation
+
+       double Q11, Q21, Q12, Q22;
+
+       Q11 = image.at<Type>(x1, y1, depth);
+       Q21 = image.at<Type>(x1+1, y1, depth);
+       Q12 = image.at<Type>(x1, y1+1, depth);
+       Q22 = image.at<Type>(x1+1, y1+1, depth);
+       return static_cast<Type>(Q11 + (Q21 - Q11) * dx + (Q12 - Q11) * dy + (Q11 + Q22 - Q12 - Q21) * dx * dy);
+   }
+   return  0;
+}
 
 vital::image_container_sptr generate_triangles_map(const kwiver::arrows::core::uv_parameterization_t &param,
                                                    int exterior_margin)
@@ -154,7 +187,7 @@ vital::image_container_sptr generate_triangles_map(const kwiver::arrows::core::u
 
     double bounds[4];
     param.get_bounds(bounds);
-    double width = std::ceil(bounds[1]+1 + exterior_margin);     //+3 is a margin (at the bottom and right borders)
+    double width = std::ceil(bounds[1]+1 + exterior_margin);
     double height = std::ceil(bounds[3]+1 + exterior_margin);
 
     // status_grid contains the status of each pixel:
@@ -181,7 +214,9 @@ vital::image_container_sptr generate_triangles_map(const kwiver::arrows::core::u
         const vector_2d& a_uv = param.tcoords[param.face_mapping[f][0]];
         const vector_2d& b_uv = param.tcoords[param.face_mapping[f][1]];
         const vector_2d& c_uv = param.tcoords[param.face_mapping[f][2]];
-
+//        std::cout << "a " << a_uv[0] << " " << a_uv[1] << std::endl;
+//        std::cout << "b " << b_uv[0] << " " << b_uv[1] << std::endl;
+//        std::cout << "c " << c_uv[0] << " " << c_uv[1] << std::endl;
         // get the 2d bounding box
         int u_min = static_cast<int>(std::floor(std::min(a_uv[0], std::min(b_uv[0], c_uv[0]))));
         int u_max = static_cast<int>(std::ceil(std::max(a_uv[0], std::max(b_uv[0], c_uv[0]))));
@@ -198,6 +233,7 @@ vital::image_container_sptr generate_triangles_map(const kwiver::arrows::core::u
                 {
                     id_grid(u, v) = f;
                     status_grid(u, v) = 1;   // strong assignment
+
                 }
                 else
                 {
@@ -492,7 +528,8 @@ image_container_sptr rasterize(mesh_sptr mesh, const uv_parameterization_t& para
             {
                 for (unsigned int b=0; b < depth; ++b)
                 {
-                    texture(u, v, b) = image->get_image().at<unsigned short>(p_img[0], p_img[1], b);
+                    texture(u, v, b) = get_interpolated_pixel<unsigned short>(image->get_image(), p_img[0], p_img[1], b);
+//                    texture(u, v, b) = image->get_image().at<unsigned short>(p_img[0], p_img[1], b);
                 }
             }
         }
@@ -517,12 +554,6 @@ image_container_sptr rasterize(mesh_sptr mesh, const uv_parameterization_t& para
     dilate_atlas<unsigned char>(visibility, mask, 2);
     dilate_atlas<unsigned char>(shadow, mask, 2);
     dilate_atlas<float>(scores, mask, 2);
-
-//    out_texture_atlas->set_texture(texture);
-//    out_texture_atlas->set_visibility(visibility);
-//    out_texture_atlas->set_shadow(shadow);
-//    out_texture_atlas->set_score(score);
-//    out_texture_atlas->set_normals(normals);
 
     return image_container_sptr(new simple_image_container(texture));
 }

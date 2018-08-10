@@ -367,7 +367,9 @@ void test_rasterize()
 {
     kwiver::vital::plugin_manager::instance().load_all_plugins();
 
-    std::string mesh_filename = ("/media/matthieu/DATA/core3D-data/AOI_D4_(Nick)/triangulated/66.obj");
+    std::string mesh_filename = ("/media/matthieu/DATA/core3D-data/AOI_D4_(Nick)/result_new/buildings.obj");
+//    std::string mesh_filename = ("/media/matthieu/DATA/core3D-data/AOI_D4_(Nick)/triangulated/41.obj");
+//    std::string mesh_filename = ("/media/matthieu/DATA/core3D-data/AOI_D4_(Nick)/test.obj");
     std::string image_filename = ("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01MAY15WV031200015MAY01160357-P1BS-500648062030_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif");
 
     // mesh
@@ -382,7 +384,7 @@ void test_rasterize()
     }
 
     // uv parameterization
-    kwiver::arrows::core::uv_parameterization_t param = kwiver::arrows::core::parameterize(mesh, 0.3, 8000, 5, 5);
+    kwiver::arrows::core::uv_parameterization_t param = kwiver::arrows::core::parameterize(mesh, 0.3, 8000, 10, 5);
 
     // camera
     kwiver::vital::camera_rpc_sptr camera = load_camera_from_tif_image(image_filename, 17);
@@ -414,11 +416,54 @@ void test_rasterize()
     std::cout << "cv_tex channels " << cv_tex.channels() << std::endl;
     std::vector<cv::Mat> splitted;
     cv::split(cv_tex, splitted);
-    std::vector<cv::Mat> rgb_splitted = {splitted[4], splitted[2], splitted[1]};
+    std::vector<cv::Mat> rgb_splitted = {splitted[1], splitted[2], splitted[4]};
     cv::Mat rgb_tex;
     cv::merge(rgb_splitted, rgb_tex);
     cv::minMaxLoc(rgb_tex, &min, &max, 0, 0);
     std::cout << "min max " << min << " " << max << std::endl;
     rgb_tex.convertTo(rgb_tex, CV_8U);
     cv::imwrite("texture.png", rgb_tex);
+
+    for (int i=0; i < vertices.size(); ++i)
+    {
+        vertices[i] -= mesh_offset;
+    }
+    mesh_io.save("test.obj", mesh, &param, texture.get());
+
+
+    //------------------------------
+    std::cout << "uv_param: " << std::endl;
+    for (int i=0; i < param.face_mapping.size(); ++i)
+    {
+        const kwiver::vital::vector_2d& a_uv = param.tcoords[param.face_mapping[i][0]];
+        const kwiver::vital::vector_2d& b_uv = param.tcoords[param.face_mapping[i][1]];
+        const kwiver::vital::vector_2d& c_uv = param.tcoords[param.face_mapping[i][2]];
+    }
+
+    double bounds[4];
+    param.get_bounds(bounds);
+    cv::Mat image_param(texture->height(), texture->width(), CV_8UC3, 0.0);
+    // margins at the right and bottom borders
+
+    std::vector<cv::Point2i> points(3);
+    for (unsigned int f=0; f < param.face_mapping.size(); ++f)
+    {
+        const kwiver::arrows::core::tcoord_t& tcoord_0 = param.tcoords[param.face_mapping[f][0]];
+        const kwiver::arrows::core::tcoord_t& tcoord_1 = param.tcoords[param.face_mapping[f][1]];
+        const kwiver::arrows::core::tcoord_t& tcoord_2 = param.tcoords[param.face_mapping[f][2]];
+
+        points[0].x = std::round(tcoord_0[0]);
+        points[0].y = std::round(tcoord_0[1]);
+
+        points[1].x = std::round(tcoord_1[0]);
+        points[1].y = std::round(tcoord_1[1]);
+
+        points[2].x = std::round(tcoord_2[0]);
+        points[2].y = std::round(tcoord_2[1]);
+
+        cv::Scalar random_color(rand() % 255, rand() % 255, rand() % 255);
+        cv::polylines(image_param, points, true, random_color);
+    }
+    cv::imwrite("parameterization.png", image_param);
+
 }
