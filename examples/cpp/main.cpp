@@ -39,6 +39,7 @@ void test_open_tif();
 void test_generate_triangles_map();
 void test_mesh_cameras_ratings();
 void test_rasterize();
+void test_rasterize_pinhole();
 
 int main()
 {
@@ -49,7 +50,8 @@ int main()
 //    test_generate_triangles_map();
 //    test_depthmap();
 //    test_mesh_cameras_ratings();
-    test_rasterize();
+//    test_rasterize();
+    test_rasterize_pinhole();
 //  test_open_tif();
 //  test_rpc_camera();
 //  how_to_part_01_images();

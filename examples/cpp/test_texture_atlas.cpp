@@ -409,7 +409,7 @@ void test_rasterize()
     kwiver::arrows::core::compute_mesh_depthmap depthmap_generator;
     auto depthmaps = depthmap_generator.compute(mesh, camera, image->width(), image->height(), 17);
 
-    kwiver::vital::image_container_sptr texture = kwiver::arrows::core::rasterize(mesh, param, id_map, image, camera, depthmaps.first);
+    kwiver::vital::image_container_sptr texture = kwiver::arrows::core::rasterize<unsigned short>(mesh, param, id_map, image, camera, depthmaps.first);
 
     cv::Mat cv_tex = kwiver::arrows::ocv::image_container_to_ocv_matrix(*(texture.get()),
                                                                         kwiver::arrows::ocv::image_container::OTHER_COLOR);
@@ -421,7 +421,7 @@ void test_rasterize()
     cv::merge(rgb_splitted, rgb_tex);
     cv::minMaxLoc(rgb_tex, &min, &max, 0, 0);
     std::cout << "min max " << min << " " << max << std::endl;
-    rgb_tex.convertTo(rgb_tex, CV_8U);
+    rgb_tex.convertTo(rgb_tex, CV_8UC3);
     cv::imwrite("texture.png", rgb_tex);
 
     for (int i=0; i < vertices.size(); ++i)
@@ -465,5 +465,97 @@ void test_rasterize()
         cv::polylines(image_param, points, true, random_color);
     }
     cv::imwrite("parameterization.png", image_param);
+
+}
+
+
+void test_rasterize_pinhole()
+{
+    kwiver::vital::plugin_manager::instance().load_all_plugins();
+
+    std::string mesh_filename = ("/home/matthieu/data_cube_texture/cube.obj");
+    std::string image_filename = ("/home/matthieu/data_cube_texture/images2/cam1.png");
+
+    // mesh
+    kwiver::arrows::core::mesh_io mesh_io;
+    kwiver::vital::mesh_sptr mesh = mesh_io.load(mesh_filename);
+
+    // uv parameterization
+    kwiver::arrows::core::uv_parameterization_t param = kwiver::arrows::core::parameterize(mesh, 0.03, 800, 10, 5);
+
+    // perspective camera
+    Eigen::Vector3d center(-10, 0, -10);
+    Eigen::Matrix< double, 3, 3 > R;
+//    R << 1,   0,   0,
+//         0,   1,   0,
+//         0,   0,   1;
+    R << 0.70711, 0.00000, 0.70711,
+         0.00000, 1.00000, 0.00000,
+         -0.70711, 0.00000, 0.70711;
+
+    kwiver::vital::rotation_d orientation(R);
+    kwiver::vital::camera_intrinsics_sptr camera_intrinsic(new kwiver::vital::simple_camera_intrinsics(1024, {480, 270}));
+    kwiver::vital::camera_perspective_sptr camera(new kwiver::vital::simple_camera_perspective(center, orientation.inverse(), camera_intrinsic));
+
+
+    // image
+    kwiver::vital::algo::image_io_sptr image_io = kwiver::vital::algo::image_io::create("ocv");
+    kwiver::vital::image_container_sptr image = image_io->load(image_filename);
+    std::cout << "image depth " << image->depth() << std::endl;
+
+    // id map
+    kwiver::vital::image_container_sptr id_map = kwiver::arrows::core::generate_triangles_map(param, 5);
+
+    // depthmap
+    kwiver::arrows::core::compute_mesh_depthmap depthmap_generator;
+    auto depthmaps = depthmap_generator.compute(mesh, camera, image->width(), image->height(), 0);
+    // write depthmap
+    cv::Mat depth_cv;
+    kwiver::arrows::ocv::image_container_to_ocv_matrix(*depthmaps.first,  kwiver::arrows::ocv::image_container::OTHER_COLOR).copyTo(depth_cv);
+    cv::Mat mask;
+    cv::threshold(depth_cv, mask, std::numeric_limits<double>::max() / 2, 1, cv::THRESH_BINARY_INV);
+    double min, max;
+    mask.convertTo(mask, CV_8U);
+    cv::minMaxLoc(depth_cv, &min, &max, 0, 0, mask);
+    std::cout << "min max " << min << " " << max << std::endl;
+    max *= 1.5;
+    depth_cv -= min;
+    depth_cv /= (max-min);
+    depth_cv *= 255;
+    cv::threshold(depth_cv, depth_cv, 255, 0, cv::THRESH_TRUNC);
+    cv::normalize(depth_cv, depth_cv, 0, 255, cv::NORM_MINMAX);
+    depth_cv.convertTo(depth_cv, CV_8U);
+    cv::imwrite("depthmap.png", depth_cv);
+
+
+
+    kwiver::vital::image_container_sptr texture = kwiver::arrows::core::rasterize<unsigned char>(mesh, param, id_map, image, camera, depthmaps.first);
+
+    cv::Mat cv_tex = kwiver::arrows::ocv::image_container_to_ocv_matrix(*(texture.get()),
+                                                                        kwiver::arrows::ocv::image_container::RGB_COLOR);
+    cv_tex.convertTo(cv_tex, CV_8UC3);
+    cv::cvtColor(cv_tex, cv_tex, CV_BGR2RGB);
+    cv::imwrite("texture.png", cv_tex);
+    mesh_io.save("test.obj", mesh, &param, texture.get());
+
+
+
+
+    // project all points on image
+//    kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
+
+//    std::vector<Eigen::Vector2d> points_uvs(mesh->num_verts());
+//    int i=0;
+//    for (auto pt3d : vertices)
+//    {
+//        points_uvs[i++] = camera->project(pt3d);
+//    }
+//    cv::Mat cv_image = kwiver::arrows::ocv::image_container_to_ocv_matrix(*(image.get()),
+//                                                                          kwiver::arrows::ocv::image_container::RGB_COLOR);
+//    for (auto p: points_uvs)
+//    {
+//        cv_image.at<cv::Vec3b>(p[1], p[0]) = cv::Vec3b::all(255);
+//    }
+//    cv::imwrite("projected_points.png", cv_image);
 
 }
