@@ -40,6 +40,7 @@ void test_generate_triangles_map();
 void test_mesh_cameras_ratings();
 void test_rasterize();
 void test_rasterize_pinhole();
+void test_fuse_multi_pinhole_cameras();
 
 int main()
 {
@@ -51,7 +52,9 @@ int main()
 //    test_depthmap();
 //    test_mesh_cameras_ratings();
 //    test_rasterize();
-    test_rasterize_pinhole();
+//    test_rasterize_pinhole();
+    test_fuse_multi_pinhole_cameras();
+
 //  test_open_tif();
 //  test_rpc_camera();
 //  how_to_part_01_images();

@@ -55,6 +55,7 @@ kwiver::vital::mesh_sptr kwiver::arrows::core::mesh_io::load(const std::string &
     return mesh;
 }
 
+
 void mesh_io::save(const std::string &filename, mesh_sptr mesh,
                    const uv_parameterization_t *tcoords, const image_container* texture) const
 {
@@ -114,7 +115,7 @@ void mesh_io::save(const std::string &filename, mesh_sptr mesh,
     mtl_file << "d 1\n";
     mtl_file << "Ns 75\n";
     mtl_file << "illum 1\n";
-    mtl_file << "map_Kd " << "texture" << ".png\n";
+    mtl_file << "map_Kd " << filename << ".png\n";
     mtl_file.close();
 }
 
