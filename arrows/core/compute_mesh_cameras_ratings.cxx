@@ -73,7 +73,7 @@ void compute_mesh_cameras_ratings(mesh_sptr mesh, const camera_sptr_list& camera
             // compute the area (in sq. pixels) of the projection
             vector_2d ab = b_uv - a_uv;
             vector_2d ac = c_uv - a_uv;
-            ratings[cam_id][f_id] = static_cast<float>(-(ab[0] * ac[1] - ab[1] * ac[0])/ 2.0);
+            ratings[cam_id][f_id] = static_cast<float>(std::abs(-(ab[0] * ac[1] - ab[1] * ac[0])/ 2.0));
         }
     }
 }

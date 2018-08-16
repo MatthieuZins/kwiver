@@ -41,6 +41,9 @@ void test_mesh_cameras_ratings();
 void test_rasterize();
 void test_rasterize_pinhole();
 void test_fuse_multi_pinhole_cameras();
+void test_fuse_multi_rpc_cameras();
+void test_fuse_multi_pinhole_cameras2();
+
 
 int main()
 {
@@ -53,7 +56,10 @@ int main()
 //    test_mesh_cameras_ratings();
 //    test_rasterize();
 //    test_rasterize_pinhole();
-    test_fuse_multi_pinhole_cameras();
+//    test_fuse_multi_pinhole_cameras();
+    test_fuse_multi_pinhole_cameras2();
+
+//    test_fuse_multi_rpc_cameras();
 
 //  test_open_tif();
 //  test_rpc_camera();

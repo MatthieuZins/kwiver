@@ -205,8 +205,9 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
                     //  to the wall which represent only a few pixel on the depthmap)
                     double min_depth = std::min(d0, std::min(d1, std::min(d2, d3)));
                     double max_depth = std::max(d0, std::max(d1, std::max(d2, d3)));
-                    if (std::abs(min_depth - std::numeric_limits<double>::max()) < 0.0001 ||
-                            (point_depth >= min_depth && point_depth <= max_depth))
+                    if ((std::abs(min_depth - std::numeric_limits<double>::max()) < 0.0001
+                         && max_depth > -std::numeric_limits<double>::max())
+                            || (point_depth >= min_depth && point_depth <= max_depth))
                     {
                         is_occluded = false;
                     }
@@ -295,7 +296,6 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
                     texture(u, v) = 0;
                 }
                 visibility(u, v) = 0;
-
             }
 //            else if (is_in_shadow)
 //            {
