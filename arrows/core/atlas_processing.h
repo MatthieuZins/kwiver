@@ -43,7 +43,7 @@ KWIVER_ALGO_CORE_EXPORT
 std::tuple<image_container_sptr, image_container_sptr, image_container_sptr>
 rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
           image_container_sptr triangles_id_map, image_container_sptr image,
-          camera_sptr camera, image_container_sptr depthmap)
+          camera_sptr camera, image_container_sptr depthmap, const std::vector<float>& faces_rating)
 {
     unsigned int nb_vertices = mesh->num_verts();
 
@@ -161,8 +161,8 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
             // Generate scores for this pixel
             // the score is the ratio between the area (in sq. pixels) of the projected face
             // and the area of the face in the mesh/texture atlas (converted in sq. pixels with the resolution used)
-            double pixel_score = 1.0;
-//            pixel_score = rating[face_id];
+            scores(u, v) = faces_rating[face_id] > 0 ? faces_rating[face_id] : 0;
+
 
             // Occlusions
             // compute the real depth of a point
@@ -309,7 +309,7 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
 //                    texture(u, v, b) = image->get_image().at<T>(p_img[0], p_img[1], b);
                 }
             }
-            scores(u, v) = 1.0;
+
         }
     }
 
@@ -332,6 +332,7 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
     dilate_atlas<unsigned char>(visibility, mask, 2);
     dilate_atlas<unsigned char>(shadow, mask, 2);
     dilate_atlas<float>(scores, mask, 2);
+
     return std::tuple<image_container_sptr, image_container_sptr, image_container_sptr>(
                 image_container_sptr(new simple_image_container(texture)),
                 image_container_sptr(new simple_image_container(visibility)),
@@ -369,7 +370,7 @@ void dilate_atlas(image& atlas, image_of<bool> _mask, int nb_iter)
             {
                 if (mask(c, r) == false)
                 {
-                    std::vector<unsigned int> values(depth, 0);
+                    std::vector<T> values(depth, 0);
                     unsigned int nb = 0;
                     if ((r-1) >= 0 && mask(c, r-1))
                     {
@@ -406,7 +407,7 @@ void dilate_atlas(image& atlas, image_of<bool> _mask, int nb_iter)
             {
                 if (mask(c, r) == false)
                 {
-                    std::vector<unsigned int> values(depth, 0);
+                    std::vector<T> values(depth, 0);
                     unsigned int nb = 0;
                     if ((c-1) >= 0 && mask(c-1, r))
                     {
@@ -476,7 +477,8 @@ T bilinear_interpolation(const vital::image& image,  double u, double v, unsigne
 template <class T>
 image_container_sptr fuse_texture_atlases(image_container_sptr_list textures,
                                           image_container_sptr_list visibilities,
-                                          image_container_sptr_list scores, int fusion_method)
+                                          image_container_sptr_list scores,
+                                          int fusion_method)
 {
     int width = textures[0]->width();
     int height = textures[0]->height();

@@ -12,14 +12,14 @@ namespace core {
 
 
 void compute_mesh_cameras_ratings(mesh_sptr mesh, const camera_sptr_list& cameras,
-                                  std::vector<std::vector<double> > &ratings)
+                                  std::vector<std::vector<float> > &ratings)
 {
     unsigned int nb_faces = mesh->num_faces();
     unsigned int nb_vertices = mesh->num_verts();
     unsigned int nb_cameras = cameras.size();
 
     // resize output scores
-    ratings.resize(nb_cameras, std::vector<double>(nb_faces, 0.0));
+    ratings.resize(nb_cameras, std::vector<float>(nb_faces, 0.0));
 
     kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
     vital::mesh_regular_face_array<3>& faces = dynamic_cast< vital::mesh_regular_face_array<3>& >(mesh->faces());
@@ -73,7 +73,7 @@ void compute_mesh_cameras_ratings(mesh_sptr mesh, const camera_sptr_list& camera
             // compute the area (in sq. pixels) of the projection
             vector_2d ab = b_uv - a_uv;
             vector_2d ac = c_uv - a_uv;
-            ratings[cam_id][f_id] = -(ab[0] * ac[1] - ab[1] * ac[0])/ 2.0;
+            ratings[cam_id][f_id] = static_cast<float>(-(ab[0] * ac[1] - ab[1] * ac[0])/ 2.0);
         }
     }
 }

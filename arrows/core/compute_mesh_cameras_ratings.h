@@ -11,7 +11,7 @@ namespace core {
 
 KWIVER_ALGO_CORE_EXPORT
 void compute_mesh_cameras_ratings(kwiver::vital::mesh_sptr mesh, const kwiver::vital::camera_sptr_list& cameras,
-                                  std::vector< std::vector<double> >& ratings);
+                                  std::vector<std::vector<float> > &ratings);
 
 }
 }
