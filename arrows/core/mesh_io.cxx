@@ -12,7 +12,12 @@ namespace kwiver {
 namespace arrows {
 namespace core {
 
-mesh_sptr mesh_io::load(const std::string &filename) const
+mesh_io::mesh_io()
+{
+    attach_logger("algo.mesh_io");
+}
+
+mesh_sptr mesh_io::load_(const std::string &filename) const
 {
     std::vector<vector_3d> verts;
     std::vector<mesh_regular_face<3> > faces;
@@ -55,8 +60,8 @@ mesh_sptr mesh_io::load(const std::string &filename) const
 }
 
 
-void mesh_io::save(const std::string &filename, mesh_sptr mesh,
-                   const uv_parameterization_t *tcoords, vector_2i texture_size) const
+void mesh_io::save_(const std::string &filename, mesh_sptr mesh,
+                    const uv_parameterization_t *tcoords, vector_2i texture_size) const
 {
     unsigned int nb_faces = mesh->num_faces();
     if (tcoords && tcoords->face_mapping.size() != nb_faces)
@@ -84,7 +89,7 @@ void mesh_io::save(const std::string &filename, mesh_sptr mesh,
         for (auto tcoord: tcoords->tcoords)
         {
             file << std::setprecision(15) << "vt " << (tcoord[0])/texture_size[0]
-                 << " " << 1.0 - (tcoord[1]/texture_size[1]) << std::endl;
+                    << " " << 1.0 - (tcoord[1]/texture_size[1]) << std::endl;
         }
     }
     file << "usemtl mat\n";

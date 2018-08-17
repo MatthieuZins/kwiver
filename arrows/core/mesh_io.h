@@ -3,6 +3,7 @@
 
 #include <arrows/core/kwiver_algo_core_export.h>
 #include <arrows/core/mesh_uv_parameterization.h>
+#include <vital/algo/mesh_io.h>
 #include <vital/types/image_container.h>
 #include <vital/types/mesh.h>
 
@@ -12,8 +13,25 @@ namespace core {
 
 
 class KWIVER_ALGO_CORE_EXPORT mesh_io
+    : public vital::algorithm_impl<mesh_io, vital::algo::mesh_io>
 {
 public:
+
+    /// Name of the algorithm
+    static constexpr char const* name = "core";
+
+    /// Description of the algorithm
+    static constexpr char const* description =
+      "A reader / writer for OBJ mesh.";
+
+    // No configuration for this class yet
+    /// \cond DoxygenSuppress
+    virtual void set_configuration(vital::config_block_sptr /*config*/) { }
+    virtual bool check_configuration(vital::config_block_sptr /*config*/) const { return true; }
+    /// \endcond
+
+
+    mesh_io();
 
     virtual ~mesh_io() {}
 
@@ -22,12 +40,11 @@ public:
      * @param filename
      * @return
      */
-    virtual vital::mesh_sptr load(const std::string& filename) const;
+    virtual kwiver::vital::mesh_sptr load_(const std::string& filename) const;
 
-    virtual void save(const std::string& filename, vital::mesh_sptr data,
-                      const kwiver::arrows::core::uv_parameterization_t* tcoords,
-                      kwiver::vital::vector_2i texture_size) const;
-
+    virtual void save_(const std::string& filename, vital::mesh_sptr data,
+                       const kwiver::arrows::core::uv_parameterization_t* tcoords,
+                       kwiver::vital::vector_2i texture_size) const;
 };
 
 }
