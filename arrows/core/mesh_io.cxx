@@ -75,7 +75,10 @@ void mesh_io::save_(const std::string &filename, mesh_sptr mesh,
 
     std::ofstream file(filename, std::ios_base::out);
     file << "# Mesh generated with Kwiver\n";
-    file << "mtllib " << filename << ".mtl\n";
+    if (tcoords)
+    {
+        file << "mtllib " << filename << ".mtl\n";
+    }
 
     int nb_vertices=0;
     for (auto vert: vertices)
@@ -92,7 +95,10 @@ void mesh_io::save_(const std::string &filename, mesh_sptr mesh,
                     << " " << 1.0 - (tcoord[1]/texture_size[1]) << std::endl;
         }
     }
-    file << "usemtl mat\n";
+    if (tcoords)
+    {
+        file << "usemtl mat\n";
+    }
 
     for (unsigned int f_id=0; f_id < nb_faces; ++f_id)
     {
@@ -109,18 +115,20 @@ void mesh_io::save_(const std::string &filename, mesh_sptr mesh,
     }
     file.close();
 
-
-    // Write material file
-    std::ofstream mtl_file(filename + ".mtl");
-    mtl_file << "newmtl mat\n";
-    mtl_file << "Ka 1.0 1.0 1.0\n";
-    mtl_file << "Kd 1.0 1.0 1.0\n";
-    mtl_file << "Ks 1 1 1\n";
-    mtl_file << "d 1\n";
-    mtl_file << "Ns 75\n";
-    mtl_file << "illum 1\n";
-    mtl_file << "map_Kd " << filename << ".png\n";
-    mtl_file.close();
+    if (tcoords)
+    {
+        // Write material file
+        std::ofstream mtl_file(filename + ".mtl");
+        mtl_file << "newmtl mat\n";
+        mtl_file << "Ka 1.0 1.0 1.0\n";
+        mtl_file << "Kd 1.0 1.0 1.0\n";
+        mtl_file << "Ks 1 1 1\n";
+        mtl_file << "d 1\n";
+        mtl_file << "Ns 75\n";
+        mtl_file << "illum 1\n";
+        mtl_file << "map_Kd " << filename << ".png\n";
+        mtl_file.close();
+    }
 }
 
 
