@@ -430,7 +430,7 @@ void test_rasterize()
     {
         vertices[i] -= mesh_offset;
     }
-    mesh_io.save("test.obj", mesh, &param, texture.get());
+    mesh_io.save("test.obj", mesh, &param, {texture->width(), texture->height()});
 
 
     //------------------------------
@@ -531,7 +531,7 @@ void test_rasterize_pinhole()
     cv_tex.convertTo(cv_tex, CV_8UC3);
     cv::cvtColor(cv_tex, cv_tex, CV_BGR2RGB);
     cv::imwrite("texture.png", cv_tex);
-    mesh_io.save("test.obj", mesh, &param, texture.get());
+    mesh_io.save("test.obj", mesh, &param, {texture->width(), texture->height()});
 
 
 
@@ -649,7 +649,7 @@ void test_fuse_multi_pinhole_cameras()
         cv::cvtColor(cv_tex, cv_tex, CV_BGR2RGB);
         std::string output_name = "texture_" + std::to_string(i) + ".obj";
         cv::imwrite(output_name+".png", cv_tex);
-        mesh_io.save(output_name, mesh, &param, texture.get());
+        mesh_io.save(output_name, mesh, &param, {texture->width(), texture->height()});
     }
 
     // fusion
@@ -659,7 +659,7 @@ void test_fuse_multi_pinhole_cameras()
     cv::cvtColor(cv_fused, cv_fused, CV_BGR2RGB);
     std::string output_name = "texture_fused.obj";
     cv::imwrite(output_name + ".png", cv_fused);
-    mesh_io.save(output_name, mesh, &param, fused.get());
+    mesh_io.save(output_name, mesh, &param, {fused->width(), fused->height()});
 }
 
 void test_fuse_multi_rpc_cameras()
@@ -669,7 +669,7 @@ void test_fuse_multi_rpc_cameras()
     // mesh
 //    std::string mesh_filename = ("/media/matthieu/DATA/core3D-data/test_aoi4.obj");
 //    std::string mesh_filename = ("/media/matthieu/DATA/core3D-data/AOI_D4_(Nick)/result_new/buildings.obj");
-    std::string mesh_filename = ("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped.obj");
+    std::string mesh_filename = ("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped2.obj");
     kwiver::arrows::core::mesh_io mesh_io;
     kwiver::vital::mesh_sptr mesh = mesh_io.load(mesh_filename);
     kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
@@ -715,7 +715,6 @@ void test_fuse_multi_rpc_cameras()
     {
         images.push_back(image_io->load(s));
     }
-
 
 
     // depthmaps
@@ -765,7 +764,7 @@ void test_fuse_multi_rpc_cameras()
         cv::merge(rgb_splitted, cv_tex);
         std::string output_name = "texture_" + std::to_string(i) + ".obj";
         cv::imwrite(output_name+".png", cv_tex);
-        mesh_io.save(output_name, mesh, &param, texture.get());
+        mesh_io.save(output_name, mesh, &param, {texture->width(), texture->height()});
     }
 
     // remove offset
@@ -789,7 +788,7 @@ void test_fuse_multi_rpc_cameras()
 //        cv::cvtColor(cv_fused, cv_fused, CV_BGR2RGB);
     cv::merge(rgb_splitted, cv_fused);    std::string output_name = "texture_fused.obj";
     cv::imwrite(output_name + ".png", cv_fused);
-    mesh_io.save(output_name, mesh, &param, fused.get());
+    mesh_io.save(output_name, mesh, &param, {fused->width(), fused->height()});
 
 }
 
@@ -857,7 +856,7 @@ void test_fuse_multi_pinhole_cameras2()
         cv::cvtColor(cv_tex, cv_tex, CV_BGR2RGB);
         std::string output_name = "texture_" + std::to_string(i) + ".obj";
         cv::imwrite(output_name+".png", cv_tex);
-        mesh_io.save(output_name, mesh, &param, texture.get());
+        mesh_io.save(output_name, mesh, &param, {texture->width(), texture->height()});
     }
 
     // fusion
@@ -867,6 +866,6 @@ void test_fuse_multi_pinhole_cameras2()
     cv::cvtColor(cv_fused, cv_fused, CV_BGR2RGB);
     std::string output_name = "texture_fused.obj";
     cv::imwrite(output_name + ".png", cv_fused);
-    mesh_io.save(output_name, mesh, &param, fused.get());
+    mesh_io.save(output_name, mesh, &param, {fused->width(), fused->height()});
 
 }

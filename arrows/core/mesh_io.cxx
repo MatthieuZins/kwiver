@@ -56,7 +56,7 @@ mesh_sptr mesh_io::load(const std::string &filename) const
 
 
 void mesh_io::save(const std::string &filename, mesh_sptr mesh,
-                   const uv_parameterization_t *tcoords, const image_container* texture) const
+                   const uv_parameterization_t *tcoords, vector_2i texture_size) const
 {
     unsigned int nb_faces = mesh->num_faces();
     if (tcoords && tcoords->face_mapping.size() != nb_faces)
@@ -83,8 +83,8 @@ void mesh_io::save(const std::string &filename, mesh_sptr mesh,
     {
         for (auto tcoord: tcoords->tcoords)
         {
-            file << std::setprecision(15) << "vt " << (tcoord[0])/texture->width()
-                 << " " << 1.0 - (tcoord[1]/texture->height()) << std::endl;
+            file << std::setprecision(15) << "vt " << (tcoord[0])/texture_size[0]
+                 << " " << 1.0 - (tcoord[1]/texture_size[1]) << std::endl;
         }
     }
     file << "usemtl mat\n";

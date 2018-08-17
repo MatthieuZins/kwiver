@@ -18,15 +18,15 @@ public:
     virtual ~mesh_io() {}
 
     /**
-     * @brief load a simple version of OBJ mesh (only vertices and faces)
+     * @brief load an OBJ mesh (only vertices and faces)
      * @param filename
      * @return
      */
     virtual vital::mesh_sptr load(const std::string& filename) const;
 
     virtual void save(const std::string& filename, vital::mesh_sptr data,
-                      const kwiver::arrows::core::uv_parameterization_t* tcoords=nullptr,
-                      const kwiver::vital::image_container* texture=nullptr) const;
+                      const kwiver::arrows::core::uv_parameterization_t* tcoords,
+                      kwiver::vital::vector_2i texture_size) const;
 
 };
 
