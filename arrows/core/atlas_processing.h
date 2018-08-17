@@ -152,9 +152,7 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
             }
 
             // Generate scores for this pixel
-            // the score is the ratio between the area (in sq. pixels) of the projected face
-            // and the area of the face in the mesh/texture atlas (converted in sq. pixels with the resolution used)
-            scores(u, v) = faces_rating[face_id] > 0 ? faces_rating[face_id] : 0;
+            scores(u, v) = faces_rating[face_id];
 
 
             // Occlusions
@@ -303,7 +301,6 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
 //                    texture(u, v, b) = image->get_image().at<T>(p_img[0], p_img[1], b);
                 }
             }
-
         }
     }
 
@@ -487,14 +484,14 @@ image_container_sptr fuse_texture_atlases(image_container_sptr_list textures,
     {
         for (int u=0; u < width; ++u)
         {
-            if (scores[0]->get_image().at<float>(u, v) < 0)
+            if (scores[0]->get_image().at<float>(u, v) == 0)
             {
                 continue;   // score < 0 means that the pixel is empty (outside every triangle)
             }
 
             for (int id=0; id < nb_textures; ++id)
             {
-                pixel_scores[id] = visibilities[id]->get_image().at<unsigned char>(u, v) * scores[id]->get_image().at<float>(u, v);
+                pixel_scores[id] = scores[id]->get_image().at<float>(u, v) * static_cast<float>(visibilities[id]->get_image().at<unsigned char>(u, v));
             }
 
             if (fusion_method == 0)
@@ -505,10 +502,17 @@ image_container_sptr fuse_texture_atlases(image_container_sptr_list textures,
                 for (int d=0; d < depth; ++d)
                 {
                     output(u, v, d) = textures[image_with_highest_score]->get_image().at<T>(u, v, d);
+
+//                    output(u, v, d) = image_with_highest_score * (255.0 / nb_textures);
                 }
             }
             else if (fusion_method == 1 /*MEAN_WEIGHTING*/)
             {
+                for (float& score: pixel_scores)
+                {
+                    if (score < 0)
+                        score = 0;
+                }
                 // normalize pixel scores
                 double sum_of_scores = std::accumulate(pixel_scores.begin(), pixel_scores.end(), 0.0);
                 if (sum_of_scores > 0)
@@ -536,9 +540,15 @@ image_container_sptr fuse_texture_atlases(image_container_sptr_list textures,
                 std::sort(indices.begin(), indices.end(), [&pixel_scores]( unsigned int i0, unsigned int i1) { return pixel_scores[i0] < pixel_scores[i1]; });
 
                 unsigned int start_index = 0;
-                if (indices.size() > 3)
+                // skip all negative or null scores
+                while (start_index < indices.size() && pixel_scores[indices[start_index]] <= 0)
                 {
-                    start_index = std::round(0.3 * indices.size());
+                    ++start_index;
+                }
+                // skip the lowest third positive scores
+                if (indices.size() - start_index > 3)
+                {
+                    start_index += std::round(0.3 * (indices.size() - start_index));
                 }
 
                 // normalize the pixel scores that are kept
