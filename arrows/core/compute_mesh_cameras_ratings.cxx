@@ -29,7 +29,7 @@ void compute_mesh_cameras_ratings(mesh_sptr mesh, const camera_sptr_list& camera
     for (unsigned int cam_id=0; cam_id < nb_cameras; ++cam_id)
     {
         // project all points on image
-        std::vector<Eigen::Vector2d> points_uvs(nb_vertices);
+        std::vector<vector_2d> points_uvs(nb_vertices);
         if (dynamic_cast<camera_rpc*>(cameras[cam_id].get()))
         {
             // RPC cameras expect lat/long points, we do the conversion only once

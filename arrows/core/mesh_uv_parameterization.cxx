@@ -79,13 +79,13 @@ uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolut
     for (int f=0; f < static_cast<int>(mesh->num_faces()); ++f)
     {
         // get the face points
-        Eigen::Vector3d pt1 = dynamic_cast<const mesh_vertex_array<3>&>(vertices)[faces(f, 0)];
-        Eigen::Vector3d pt2 = dynamic_cast<const mesh_vertex_array<3>&>(vertices)[faces(f, 1)];
-        Eigen::Vector3d pt3 = dynamic_cast<const mesh_vertex_array<3>&>(vertices)[faces(f, 2)];
+        vector_3d pt1 = dynamic_cast<const mesh_vertex_array<3>&>(vertices)[faces(f, 0)];
+        vector_3d pt2 = dynamic_cast<const mesh_vertex_array<3>&>(vertices)[faces(f, 1)];
+        vector_3d pt3 = dynamic_cast<const mesh_vertex_array<3>&>(vertices)[faces(f, 2)];
 
-        Eigen::Vector3d pt1pt2 = pt2 - pt1;
-        Eigen::Vector3d pt1pt3 = pt3 - pt1;
-        Eigen::Vector3d pt2pt3 = pt3 - pt2;
+        vector_3d pt1pt2 = pt2 - pt1;
+        vector_3d pt1pt3 = pt3 - pt1;
+        vector_3d pt2pt3 = pt3 - pt2;
 
         if (pt1pt2.norm() == 0 || pt1pt3.norm() == 0 || pt2pt3.norm() == 0)
         {
@@ -94,7 +94,7 @@ uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolut
         else
         {
             // find the longest edge and assign it to AB
-            Eigen::Vector3d AB, AC;
+            vector_3d AB, AC;
             int longest_edge;
             if (pt1pt2.norm() >= pt1pt3.norm() && pt1pt2.norm() >= pt2pt3.norm())
             {
@@ -118,10 +118,10 @@ uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolut
                 longest_edge = 2;
             }
             // Transform the face to 2d
-            Eigen::Vector2d a(0.0, 0.0);
-            Eigen::Vector2d b(AB.norm(), 0.0);
+            vector_2d a(0.0, 0.0);
+            vector_2d b(AB.norm(), 0.0);
             double proj = AC.dot(AB) / AB.norm();
-            Eigen::Vector2d c(proj, (AC - proj * AB.normalized()).norm());
+            vector_2d c(proj, (AC - proj * AB.normalized()).norm());
             // Scale B and C by the resolution
             b /= resolution;
             c /= resolution;
@@ -172,7 +172,7 @@ uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolut
             current_y = next_y + interior_margin;
         }
 
-        Eigen::Vector2d position(current_x, current_y);
+        vector_2d position(current_x, current_y);
         tcoords[i*3] = triangles[i].a + position;
         tcoords[i*3+1] = triangles[i].b + position;
         tcoords[i*3+2] = triangles[i].c + position;
@@ -184,7 +184,7 @@ uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolut
     }
 
     // add a interior_margin at the top and left borders
-    Eigen::Vector2d interior_margin_out(exterior_margin, exterior_margin);
+    vector_2d interior_margin_out(exterior_margin, exterior_margin);
     for (int it=0; it < static_cast<int>(tcoords.size()); ++it)
     {
         tcoords[it] += interior_margin_out;

@@ -17,15 +17,15 @@ namespace arrows {
 namespace core {
 
 KWIVER_ALGO_CORE_EXPORT
-bool is_point_inside_triangle(const Eigen::Vector2d& p,
-                              const Eigen::Vector2d& a,
-                              const Eigen::Vector2d& b,
-                              const Eigen::Vector2d& c);
+bool is_point_inside_triangle(const vector_2d& p,
+                              const vector_2d& a,
+                              const vector_2d& b,
+                              const vector_2d& c);
 KWIVER_ALGO_CORE_EXPORT
-Eigen::Vector3d barycentric_coordinates(const Eigen::Vector2d& p,
-                                        const Eigen::Vector2d& a,
-                                        const Eigen::Vector2d& b,
-                                        const Eigen::Vector2d& c);
+vector_3d barycentric_coordinates(const vector_2d& p,
+                                        const vector_2d& a,
+                                        const vector_2d& b,
+                                        const vector_2d& c);
 KWIVER_ALGO_CORE_EXPORT
 kwiver::vital::image_container_sptr generate_triangles_map(const kwiver::arrows::core::uv_parameterization_t& param, int exterior_margin);
 
@@ -50,7 +50,7 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
     kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
     vital::mesh_regular_face_array<3>& faces = dynamic_cast< vital::mesh_regular_face_array<3>& >(mesh->faces());
     // project all points on image
-    std::vector<Eigen::Vector2d> points_image(nb_vertices);
+    std::vector<vector_2d> points_image(nb_vertices);
     if (dynamic_cast<camera_rpc*>(camera.get()))
     {
         // RPC cameras expect points in lat/long coordinates
@@ -127,20 +127,20 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
                 continue; // empty pixel (no texture)
             }
             // Get the uvs of the corresponding face
-            const Eigen::Vector2d& a_uv = param.tcoords[param.face_mapping[face_id][0]];
-            const Eigen::Vector2d& b_uv = param.tcoords[param.face_mapping[face_id][1]];
-            const Eigen::Vector2d& c_uv = param.tcoords[param.face_mapping[face_id][2]];
+            const vector_2d& a_uv = param.tcoords[param.face_mapping[face_id][0]];
+            const vector_2d& b_uv = param.tcoords[param.face_mapping[face_id][1]];
+            const vector_2d& c_uv = param.tcoords[param.face_mapping[face_id][2]];
 
             unsigned int A_id = faces(face_id, 0);
             unsigned int B_id = faces(face_id, 1);
             unsigned int C_id = faces(face_id, 2);
 
-            Eigen::Vector2d p(u, v);
-            Eigen::Vector3d bary_coords = barycentric_coordinates(p, a_uv, b_uv, c_uv);
+            vector_2d p(u, v);
+            vector_3d bary_coords = barycentric_coordinates(p, a_uv, b_uv, c_uv);
 
-            Eigen::Vector2d p_img = points_image[A_id] * bary_coords[0] +
-                                    points_image[B_id] * bary_coords[1] +
-                                    points_image[C_id] * bary_coords[2];
+            vector_2d p_img = points_image[A_id] * bary_coords[0] +
+                              points_image[B_id] * bary_coords[1] +
+                              points_image[C_id] * bary_coords[2];
             // Check that the point is inside the image, otherwise ignore it
             if (p_img[0] < 0 || p_img[0] > image->width()-1||
                 p_img[1] < 0 || p_img[1] > image->height()-1)
@@ -168,7 +168,7 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
             {
                 double depth_threshold = 0.07;
                 // here we check the 4 nearest pixels of the point on the depthmap
-                Eigen::Vector2i p_floor(floor(p_img[0]), floor(p_img[1]));
+                vector_2i p_floor(floor(p_img[0]), floor(p_img[1]));
                 double d0 = depthmap->get_image().at<double>(p_floor[0], p_floor[1]);
                 double d1 = depthmap->get_image().at<double>(p_floor[0]+1, p_floor[1]);
                 double d2 = depthmap->get_image().at<double>(p_floor[0], p_floor[1]+1);

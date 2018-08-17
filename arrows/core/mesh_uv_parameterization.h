@@ -47,7 +47,7 @@ namespace arrows {
 namespace core {
 
 // Typedef for a texture coordinates
-typedef Eigen::Vector2d tcoord_t;
+typedef kwiver::vital::vector_2d tcoord_t;
 // Typedef for a vector of texture coordinates
 typedef std::vector<tcoord_t> tcoords_t;
 
@@ -67,9 +67,9 @@ struct KWIVER_ALGO_CORE_EXPORT uv_parameterization_t
  */
 struct triangle_t
 {
-    Eigen::Vector2d a;
-    Eigen::Vector2d b;
-    Eigen::Vector2d c;
+    kwiver::vital::vector_2d a;
+    kwiver::vital::vector_2d b;
+    kwiver::vital::vector_2d c;
     int face_id;
     double height;
     void get_bounds(double bounds[0])

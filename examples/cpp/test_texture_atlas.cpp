@@ -434,14 +434,6 @@ void test_rasterize()
 
 
     //------------------------------
-    std::cout << "uv_param: " << std::endl;
-    for (int i=0; i < param.face_mapping.size(); ++i)
-    {
-        const kwiver::vital::vector_2d& a_uv = param.tcoords[param.face_mapping[i][0]];
-        const kwiver::vital::vector_2d& b_uv = param.tcoords[param.face_mapping[i][1]];
-        const kwiver::vital::vector_2d& c_uv = param.tcoords[param.face_mapping[i][2]];
-    }
-
     double bounds[4];
     param.get_bounds(bounds);
     cv::Mat image_param(texture->height(), texture->width(), CV_8UC3, 0.0);
@@ -786,7 +778,7 @@ void test_fuse_multi_rpc_cameras()
 
     kwiver::vital::cpu_timer timer;
     timer.start();
-    auto fused = kwiver::arrows::core::fuse_texture_atlases<unsigned short>(textures, visibilities, scores, 2);
+    auto fused = kwiver::arrows::core::fuse_texture_atlases<unsigned short>(textures, visibilities, scores, 0);
     timer.stop();
     std::cout << "timer : " << timer.elapsed() << " s" << std::endl;
     cv::Mat cv_fused = kwiver::arrows::ocv::image_container_to_ocv_matrix(*(fused.get()), kwiver::arrows::ocv::image_container::RGB_COLOR);

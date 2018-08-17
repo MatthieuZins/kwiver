@@ -5,11 +5,6 @@
 #include <vital/types/camera_rpc.h>
 #include <vital/types/geodesy.h>
 #include <vital/types/image.h>
-#include <vital/plugin_loader/plugin_manager.h>
-
-#include <Eigen/Dense>
-#include <typeinfo>
-
 
 namespace kwiver {
 namespace arrows {
@@ -29,7 +24,7 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
     kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
 
     // project all points on image
-    std::vector<Eigen::Vector2d> points_uvs(nb_vertices);
+    std::vector<vector_2d> points_uvs(nb_vertices);
     if (utm_zone > 0)
     {
         // if utm is valid, the mesh points are first transformed to lat/long coordinates
@@ -75,9 +70,9 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
     for (unsigned int f_id=0; f_id < faces.size(); ++f_id)
     {
         vital::mesh_regular_face<3> f = faces[f_id];
-        const Eigen::Vector2d& a_uv = points_uvs[f[0]];
-        const Eigen::Vector2d& b_uv = points_uvs[f[1]];
-        const Eigen::Vector2d& c_uv = points_uvs[f[2]];
+        const vector_2d& a_uv = points_uvs[f[0]];
+        const vector_2d& b_uv = points_uvs[f[1]];
+        const vector_2d& c_uv = points_uvs[f[2]];
 
         // skip the face if the three points are outside the image
         if ((a_uv[0] < 0 || a_uv[0] >= width || a_uv[1] < 0 || a_uv[1] >= height) &&
@@ -99,11 +94,11 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
             for (int u=u_min; u<=u_max; ++u)
             {
 
-                Eigen::Vector2d p(u, v);
+                vector_2d p(u, v);
                 // only compute depth for points inside the image and inside the triangle
                 if (u >= 0 && u < width && v >= 0 && v < height && is_point_inside_triangle(p, a_uv, b_uv, c_uv))
                 {
-                    Eigen::Vector3d bary_coords = barycentric_coordinates(p, a_uv, b_uv, c_uv);
+                    vector_3d bary_coords = barycentric_coordinates(p, a_uv, b_uv, c_uv);
                     double depth = bary_coords[0] * a_depth
                                    + bary_coords[1] * b_depth
                                    + bary_coords[2] * c_depth;
