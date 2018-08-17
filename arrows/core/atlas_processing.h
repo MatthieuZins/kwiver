@@ -173,6 +173,7 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
             bool is_occluded = true;
             if (depthmap.get())
             {
+                double depth_threshold = 0.07;
                 // here we check the 4 nearest pixels of the point on the depthmap
                 Eigen::Vector2i p_floor(floor(p_img[0]), floor(p_img[1]));
                 double d0 = depthmap->get_image().at<double>(p_floor[0], p_floor[1]);
@@ -181,19 +182,19 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
                 double d3 = depthmap->get_image().at<double>(p_floor[0]+1, p_floor[1]+1);
                 // if the real value is close to one of the for values from the depthmap,
                 // we consider the point as non occluded
-                if (fabs(point_depth - d0) < 0.15)
+                if (fabs(point_depth - d0) < depth_threshold)
                 {
                     is_occluded = false;
                 }
-                else if (fabs(point_depth - d1) < 0.15)
+                else if (fabs(point_depth - d1) < depth_threshold)
                 {
                     is_occluded = false;
                 }
-                else if (fabs(point_depth - d2) < 0.15)
+                else if (fabs(point_depth - d2) < depth_threshold)
                 {
                     is_occluded = false;
                 }
-                else if (fabs(point_depth - d3) < 0.15)
+                else if (fabs(point_depth - d3) < depth_threshold)
                 {
                     is_occluded = false;
                 }
