@@ -57,9 +57,9 @@ int main()
 //    test_rasterize();
 //    test_rasterize_pinhole();
 //    test_fuse_multi_pinhole_cameras();
-    test_fuse_multi_pinhole_cameras2();
+//    test_fuse_multi_pinhole_cameras2();
 
-//    test_fuse_multi_rpc_cameras();
+    test_fuse_multi_rpc_cameras();
 
 //  test_open_tif();
 //  test_rpc_camera();

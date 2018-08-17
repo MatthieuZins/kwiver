@@ -55,6 +55,8 @@
 #include <arrows/core/atlas_processing.h>
 #include <arrows/core/compute_mesh_cameras_ratings.h>
 #include <fstream>
+#include <vital/util/cpu_timer.h>
+
 void test_uv_parameterization()
 {
     kwiver::arrows::core::uv_parameterization_t param;
@@ -675,7 +677,7 @@ void test_fuse_multi_rpc_cameras()
     // mesh
 //    std::string mesh_filename = ("/media/matthieu/DATA/core3D-data/test_aoi4.obj");
 //    std::string mesh_filename = ("/media/matthieu/DATA/core3D-data/AOI_D4_(Nick)/result_new/buildings.obj");
-    std::string mesh_filename = ("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped.obj");
+    std::string mesh_filename = ("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped2.obj");
     kwiver::arrows::core::mesh_io mesh_io;
     kwiver::vital::mesh_sptr mesh = mesh_io.load(mesh_filename);
     kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
@@ -693,13 +695,19 @@ void test_fuse_multi_rpc_cameras()
 
 
     std::vector<std::string> images_filenames;
-    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/27JAN15WV031100015JAN27160845-P1BS-500648062010_01_P001_________AAE_0AAAAABPABS0_pansharpen_8.tif");
-    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/26APR15WV031200015APR26162435-P1BS-501504472050_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
-    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_pansharpen_8.tif");
-    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/11OCT14WV031100014OCT11155720-P1BS-500648061020_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
-    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/08FEB15WV031100015FEB08160130-P1BS-500648061090_01_P001_________AAE_0AAAAABPABP0_pansharpen_8.tif");
-    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/02MAY15WV031100015MAY02161943-P1BS-500648061030_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
+//    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/27JAN15WV031100015JAN27160845-P1BS-500648062010_01_P001_________AAE_0AAAAABPABS0_pansharpen_8.tif");
+//    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/26APR15WV031200015APR26162435-P1BS-501504472050_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
+//    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_pansharpen_8.tif");
+//    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/11OCT14WV031100014OCT11155720-P1BS-500648061020_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
+//    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/08FEB15WV031100015FEB08160130-P1BS-500648061090_01_P001_________AAE_0AAAAABPABP0_pansharpen_8.tif");
+//    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/02MAY15WV031100015MAY02161943-P1BS-500648061030_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
+//    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01MAY15WV031200015MAY01160357-P1BS-500648062030_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif");
+
     images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01MAY15WV031200015MAY01160357-P1BS-500648062030_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif");
+    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01NOV15WV031100015NOV01161954-P1BS-500648062080_01_P001_________AAE_0AAAAABPABS0_pansharpen_8.tif");
+    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01NOV15WV031100015NOV01162034-P1BS-500648061060_01_P001_________AAE_0AAAAABPABE0_pansharpen_8.tif");
+    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/05JUL15WV031100015JUL05162954-P1BS-500648062020_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif");
+    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_pansharpen_8.tif");
 
     // camera
     kwiver::vital::camera_sptr_list cameras;
@@ -745,7 +753,11 @@ void test_fuse_multi_rpc_cameras()
     kwiver::vital::image_container_sptr_list textures, visibilities, scores;
     for (int i=0; i < cameras.size(); ++i)
     {
+        kwiver::vital::cpu_timer timer;
+        timer.start();
         auto raster_result = kwiver::arrows::core::rasterize<unsigned short>(mesh, param, id_map, images[i], cameras[i], depthmaps[i], ratings[i]);
+        timer.stop();
+        std::cout << "rasterization timer => " << timer.elapsed() << " s" << std::endl;
         auto texture = std::get<0>(raster_result);
         textures.push_back(std::get<0>(raster_result));
         visibilities.push_back(std::get<1>(raster_result));
@@ -771,7 +783,12 @@ void test_fuse_multi_rpc_cameras()
     }
 
     // fusion
-    auto fused = kwiver::arrows::core::fuse_texture_atlases<unsigned short>(textures, visibilities, scores, 0);
+
+    kwiver::vital::cpu_timer timer;
+    timer.start();
+    auto fused = kwiver::arrows::core::fuse_texture_atlases<unsigned short>(textures, visibilities, scores, 2);
+    timer.stop();
+    std::cout << "timer : " << timer.elapsed() << " s" << std::endl;
     cv::Mat cv_fused = kwiver::arrows::ocv::image_container_to_ocv_matrix(*(fused.get()), kwiver::arrows::ocv::image_container::RGB_COLOR);
     cv_fused.convertTo(cv_fused, CV_8UC3);
     std::vector<cv::Mat> splitted;

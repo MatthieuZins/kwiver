@@ -117,13 +117,6 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
             scores(j, i) = -1;
         }
     }
-    // texture
-//    cv::Mat texture(id_map.size(), CV_16UC(nb_bands), 0.0);
-//    cv::Mat visibility(id_map.size(), CV_8UC1, 0.0);
-//    cv::Mat shadow (id_map.size(), CV_8UC1, 0.0);
-//    cv::Mat score(id_map.size(), CV_32FC1, -1.0);
-//    cv::Mat normals(id_map.size(), CV_32FC3, 0.0);
-
     for (unsigned int v=0; v < height; ++v)
     {
         for (unsigned int u=0; u < width; ++u)
@@ -485,16 +478,7 @@ image_container_sptr fuse_texture_atlases(image_container_sptr_list textures,
     int height = textures[0]->height();
     int depth = textures[0]->depth();
     image_of<T> output(width, height, depth);
-    for (int i=0; i < height; ++i)
-    {
-        for (int j=0; j < width; ++j)
-        {
-            for (int d=0; d < depth; ++d)
-            {
-                output(j, i, d) = 0;
-            }
-        }
-    }
+    std::memset(output.memory()->data(), 0, output.memory()->size());   // fill output with 0
     unsigned int nb_textures = textures.size();
     std::vector<float> pixel_scores(nb_textures, 0.0);
 
@@ -523,147 +507,63 @@ image_container_sptr fuse_texture_atlases(image_container_sptr_list textures,
                     output(u, v, d) = textures[image_with_highest_score]->get_image().at<T>(u, v, d);
                 }
             }
-//            else if(fusion_method == MEAN_WEIGHTING)
-//            {
-//                // normalize pixel scores
-//                double sum_of_scores = std::accumulate(pixel_scores.begin(), pixel_scores.end(), 0.0);
-//                if (sum_of_scores > 0)
-//                {
-//                    // normalization
-//                    for (int i=0; i < pixel_scores.size(); ++i)
-//                    {
-//                        pixel_scores[i] /= sum_of_scores;
-//                    }
-//                }
-//                // compute pixel value
-//                for (int i=0; i < pixel_scores.size(); ++i)
-//                {
-//                    output.at< cv::Vec<unsigned short, nb_bands> >(output_v, output_u) += pixel_scores[i] *
-//                            atlases[i]->get_texture().at< cv::Vec<unsigned short, nb_bands> >(v, u);
-//                }
-//            }
-//            else if(fusion_method == MEAN_HIGH_WEIGHTING)
-//            {
-//                std::vector<float> inital_pixel_scores = pixel_scores;
-//                int nb_to_zero = 0;
-//                for (int i=0; i < pixel_scores.size(); ++i)
-//                {
-//                    if (pixel_scores[i] < 0.3)
-//                    {
-//                        pixel_scores[i] = 0.0;
-//                        ++nb_to_zero;
-//                    }
-//                }
-//                if (nb_to_zero == pixel_scores.size())
-//                {
-//                    unsigned int image_with_highest_score = std::distance(inital_pixel_scores.begin(),
-//                                                               std::max_element(inital_pixel_scores.begin(),
-//                                                                               inital_pixel_scores.end()));
-//                    output.at< cv::Vec<unsigned short, nb_bands> >(output_v, output_u) =
-//                            atlases[image_with_highest_score]->get_texture().at< cv::Vec<unsigned short, nb_bands> >(v, u);
-//                }
-//                else
-//                {
-//                    // normalize pixel scores
-//                    double sum_of_scores = std::accumulate(pixel_scores.begin(), pixel_scores.end(), 0.0);
-//                    if (sum_of_scores > 0)
-//                    {
-//                        // normalization
-//                        for (int i=0; i < pixel_scores.size(); ++i)
-//                        {
-//                            pixel_scores[i] /= sum_of_scores;
-//                        }
-//                    }
-//                    // compute pixel value
-//                    for (int i=0; i < pixel_scores.size(); ++i)
-//                    {
-//                        output.at< cv::Vec<unsigned short, nb_bands> >(output_v, output_u) += pixel_scores[i] *
-//                                atlases[i]->get_texture().at< cv::Vec<unsigned short, nb_bands> >(v, u);
-//                    }
-//                }
-//            }
-//            else if (fusion_method == EXPONENTIAL_WEIGHTING)
-//            {
-//                // normalize pixel scores
-//                double highest_score = *std::max_element(pixel_scores.begin(), pixel_scores.end());
-//                if (highest_score > 0)
-//                {
-//                    double sum_of_exp = 0.0;
-//                    for (int i=0; i < pixel_scores.size(); ++i)
-//                    {
-//                        if (pixel_scores[i] > 0)
-//                            sum_of_exp += std::exp(20*pixel_scores[i]);
-//                    }
-//                    for (int i=0; i < pixel_scores.size(); ++i)
-//                    {
-//                        if (pixel_scores[i] > 0)
-//                            pixel_scores[i] = std::exp(20*pixel_scores[i]) / sum_of_exp;
-//                    }
-//                }
+            else if (fusion_method == 1 /*MEAN_WEIGHTING*/)
+            {
+                // normalize pixel scores
+                double sum_of_scores = std::accumulate(pixel_scores.begin(), pixel_scores.end(), 0.0);
+                if (sum_of_scores > 0)
+                {
+                    // normalization
+                    for (int i=0; i < pixel_scores.size(); ++i)
+                    {
+                        pixel_scores[i] /= sum_of_scores;
+                    }
+                }
+                // compute pixel value
+                for (int i=0; i < pixel_scores.size(); ++i)
+                {
+                    for (int d=0; d < depth; ++d)
+                    {
+                        output(u, v, d) += pixel_scores[i] * textures[i]->get_image().at<T>(u, v, d);
+                    }
+                }
+            }
+            else if (fusion_method == 2)
+            {
+                // sort scores and remove the lowest
+                std::vector<unsigned int> indices(nb_textures, 0);
+                std::iota(indices.begin(), indices.end(), 0);
+                std::sort(indices.begin(), indices.end(), [&pixel_scores]( unsigned int i0, unsigned int i1) { return pixel_scores[i0] < pixel_scores[i1]; });
 
-//                // compute pixel value
-//                for (int i=0; i < pixel_scores.size(); ++i)
-//                {
-//                    output.at< cv::Vec<unsigned short, nb_bands> >(output_v, output_u) += pixel_scores[i] *
-//                            atlases[i]->get_texture().at< cv::Vec<unsigned short, nb_bands> >(v, u);
-//                }
-//            }
-//            else if (fusion_method == TEST_FUSION)
-//            {
-//                // keep the scores that are higher than a threshold
-//                std::vector<unsigned int> score_higher_than_threshold;
-//                for (unsigned int i=0; i < pixel_scores.size(); ++i)
-//                {
-//                    if (pixel_scores[i] > 0.3)
-//                    {
-//                        score_higher_than_threshold.push_back(i);
-//                    }
-//                }
-//                if (score_higher_than_threshold.size() > 0)
-//                {
-//                    cv::Vec<unsigned short, nb_bands> out_pixel;
+                unsigned int start_index = 0;
+                if (indices.size() > 3)
+                {
+                    start_index = std::round(0.3 * indices.size());
+                }
 
-//                    // for each band separately, we average the values
-//                    // which are not farther from the median value
-//                    // than an asbolute threshold (here 250)
-//                    for (int b=0; b < nb_bands; ++b)
-//                    {
-//                        std::vector<unsigned short> values(score_higher_than_threshold.size());
-//                        for (int j=0; j<score_higher_than_threshold.size(); ++j)
-//                        {
-//                            values[j] = atlases[score_higher_than_threshold[j]]->get_texture().at< cv::Vec<unsigned short, nb_bands> >(v, u)[b];
-//                        }
-//                        float mean = static_cast<float>(std::accumulate(values.begin(), values.end(), 0)) / values.size();
-//                        out_pixel[b] = mean;
-//                        // find the median value
-////                                std::nth_element(values.begin(), values.begin() + values.size() / 2, values.end());
-////                                float median = values[values.size() / 2];
-////                                // average values not too far
-////                                float sum = 0.0;
-////                                int sum_count = 0;
-////                                for (float val : values)
-////                                {
-////                                    if (abs(val-median) <= 10)
-////                                    {
-////                                        sum += val;
-////                                        ++sum_count;
-////                                    }
-////                                }
-////                                out_pixel[b] = sum / sum_count;
-//                    }
-//                    output.at< cv::Vec<unsigned short, nb_bands> >(output_v, output_u) = out_pixel;
-
-//                }
-//                else
-//                {
-//                    // if no score is higher than the threshold we use the image with the highest
-//                    unsigned int image_with_highest_score = std::distance(pixel_scores.begin(),
-//                                                               std::max_element(pixel_scores.begin(),
-//                                                                               pixel_scores.end()));
-//                    output.at< cv::Vec<unsigned short, nb_bands> >(output_v, output_u) =
-//                            atlases[image_with_highest_score]->get_texture().at< cv::Vec<unsigned short, nb_bands> >(v, u);
-//                }
-//            }
+                // normalize the pixel scores that are kept
+                double sum_of_scores = 0.0;
+                for (int i=start_index; i < indices.size(); ++i)
+                {
+                    sum_of_scores += pixel_scores[indices[i]];
+                }
+                if (sum_of_scores > 0)
+                {
+                    // normalization
+                    for (int i=start_index; i < indices.size(); ++i)
+                    {
+                        pixel_scores[indices[i]] /= sum_of_scores;
+                    }
+                }
+                // assign pixel value
+                for (int i=start_index; i < indices.size(); ++i)
+                {
+                    for (int d=0; d < depth; ++d)
+                    {
+                        output(u, v, d) += pixel_scores[indices[i]] * textures[indices[i]]->get_image().at<T>(u, v, d);
+                    }
+                }
+            }
         }
     }
 
