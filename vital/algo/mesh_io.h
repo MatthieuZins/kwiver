@@ -92,7 +92,6 @@ public:
    * \param the texture size
    */
   void save(const std::string& filename, kwiver::vital::mesh_sptr data,
-            const kwiver::arrows::core::uv_parameterization_t* tcoords,
             kwiver::vital::vector_2i texture_size) const;
 
 protected:
@@ -120,7 +119,6 @@ private:
    * \param the texture size
    */
   virtual void save_(const std::string& filename, kwiver::vital::mesh_sptr data,
-                     const kwiver::arrows::core::uv_parameterization_t* tcoords,
                      kwiver::vital::vector_2i texture_size) const = 0;
 };
 

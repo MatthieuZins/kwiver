@@ -27,7 +27,7 @@ vector_3d barycentric_coordinates(const vector_2d& p,
                                         const vector_2d& b,
                                         const vector_2d& c);
 KWIVER_ALGO_CORE_EXPORT
-kwiver::vital::image_container_sptr generate_triangles_map(const kwiver::arrows::core::uv_parameterization_t& param, int exterior_margin);
+kwiver::vital::image_container_sptr generate_triangles_map(kwiver::vital::mesh_sptr mesh, unsigned int width, unsigned int height);
 
 
 template <class T>
@@ -41,8 +41,7 @@ T bilinear_interpolation(const vital::image& image,  double u, double v, unsigne
 template<class T>
 KWIVER_ALGO_CORE_EXPORT
 std::tuple<image_container_sptr, image_container_sptr, image_container_sptr>
-rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
-          image_container_sptr triangles_id_map, image_container_sptr image,
+rasterize(mesh_sptr mesh, image_container_sptr triangles_id_map, image_container_sptr image,
           camera_sptr camera, image_container_sptr depthmap, const std::vector<float>& faces_rating)
 {
     unsigned int nb_vertices = mesh->num_verts();
@@ -117,6 +116,8 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
             scores(j, i) = -1;
         }
     }
+
+    const std::vector<vector_2d>& tcoords = mesh->tex_coords();
     for (unsigned int v=0; v < height; ++v)
     {
         for (unsigned int u=0; u < width; ++u)
@@ -127,9 +128,9 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
                 continue; // empty pixel (no texture)
             }
             // Get the uvs of the corresponding face
-            const vector_2d& a_uv = param.tcoords[param.face_mapping[face_id][0]];
-            const vector_2d& b_uv = param.tcoords[param.face_mapping[face_id][1]];
-            const vector_2d& c_uv = param.tcoords[param.face_mapping[face_id][2]];
+            const vector_2d& a_uv = tcoords[face_id * 3 + 0];
+            const vector_2d& b_uv = tcoords[face_id * 3 + 1];
+            const vector_2d& c_uv = tcoords[face_id * 3 + 2];
 
             unsigned int A_id = faces(face_id, 0);
             unsigned int B_id = faces(face_id, 1);

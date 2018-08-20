@@ -44,16 +44,11 @@ vector_3d barycentric_coordinates(const vector_2d& p,
     return res;
 }
 
-vital::image_container_sptr generate_triangles_map(const kwiver::arrows::core::uv_parameterization_t &param,
-                                                   int exterior_margin)
+vital::image_container_sptr generate_triangles_map(kwiver::vital::mesh_sptr mesh,
+                                                   unsigned int width, unsigned int height)
 {
 
     // can handle separate triangles or adjacent triangles (with weak and strong assignment)
-
-    double bounds[4];
-    param.get_bounds(bounds);
-    double width = std::ceil(bounds[1]+1 + exterior_margin);
-    double height = std::ceil(bounds[3]+1 + exterior_margin);
 
     // status_grid contains the status of each pixel:
     // 0: do not intersect any triangle
@@ -72,16 +67,15 @@ vital::image_container_sptr generate_triangles_map(const kwiver::arrows::core::u
         }
     }
 
-    int number_of_faces = param.face_mapping.size();
+    const int number_of_faces = mesh->num_faces();
+    const std::vector<vector_2d>& tcoords = mesh->tex_coords();
     for (int f=0; f < number_of_faces; ++f)
     {
         // get the face uv coordinates
-        const vector_2d& a_uv = param.tcoords[param.face_mapping[f][0]];
-        const vector_2d& b_uv = param.tcoords[param.face_mapping[f][1]];
-        const vector_2d& c_uv = param.tcoords[param.face_mapping[f][2]];
-//        std::cout << "a " << a_uv[0] << " " << a_uv[1] << std::endl;
-//        std::cout << "b " << b_uv[0] << " " << b_uv[1] << std::endl;
-//        std::cout << "c " << c_uv[0] << " " << c_uv[1] << std::endl;
+        const vector_2d& a_uv = tcoords[f * 3 + 0];
+        const vector_2d& b_uv = tcoords[f * 3 + 1];
+        const vector_2d& c_uv = tcoords[f * 3 + 2];
+
         // get the 2d bounding box
         int u_min = static_cast<int>(std::floor(std::min(a_uv[0], std::min(b_uv[0], c_uv[0]))));
         int u_max = static_cast<int>(std::ceil(std::max(a_uv[0], std::max(b_uv[0], c_uv[0]))));

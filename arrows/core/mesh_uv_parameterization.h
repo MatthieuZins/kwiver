@@ -30,7 +30,7 @@
 
 /**
  * \file
- * \brief Header for match matrix computation
+ * \brief Header for mesh uv parameterization
  */
 
 #ifndef KWIVER_ARROWS_CORE_MESH_UV_PARAMETERIZATION_H
@@ -46,42 +46,6 @@ namespace kwiver {
 namespace arrows {
 namespace core {
 
-// Typedef for a texture coordinates
-typedef kwiver::vital::vector_2d tcoord_t;
-// Typedef for a vector of texture coordinates
-typedef std::vector<tcoord_t> tcoords_t;
-
-/**
- * @brief The uv_parameterization_t struct
- */
-struct KWIVER_ALGO_CORE_EXPORT uv_parameterization_t
-{
-    tcoords_t tcoords;
-    std::vector<Eigen::Vector3i> face_mapping;
-
-    void get_bounds(double bounds[4]) const;
-};
-
-/**
- * @brief The triangle_t struct represents  a mesh face in the texture atlas
- */
-struct triangle_t
-{
-    kwiver::vital::vector_2d a;
-    kwiver::vital::vector_2d b;
-    kwiver::vital::vector_2d c;
-    int face_id;
-    double height;
-    void get_bounds(double bounds[0])
-    {
-        bounds[0] = std::min(a[0], std::min(b[0], c[0]));
-        bounds[1] = std::max(a[0], std::max(b[0], c[0]));
-
-        bounds[2] = std::min(a[1], std::min(b[1], c[1]));
-        bounds[3] = std::max(a[1], std::max(b[1], c[1]));
-    }
-};
-
 /**
  * @brief parameterize
  * @param mesh
@@ -89,12 +53,12 @@ struct triangle_t
  * @param max_width [in] maximal parameterization width (in pixels)
  * @param interior_margin [in] horizontal or vertical margin between triangles (in pixels)
  * @param exterior_margin [in] horizontal or vertical margin at the borders (in pixels)
- * @return
+ * @return widht and height of the parameterization space
  */
 KWIVER_ALGO_CORE_EXPORT
-uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolution,
-                                   int max_width, int interior_margin,
-                                   int exterior_margin);
+std::pair<unsigned int, unsigned int>
+parameterize(kwiver::vital::mesh_sptr mesh, double resolution,
+             int max_width, int interior_margin, int exterior_margin);
 
 }
 }

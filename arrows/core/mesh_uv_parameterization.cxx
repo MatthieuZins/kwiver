@@ -30,45 +30,43 @@
 
 /**
  * \file
- * \brief Core feature_descriptor_io implementation
+ * \brief Core mesh uv parameterization implementation
  */
 
 #include "mesh_uv_parameterization.h"
-
+#include <vital/util/cpu_timer.h>
 #include <algorithm>
 #include <iostream>
 
 using namespace kwiver::vital;
 
+namespace {
+struct triangle_t
+{
+    kwiver::vital::vector_2d a;
+    kwiver::vital::vector_2d b;
+    kwiver::vital::vector_2d c;
+    int face_id;
+    double height;
+    void get_bounds(double bounds[0])
+    {
+        bounds[0] = std::min(a[0], std::min(b[0], c[0]));
+        bounds[1] = std::max(a[0], std::max(b[0], c[0]));
+
+        bounds[2] = std::min(a[1], std::min(b[1], c[1]));
+        bounds[3] = std::max(a[1], std::max(b[1], c[1]));
+    }
+};
+}
+
 namespace kwiver {
 namespace arrows {
 namespace core {
 
-void uv_parameterization_t::get_bounds(double bounds[4]) const
-{
-    auto compare_u = [](const tcoord_t& t1, const tcoord_t& t2) {
-        return t1[0] < t2[0];
-    };
-    auto compare_v = [](const tcoord_t& t1, const tcoord_t& t2) {
-        return t1[1] < t2[1];
-    };
-    if (tcoords.size() > 0)
-    {
-        bounds[0] = (*std::min_element(tcoords.begin(), tcoords.end(), compare_u))[0];
-        bounds[1] = (*std::max_element(tcoords.begin(), tcoords.end(), compare_u))[0];
-        bounds[2] = (*std::min_element(tcoords.begin(), tcoords.end(), compare_v))[1];
-        bounds[3] = (*std::max_element(tcoords.begin(), tcoords.end(), compare_v))[1];
-    }
-    else
-    {
-        std::cout << "Warning UV_Parameterization::get_bounds : no tcoords" << std::endl;
-    }
-}
 
-
-/// Compute a UV parameterization of the mesh in the form of a rectangular texture atas
-uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolution,
-                                   int max_width, int interior_margin, int exterior_margin)
+/// Compute a UV parameterization of the mesh in the form of a rectangular texture atas and set texture coordinates
+std::pair<unsigned int, unsigned int> parameterize(kwiver::vital::mesh_sptr mesh, double resolution,
+                                                   int max_width, int interior_margin, int exterior_margin)
 {
     std::vector<triangle_t> triangles(mesh->num_faces());
     const mesh_face_array_base& faces = mesh->faces();
@@ -149,11 +147,11 @@ uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolut
                                                      const triangle_t& t2)
     {
         return t1.height < t2.height;
-
     });
 
-    tcoords_t tcoords(mesh->num_faces()* 3);
-    std::vector<Eigen::Vector3i> mapping(mesh->num_faces());
+
+    // pack triangles
+    std::vector<vector_2d> tcoords(mesh->num_faces() * 3);
 
     double current_x = 0.0;
     double current_y = 0.0;
@@ -171,13 +169,10 @@ uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolut
             current_x = -bounds[0];
             current_y = next_y + interior_margin;
         }
-
         vector_2d position(current_x, current_y);
-        tcoords[i*3] = triangles[i].a + position;
-        tcoords[i*3+1] = triangles[i].b + position;
-        tcoords[i*3+2] = triangles[i].c + position;
-
-        mapping[triangles[i].face_id] = {i*3, i*3+1, i*3+2};
+        tcoords[triangles[i].face_id * 3 + 0] = triangles[i].a + position;
+        tcoords[triangles[i].face_id * 3 + 1] = triangles[i].b + position;
+        tcoords[triangles[i].face_id * 3 + 2] = triangles[i].c + position;
 
         current_x += bounds[1];
         next_y = std::max(next_y, current_y + (bounds[3]-bounds[2]));
@@ -189,9 +184,21 @@ uv_parameterization_t parameterize(kwiver::vital::mesh_sptr mesh, double resolut
     {
         tcoords[it] += interior_margin_out;
     }
-    uv_parameterization_t param = {tcoords, mapping};
 
-    return param;
+    // find width and height
+    double max_x = (*std::max_element(tcoords.begin(), tcoords.end(), [](const vector_2d& v1, const vector_2d& v2) {
+        return v1[0] < v2[0];
+    }))[0];
+    double max_y = (*std::max_element(tcoords.begin(), tcoords.end(), [](const vector_2d& v1, const vector_2d& v2) {
+        return v1[1] < v2[1];
+    }))[1];
+
+    unsigned int width = std::ceil(max_x) + 1 + exterior_margin;
+    unsigned int height = std::ceil(max_y) + 1 + exterior_margin;
+
+    mesh->set_tex_coords(tcoords);
+
+    return std::pair<unsigned int, unsigned int>(width, height);
 }
 
 }

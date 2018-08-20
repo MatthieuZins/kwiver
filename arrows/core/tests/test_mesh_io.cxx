@@ -83,7 +83,7 @@ TEST(mesh_io, load_save_mesh)
 
       algo::mesh_io_sptr mesh_io = algo::mesh_io::create("core");
       std::string temp_filename("temp_mesh.obj");
-      mesh_io->save(temp_filename, mesh, nullptr, {});
+      mesh_io->save(temp_filename, mesh, {});
       mesh_sptr reloaded_mesh = mesh_io->load(temp_filename);
 
       EXPECT_EQ(reloaded_mesh->num_faces(), faces.size());

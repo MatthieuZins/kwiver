@@ -71,7 +71,6 @@ mesh_sptr mesh_io::load(std::string const& filename) const
 
 
 void mesh_io::save(const std::string& filename, mesh_sptr data,
-                   const kwiver::arrows::core::uv_parameterization_t* tcoords,
                    vector_2i texture_size) const
 {
     // Make sure that the given file path's containing directory exists and is
@@ -88,7 +87,7 @@ void mesh_io::save(const std::string& filename, mesh_sptr data,
       VITAL_THROW( path_not_a_directory, containing_dir );
     }
 
-    this->save_(filename, data, tcoords, texture_size);
+    this->save_(filename, data, texture_size);
 }
 
 } } } // end namespace

@@ -61,21 +61,17 @@ mesh_sptr mesh_io::load_(const std::string &filename) const
 
 
 void mesh_io::save_(const std::string &filename, mesh_sptr mesh,
-                    const uv_parameterization_t *tcoords, vector_2i texture_size) const
+                    vector_2i texture_size) const
 {
     unsigned int nb_faces = mesh->num_faces();
-    if (tcoords && tcoords->face_mapping.size() != nb_faces)
-    {
-        std::cerr << "Warning: texture coordinates are ignored (not the correct number of faces)" << std::endl;
-        tcoords = nullptr;
-    }
 
     mesh_regular_face_array<3>& faces = dynamic_cast< mesh_regular_face_array<3>& >(mesh->faces());
     mesh_vertex_array<3>& vertices = dynamic_cast< mesh_vertex_array<3>& >(mesh->vertices());
+    const std::vector<vector_2d>& tcoords = mesh->tex_coords();
 
     std::ofstream file(filename, std::ios_base::out);
     file << "# Mesh generated with Kwiver\n";
-    if (tcoords)
+    if (mesh->has_tex_coords())
     {
         file << "mtllib " << filename << ".mtl\n";
     }
@@ -86,26 +82,27 @@ void mesh_io::save_(const std::string &filename, mesh_sptr mesh,
         file << std::setprecision(15) <<  "v " << vert[0] << " " << vert[1] << " " << vert[2] << std::endl;
         nb_vertices++;
     }
-    if (tcoords)
+    if (mesh->has_tex_coords())
     {
-        for (auto tcoord: tcoords->tcoords)
+        for (auto tcoord: tcoords)
         {
             file << std::setprecision(15) << "vt " << (tcoord[0])/texture_size[0]
                     << " " << 1.0 - (tcoord[1]/texture_size[1]) << std::endl;
         }
     }
-    if (tcoords)
+    if (mesh->has_tex_coords())
     {
         file << "usemtl mat\n";
     }
 
     for (unsigned int f_id=0; f_id < nb_faces; ++f_id)
     {
-        if (tcoords)
+        if (mesh->has_tex_coords())
         {
-            file << std::setprecision(15) << "f " << faces(f_id, 0)+1  << "/" << tcoords->face_mapping[f_id][0]+1 << " "
-                 << faces(f_id, 1)+1 << "/" << tcoords->face_mapping[f_id][1]+1 << " "
-                 << faces(f_id, 2)+1 << "/" << tcoords->face_mapping[f_id][2]+1 << std::endl;
+            file << std::setprecision(15) << "f "
+                 << faces(f_id, 0)+1 << "/" << f_id * 3 + 0 + 1 << " "
+                 << faces(f_id, 1)+1 << "/" << f_id * 3 + 1 + 1 << " "
+                 << faces(f_id, 2)+1 << "/" << f_id * 3 + 2 + 1 << std::endl;
         }
         else
         {
@@ -114,7 +111,7 @@ void mesh_io::save_(const std::string &filename, mesh_sptr mesh,
     }
     file.close();
 
-    if (tcoords)
+    if (mesh->has_tex_coords())
     {
         // Write material file
         std::ofstream mtl_file(filename + ".mtl");
