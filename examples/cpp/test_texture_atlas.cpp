@@ -652,7 +652,7 @@ void test_fuse_multi_pinhole_cameras()
         cv::cvtColor(cv_tex, cv_tex, CV_BGR2RGB);
         std::string output_name = "texture_" + std::to_string(i) + ".obj";
         cv::imwrite(output_name+".png", cv_tex);
-        mesh_io->save(output_name, mesh, {texture->width(), texture->height()});
+        mesh_io->save(output_name, mesh, texture->width(), texture->height(), true);
     }
 
     // fusion
@@ -662,7 +662,7 @@ void test_fuse_multi_pinhole_cameras()
     cv::cvtColor(cv_fused, cv_fused, CV_BGR2RGB);
     std::string output_name = "texture_fused.obj";
     cv::imwrite(output_name + ".png", cv_fused);
-    mesh_io->save(output_name, mesh, {fused->width(), fused->height()});
+    mesh_io->save(output_name, mesh, fused->width(), fused->height(), true);
 }
 
 void test_fuse_multi_rpc_cameras()
@@ -766,7 +766,7 @@ void test_fuse_multi_rpc_cameras()
         cv::merge(rgb_splitted, cv_tex);
         std::string output_name = "texture_" + std::to_string(i) + ".obj";
         cv::imwrite(output_name+".png", cv_tex);
-        mesh_io->save(output_name, mesh, {texture->width(), texture->height()});
+        mesh_io->save(output_name, mesh, texture->width(), texture->height(), true);
     }
 
     // remove offset
@@ -790,7 +790,7 @@ void test_fuse_multi_rpc_cameras()
 //        cv::cvtColor(cv_fused, cv_fused, CV_BGR2RGB);
     cv::merge(rgb_splitted, cv_fused);    std::string output_name = "texture_fused.obj";
     cv::imwrite(output_name + ".png", cv_fused);
-    mesh_io->save(output_name, mesh, {fused->width(), fused->height()});
+    mesh_io->save(output_name, mesh, fused->width(), fused->height(), true);
 
 }
 
@@ -858,7 +858,7 @@ void test_fuse_multi_pinhole_cameras2()
         cv::cvtColor(cv_tex, cv_tex, CV_BGR2RGB);
         std::string output_name = "texture_" + std::to_string(i) + ".obj";
         cv::imwrite(output_name+".png", cv_tex);
-        mesh_io->save(output_name, mesh, {texture->width(), texture->height()});
+        mesh_io->save(output_name, mesh, texture->width(), texture->height(), true);
     }
 
     // fusion
@@ -868,5 +868,18 @@ void test_fuse_multi_pinhole_cameras2()
     cv::cvtColor(cv_fused, cv_fused, CV_BGR2RGB);
     std::string output_name = "texture_fused.obj";
     cv::imwrite(output_name + ".png", cv_fused);
-    mesh_io->save(output_name, mesh, {fused->width(), fused->height()});
+    mesh_io->save(output_name, mesh, fused->width(), fused->height(), true);
+}
+
+void test_mesh_io_tcoords()
+{
+    kwiver::vital::plugin_manager::instance().load_all_plugins();
+
+    kwiver::vital::algo::mesh_io_sptr mesh_io = kwiver::vital::algo::mesh_io::create("core");
+//    kwiver::vital::mesh_sptr mesh = mesh_io->load("/home/matthieu/data_cube_texture/cube.obj");
+    kwiver::vital::mesh_sptr mesh = mesh_io->load("/home/matthieu/Lib/kwiver/build/examples/cpp/texture_fused.obj");
+
+    std::cout << "has tcoords " << mesh->has_tex_coords() << std::endl;
+
+    mesh_io->save("test.obj", mesh);
 }

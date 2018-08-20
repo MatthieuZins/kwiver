@@ -43,7 +43,8 @@ public:
     virtual kwiver::vital::mesh_sptr load_(const std::string& filename) const;
 
     virtual void save_(const std::string& filename, vital::mesh_sptr data,
-                       kwiver::vital::vector_2i texture_size) const;
+                       unsigned int tex_width=1, unsigned int tex_height=1,
+                       bool flip_v_axis=false) const;
 };
 
 }

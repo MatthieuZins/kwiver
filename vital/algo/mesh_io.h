@@ -92,7 +92,7 @@ public:
    * \param the texture size
    */
   void save(const std::string& filename, kwiver::vital::mesh_sptr data,
-            kwiver::vital::vector_2i texture_size) const;
+            unsigned tex_width=1, unsigned int tex_height=1, bool flip_v_axis=false) const;
 
 protected:
   mesh_io();
@@ -119,7 +119,7 @@ private:
    * \param the texture size
    */
   virtual void save_(const std::string& filename, kwiver::vital::mesh_sptr data,
-                     kwiver::vital::vector_2i texture_size) const = 0;
+                     unsigned tex_width=1, unsigned int tex_height=1, bool flip_v_axis=false) const = 0;
 };
 
 /// Shared pointer type for generic mesh_io definition type.

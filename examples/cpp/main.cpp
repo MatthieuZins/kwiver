@@ -43,6 +43,7 @@ void test_rasterize_pinhole();
 void test_fuse_multi_pinhole_cameras();
 void test_fuse_multi_rpc_cameras();
 void test_fuse_multi_pinhole_cameras2();
+void test_mesh_io_tcoords();
 
 int main()
 {
@@ -58,7 +59,8 @@ int main()
 
 //    test_fuse_multi_pinhole_cameras();
 //    test_fuse_multi_pinhole_cameras2();
-    test_fuse_multi_rpc_cameras();
+//    test_fuse_multi_rpc_cameras();
+    test_mesh_io_tcoords();
 
 //  test_open_tif();
 //  test_rpc_camera();

@@ -21,47 +21,126 @@ mesh_sptr mesh_io::load_(const std::string &filename) const
 {
     std::vector<vector_3d> verts;
     std::vector<mesh_regular_face<3> > faces;
+    std::vector<vector_2d> tcoords;
+    std::vector<vector_3d> normals;
+    std::vector<Eigen::Vector3i> faces_tcoords_ids;
+    std::vector<Eigen::Vector3i> faces_normals_ids;
+
     std::ifstream input_file(filename);
     std::string line;
     while (std::getline(input_file, line))
     {
         if (line[0] == '#')
         {
+            // comments
             continue;
         }
-        else if (line[0] == 'v')
+        else if (line[0] == 'v' && line[1] == ' ')
         {
-            std::stringstream extractor(line.substr(1));
+            // vertices
+            std::stringstream extractor(line.substr(2));
             double x, y, z;
             extractor >> x >> y >> z;
             verts.push_back({x, y, z});
         }
         else if (line[0] == 'f')
         {
-            // check that the input mesh is the simplest version with only 3 vertices per face
-            // (no normals, nor texture coordinates)
-            if (line.find('/') == std::string::npos)
+            // faces
+            std::stringstream extractor(line.substr(2));
+            int vertices_ids[3] = {0, 0, 0};
+            int tcoords_ids[3] = {0, 0, 0};
+            int normals_ids[3] = {0, 0, 0};
+            bool has_tcoords = false;
+            bool has_normals = false;
+            for (int i=0; i <3; ++i)
             {
-                std::stringstream extractor(line.substr(1));
-                unsigned int v1, v2, v3;
-                extractor >> v1 >> v2 >> v3;
-                faces.push_back(mesh_regular_face<3>({v1-1, v2-1, v3-1}));
+                std::string v_attrib;
+                extractor >> v_attrib ;
+                int first_sep = v_attrib.find_first_of('/');
+                int last_sep = v_attrib.find_last_of('/');
+                std::replace(v_attrib.begin(), v_attrib.end(), '/', ' ');
+                std::stringstream attribute_extractor(v_attrib);
+                attribute_extractor >> vertices_ids[i];
+                --vertices_ids[i];
+                if (first_sep != std::string::npos && last_sep != std::string::npos)
+                {
+                    if (first_sep == last_sep || last_sep - first_sep > 1)
+                    {
+                        attribute_extractor >> tcoords_ids[i];
+                        --tcoords_ids[i];
+                        has_tcoords = true;
+                    }
+                    if (first_sep != last_sep)
+                    {
+                        attribute_extractor >> normals_ids[i];
+                        --normals_ids[i];
+                        has_normals = true;
+                    }
+                }
             }
-            else
+            faces.push_back(mesh_regular_face<3>({static_cast<unsigned int>(vertices_ids[0]),
+                                                  static_cast<unsigned int>(vertices_ids[1]),
+                                                  static_cast<unsigned int>(vertices_ids[2])}));
+            if (has_tcoords)
             {
-                std::cerr << "Unhandled format" << std::endl;
+                faces_tcoords_ids.push_back(Eigen::Map<Eigen::Vector3i>(tcoords_ids));
             }
+            if (has_normals)
+            {
+                faces_normals_ids.push_back(Eigen::Map<Eigen::Vector3i>(normals_ids));
+            }
+        }
+        else if (line[0] == 'v' && line[1] == 't')
+        {
+            // tex coords
+            std::stringstream extractor(line.substr(2));
+            double x, y;
+            extractor >> x >> y;
+            tcoords.push_back({x, y});
+        }
+        else if (line[0] == 'v' && line[1] == 'n')
+        {
+            // vertex normals
+            std::stringstream extractor(line.substr(2));
+            double x, y, z;
+            extractor >> x >> y >> z;
+            normals.push_back({x, y, z});
         }
     }
     std::unique_ptr<mesh_vertex_array_base> vertices_array_ptr(new mesh_vertex_array<3>(verts));
     std::unique_ptr<mesh_face_array_base> faces_array_ptr(new mesh_regular_face_array<3>(faces));
+
+    // sort tcoords by face: [vt1_face1, vt2_face1, vt3_face1, vt1_face2, ...]
+    std::vector<vector_2d> sorted_tcoords(faces_tcoords_ids.size() * 3);
+    for (int i=0; i < faces_tcoords_ids.size(); ++i)
+    {
+        sorted_tcoords[i * 3 + 0] = tcoords[faces_tcoords_ids[i][0]];
+        sorted_tcoords[i * 3 + 1] = tcoords[faces_tcoords_ids[i][1]];
+        sorted_tcoords[i * 3 + 2] = tcoords[faces_tcoords_ids[i][2]];
+    }
+
+    // average the vertices normals for each face
+    std::vector<vector_3d> faces_normals(faces_normals_ids.size());
+    for (int i=0; i < faces_normals_ids.size(); i++)
+    {
+        auto n1 = normals[faces_normals_ids[i][0]];
+        auto n2 = normals[faces_normals_ids[i][1]];
+        auto n3 = normals[faces_normals_ids[i][2]];
+        vector_3d avg_normal = n1 + n2 + n3;
+        avg_normal.normalize();
+        faces_normals[i] = avg_normal;
+    }
+
     mesh_sptr mesh(new kwiver::vital::mesh(std::move(vertices_array_ptr), std::move(faces_array_ptr)));
+    mesh->set_tex_coords(sorted_tcoords);
+    mesh->faces().set_normals(faces_normals);
+
     return mesh;
 }
 
 
 void mesh_io::save_(const std::string &filename, mesh_sptr mesh,
-                    vector_2i texture_size) const
+                    unsigned int tex_width, unsigned int tex_height, bool flip_v_axis) const
 {
     unsigned int nb_faces = mesh->num_faces();
 
@@ -77,17 +156,31 @@ void mesh_io::save_(const std::string &filename, mesh_sptr mesh,
     }
 
     int nb_vertices=0;
+    // vertices
     for (auto vert: vertices)
     {
         file << std::setprecision(15) <<  "v " << vert[0] << " " << vert[1] << " " << vert[2] << std::endl;
         nb_vertices++;
     }
+
+    // normals
+    if (mesh->faces().has_normals())
+    {
+        auto normals = mesh->faces().normals();
+        for (auto n: normals)
+        {
+            file << std::setprecision(15) << "vn " << n[0] << " " << n[1] << " " << n[2] << std::endl;
+        }
+    }
+
+    // tex coords
     if (mesh->has_tex_coords())
     {
         for (auto tcoord: tcoords)
         {
-            file << std::setprecision(15) << "vt " << (tcoord[0])/texture_size[0]
-                    << " " << 1.0 - (tcoord[1]/texture_size[1]) << std::endl;
+            file << std::setprecision(15) << "vt " << (tcoord[0])/tex_width
+                 << " " << (flip_v_axis ? 1.0 - (tcoord[1]/tex_height) : tcoord[1]/tex_height)
+                 << std::endl;
         }
     }
     if (mesh->has_tex_coords())
@@ -95,19 +188,24 @@ void mesh_io::save_(const std::string &filename, mesh_sptr mesh,
         file << "usemtl mat\n";
     }
 
+    // faces
     for (unsigned int f_id=0; f_id < nb_faces; ++f_id)
     {
-        if (mesh->has_tex_coords())
+        file << std::setprecision(15) << "f ";
+        for (int k=0; k < 3; ++k)
         {
-            file << std::setprecision(15) << "f "
-                 << faces(f_id, 0)+1 << "/" << f_id * 3 + 0 + 1 << " "
-                 << faces(f_id, 1)+1 << "/" << f_id * 3 + 1 + 1 << " "
-                 << faces(f_id, 2)+1 << "/" << f_id * 3 + 2 + 1 << std::endl;
+            file << faces(f_id, k) + 1;
+            if (mesh->has_tex_coords())
+            {
+                file << "/" << f_id * 3 + k + 1;
+            }
+            if (mesh->faces().has_normals())
+            {
+                file << "/" << f_id + 1;
+            }
+            file << " ";
         }
-        else
-        {
-            file << std::setprecision(15) << "f " << faces(f_id, 0)+1 << " " << faces(f_id, 1)+1 << " " << faces(f_id, 2)+1 << std::endl;
-        }
+        file << std::endl;
     }
     file.close();
 
