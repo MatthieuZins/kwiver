@@ -31,7 +31,7 @@ kwiver::vital::image_container_sptr generate_triangles_map(const kwiver::arrows:
 
 
 template <class T>
-void dilate_atlas(image& atlas, image_of<bool> _mask, int nb_iter);
+void dilate_atlas(image& atlas, image_of<unsigned char> _mask, int nb_iter);
 
 
 template <class T>
@@ -309,7 +309,7 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
     //  1 -> inside triangles
 //    cv::Mat mask = cv::min(0, triangles_id_map);      // between -1 and 0
 //    mask.convertTo(mask, CV_8U, 1.0, 1);              // between 0 and 1
-    image_of<bool> mask(width, height);
+    image_of<unsigned char> mask(width, height);
     for (unsigned int v=0; v < height; ++v)
     {
         for (unsigned int u=0; u < width; ++u)
@@ -340,7 +340,7 @@ rasterize(mesh_sptr mesh, const uv_parameterization_t& param,
  * @param nb_iter [in] the dilation is repeated nb_iter times
  */
 template <class T>
-void dilate_atlas(image& atlas, image_of<bool> _mask, int nb_iter)
+void dilate_atlas(image& atlas, image_of<unsigned char> _mask, int nb_iter)
 {
     image_of<bool> mask;
     mask.copy_from(_mask);
