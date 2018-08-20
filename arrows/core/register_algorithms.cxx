@@ -44,6 +44,7 @@
 #include <arrows/core/close_loops_keyframe.h>
 #include <arrows/core/close_loops_multi_method.h>
 #include <arrows/core/compute_association_matrix_from_features.h>
+#include <arrows/core/compute_mesh_depthmap.h>
 #include <arrows/core/compute_ref_homography_core.h>
 #include <arrows/core/convert_image_bypass.h>
 #include <arrows/core/create_detection_grid.h>
@@ -125,6 +126,7 @@ register_factories( kwiver::vital::plugin_loader& vpm )
   register_algorithm< close_loops_keyframe >( vpm );
   register_algorithm< close_loops_multi_method >( vpm );
   register_algorithm< compute_association_matrix_from_features >( vpm );
+  register_algorithm< compute_mesh_depthmap >( vpm );
   register_algorithm< compute_ref_homography_core >( vpm );
   register_algorithm< convert_image_bypass >( vpm );
   register_algorithm< create_detection_grid >( vpm );

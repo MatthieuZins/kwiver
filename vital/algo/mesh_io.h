@@ -69,7 +69,7 @@ public:
    * \throws kwiver::vital::path_not_a_file Thrown when the given path does
    *    not point to a file (i.e. it points to a directory).
    *
-   * \param filename the path to the file the load
+   * \param filename the path to the file to load
    * \returns a smart pointer to the loaded mesh
    */
   kwiver::vital::mesh_sptr load(std::string const& filename) const;
@@ -104,7 +104,7 @@ private:
    * Concrete implementations of mesh_io class must provide an
    * implementation for this method.
    *
-   * \param filename the path to the file the load
+   * \param filename the path to the file to load
    * \returns a smart pointer to the loaded mesh
    */
   virtual kwiver::vital::mesh_sptr load_(std::string const& filename) const = 0;

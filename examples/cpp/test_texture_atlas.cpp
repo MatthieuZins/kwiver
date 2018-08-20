@@ -38,7 +38,6 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgcodecs.hpp>
 
-#include <arrows/core/compute_mesh_depthmap.h>
 #include <arrows/core/mesh_uv_parameterization.h>
 #include <vital/algo/mesh_io.h>
 #include <arrows/ocv/image_container.h>
@@ -56,6 +55,7 @@
 #include <arrows/core/compute_mesh_cameras_ratings.h>
 #include <fstream>
 #include <vital/util/cpu_timer.h>
+#include <vital/algo/compute_mesh_depthmap.h>
 
 void test_uv_parameterization()
 {
@@ -188,7 +188,8 @@ loadcamera_from_tif_image(const std::string& filename, unsigned int utm_zone)
 void test_depthmap()
 {
     kwiver::vital::plugin_manager::instance().load_all_plugins();
-    kwiver::arrows::core::compute_mesh_depthmap depthmap_generator;
+    kwiver::vital::algo::compute_mesh_depthmap_sptr depthmap_generator =
+            kwiver::vital::algo::compute_mesh_depthmap::create("core");
     kwiver::vital::algo::mesh_io_sptr mesh_io = kwiver::vital::algo::mesh_io::create("core");
 //    kwiver::vital::mesh_sptr mesh =  mesh_io->load("/home/matthieu/cube.obj");
 //    kwiver::vital::mesh_sptr mesh =  mesh_io->load("/home/matthieu/AOI1_centered.obj");
@@ -208,7 +209,7 @@ void test_depthmap()
     kwiver::vital::camera_rpc_sptr cam = loadcamera_from_tif_image("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/26APR15WV031200015APR26162435-P1BS-501504472050_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif", 17);
 
     std::pair<kwiver::vital::image_container_sptr,
-              kwiver::vital::image_container_sptr> depthmap_pair = depthmap_generator.compute(mesh, cam, 4077, 4606, 17);
+              kwiver::vital::image_container_sptr> depthmap_pair = depthmap_generator->compute(mesh, cam, 4077, 4606, 17);
     std::cout << "done." << std::endl;
 
     cv::Mat image = kwiver::arrows::ocv::image_container_to_ocv_matrix(*depthmap_pair.first,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
@@ -407,9 +408,9 @@ void test_rasterize()
     cv::imwrite("triangle_map.png", cv_map);
 
 
-    kwiver::arrows::core::compute_mesh_depthmap depthmap_generator;
-    auto depthmaps = depthmap_generator.compute(mesh, camera, image->width(), image->height(), 17);
-
+    kwiver::vital::algo::compute_mesh_depthmap_sptr depthmap_generator =
+            kwiver::vital::algo::compute_mesh_depthmap::create("core");
+    auto depthmaps = depthmap_generator->compute(mesh, camera, image->width(), image->height(), 17);
     auto raster_result = kwiver::arrows::core::rasterize<unsigned short>(mesh, param, id_map, image, camera, depthmaps.first, {});
     auto texture = std::get<0>(raster_result);
     cv::Mat cv_tex = kwiver::arrows::ocv::image_container_to_ocv_matrix(*(texture.get()),
@@ -500,8 +501,9 @@ void test_rasterize_pinhole()
     kwiver::vital::image_container_sptr id_map = kwiver::arrows::core::generate_triangles_map(param, 5);
 
     // depthmap
-    kwiver::arrows::core::compute_mesh_depthmap depthmap_generator;
-    auto depthmaps = depthmap_generator.compute(mesh, camera, image->width(), image->height(), 0);
+    kwiver::vital::algo::compute_mesh_depthmap_sptr depthmap_generator =
+            kwiver::vital::algo::compute_mesh_depthmap::create("core");
+    auto depthmaps = depthmap_generator->compute(mesh, camera, image->width(), image->height(), 0);
     // write depthmap
     cv::Mat depth_cv;
     kwiver::arrows::ocv::image_container_to_ocv_matrix(*depthmaps.first,  kwiver::arrows::ocv::image_container::OTHER_COLOR).copyTo(depth_cv);
@@ -619,12 +621,13 @@ void test_fuse_multi_pinhole_cameras()
 
 
     // depthmaps
-    kwiver::arrows::core::compute_mesh_depthmap depthmap_generator;
+    kwiver::vital::algo::compute_mesh_depthmap_sptr depthmap_generator =
+            kwiver::vital::algo::compute_mesh_depthmap::create("core");
     image_container_sptr_list depthmaps;
     int i=0;
     for (auto cam: cameras)
     {
-        auto res = depthmap_generator.compute(mesh, cam, images[i]->width(), images[i]->height(), 0);
+        auto res = depthmap_generator->compute(mesh, cam, images[i]->width(), images[i]->height(), 0);
         depthmaps.push_back(res.first);
         i++;
     }
@@ -717,12 +720,13 @@ void test_fuse_multi_rpc_cameras()
 
 
     // depthmaps
-    kwiver::arrows::core::compute_mesh_depthmap depthmap_generator;
+    kwiver::vital::algo::compute_mesh_depthmap_sptr depthmap_generator =
+            kwiver::vital::algo::compute_mesh_depthmap::create("core");
     image_container_sptr_list depthmaps;
     int i=0;
     for (auto cam: cameras)
     {
-        auto res = depthmap_generator.compute(mesh, cam, images[i]->width(), images[i]->height(), 17);
+        auto res = depthmap_generator->compute(mesh, cam, images[i]->width(), images[i]->height(), 17);
         depthmaps.push_back(res.first);
         i++;
     }
@@ -826,12 +830,13 @@ void test_fuse_multi_pinhole_cameras2()
 
 
     // depthmaps
-    kwiver::arrows::core::compute_mesh_depthmap depthmap_generator;
+    kwiver::vital::algo::compute_mesh_depthmap_sptr depthmap_generator =
+            kwiver::vital::algo::compute_mesh_depthmap::create("core");
     image_container_sptr_list depthmaps;
     int i=0;
     for (auto cam: cameras)
     {
-        auto res = depthmap_generator.compute(mesh, cam, images[i]->width(), images[i]->height(), 0);
+        auto res = depthmap_generator->compute(mesh, cam, images[i]->width(), images[i]->height(), 0);
         depthmaps.push_back(res.first);
         i++;
     }

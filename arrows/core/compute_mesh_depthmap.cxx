@@ -17,7 +17,7 @@ compute_mesh_depthmap::compute_mesh_depthmap()
 
 std::pair<vital::image_container_sptr, vital::image_container_sptr>
 compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr camera,
-                               int width, int height, int utm_zone)
+                               int width, int height, int utm_zone) const
 {
     unsigned int nb_vertices = mesh->num_verts();
 
