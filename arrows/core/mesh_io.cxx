@@ -86,7 +86,6 @@ void mesh_io::save_(const std::string &filename, mesh_sptr mesh,
         file << std::setprecision(15) <<  "v " << vert[0] << " " << vert[1] << " " << vert[2] << std::endl;
         nb_vertices++;
     }
-    std::cout << "write " << nb_vertices << " vertices " << std::endl;
     if (tcoords)
     {
         for (auto tcoord: tcoords->tcoords)
