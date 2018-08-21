@@ -201,6 +201,10 @@ void mesh_io::save_(const std::string &filename, mesh_sptr mesh,
             }
             if (mesh->faces().has_normals())
             {
+                if (!mesh->has_tex_coords())
+                {
+                    file << "/";
+                }
                 file << "/" << f_id + 1;
             }
             file << " ";
