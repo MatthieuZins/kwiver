@@ -31,39 +31,20 @@
 // Predefine methods that show off various functionality in kwiver
 void how_to_part_01_images();
 void how_to_part_02_detections();
-void test_uv_parameterization();
-void test_depthmap();
-void test_proj4();
-void test_rpc_camera();
-void test_open_tif();
-void test_generate_triangles_map();
-void test_mesh_cameras_ratings();
-void test_rasterize();
-void test_rasterize_pinhole();
+void test_compute_mesh_depthmap();
 void test_fuse_multi_pinhole_cameras();
 void test_fuse_multi_rpc_cameras();
 void test_fuse_multi_pinhole_cameras2();
-void test_mesh_io_tcoords();
 
 int main()
 {
   // use comments to execute a particular method
-//  test_uv_parameterization();
-//    test_proj4();
-//  test_depthmap();
-//    test_generate_triangles_map();
-//    test_depthmap();
-//    test_mesh_cameras_ratings();
-//    test_rasterize();
-//    test_rasterize_pinhole();
+    test_compute_mesh_depthmap();
 
-//    test_fuse_multi_pinhole_cameras();
+    test_fuse_multi_pinhole_cameras();
 //    test_fuse_multi_pinhole_cameras2();
 //    test_fuse_multi_rpc_cameras();
-    test_mesh_io_tcoords();
 
-//  test_open_tif();
-//  test_rpc_camera();
-//  how_to_part_01_images();
+    //  how_to_part_01_images();
 //  how_to_part_02_detections();
 }

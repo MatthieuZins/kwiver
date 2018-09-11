@@ -485,7 +485,7 @@ image_container_sptr fuse_texture_atlases(image_container_sptr_list textures,
     {
         for (int u=0; u < width; ++u)
         {
-            if (scores[0]->get_image().at<float>(u, v) == 0)
+            if (scores[0]->get_image().at<float>(u, v) < 0)
             {
                 continue;   // score < 0 means that the pixel is empty (outside every triangle)
             }
