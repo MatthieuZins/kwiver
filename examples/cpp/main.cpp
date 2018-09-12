@@ -34,17 +34,17 @@ void how_to_part_02_detections();
 void test_compute_mesh_depthmap();
 void test_fuse_multi_pinhole_cameras();
 void test_fuse_multi_rpc_cameras();
-void test_fuse_multi_pinhole_cameras2();
 
 int main()
 {
   // use comments to execute a particular method
     test_compute_mesh_depthmap();
-
     test_fuse_multi_pinhole_cameras();
-//    test_fuse_multi_pinhole_cameras2();
+
 //    test_fuse_multi_rpc_cameras();
 
-    //  how_to_part_01_images();
+
+
+//  how_to_part_01_images();
 //  how_to_part_02_detections();
 }

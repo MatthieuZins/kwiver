@@ -102,7 +102,7 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
                     double depth = bary_coords[0] * a_depth
                                    + bary_coords[1] * b_depth
                                    + bary_coords[2] * c_depth;
-                    if (depth < z_buffer(u, v))
+                    if (depth >= 0 && depth < z_buffer(u, v))
                     {
                         z_buffer(u, v) = depth;
                         id_map(u, v) = f_id;

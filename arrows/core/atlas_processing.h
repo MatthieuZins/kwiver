@@ -41,8 +41,8 @@ T bilinear_interpolation(const vital::image& image,  double u, double v, unsigne
 template<class T>
 KWIVER_ALGO_CORE_EXPORT
 std::tuple<image_container_sptr, image_container_sptr, image_container_sptr>
-rasterize(mesh_sptr mesh, image_container_sptr triangles_id_map, image_container_sptr image,
-          camera_sptr camera, image_container_sptr depthmap, const std::vector<float>& faces_rating)
+rasterize_texture_atlas(mesh_sptr mesh, image_container_sptr triangles_id_map, image_container_sptr image,
+                        camera_sptr camera, image_container_sptr depthmap, const std::vector<float>& faces_rating)
 {
     unsigned int nb_vertices = mesh->num_verts();
 
@@ -500,11 +500,14 @@ image_container_sptr fuse_texture_atlases(image_container_sptr_list textures,
                 unsigned int image_with_highest_score = std::distance(pixel_scores.begin(),
                                                            std::max_element(pixel_scores.begin(),
                                                                            pixel_scores.end()));
-                for (int d=0; d < depth; ++d)
+                if (pixel_scores[image_with_highest_score] > 0)
                 {
-                    output(u, v, d) = textures[image_with_highest_score]->get_image().at<T>(u, v, d);
+                    for (int d=0; d < depth; ++d)
+                    {
+                        output(u, v, d) = textures[image_with_highest_score]->get_image().at<T>(u, v, d);
 
-//                    output(u, v, d) = image_with_highest_score * (255.0 / nb_textures);
+    //                    output(u, v, d) = image_with_highest_score * (255.0 / nb_textures);
+                    }
                 }
             }
             else if (fusion_method == 1 /*MEAN_WEIGHTING*/)
