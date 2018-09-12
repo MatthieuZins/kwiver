@@ -40,12 +40,9 @@
 // We will be calling some OpenCV code, so we need to include
 // some OpenCV related files
 #include <opencv2/highgui/highgui.hpp>
+#include "arrows/ocv/image_container.h"
 
 #include <kwiversys/SystemTools.hxx>
-
-#include <arrows/ocv/image_container.h>
-
-
 
 void how_to_part_01_images()
 {

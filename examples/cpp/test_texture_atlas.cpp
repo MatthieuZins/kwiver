@@ -465,5 +465,4 @@ void test_fuse_multi_rpc_cameras()
   cv::merge(rgb_splitted, cv_fused);    std::string output_name = "texture_fused.obj";
   cv::imwrite(output_name + ".png", cv_fused);
   mesh_io->save(output_name, mesh, fused->width(), fused->height(), true);
-
 }
