@@ -49,6 +49,7 @@
 
 #include <vital/types/geodesy.h>
 #include <vital/types/camera_rpc.h>
+#include <vital/io/camera_from_metadata.h>
 
 #include <vital/types/image_container.h>
 #include <vital/algo/image_io.h>
@@ -71,60 +72,8 @@ loadcamera_from_tif_image(const std::string& filename, unsigned int utm_zone)
   kwiver::vital::image_container_sptr img = image_io->load(filename);
   kwiver::vital::metadata_sptr md = img->get_metadata();
 
-  kwiver::vital::camera_rpc_sptr cam(new kwiver::vital::simple_camera_rpc(img->width(), img->height(), utm_zone));
-  kwiver::vital::simple_camera_rpc* cam_pt = dynamic_cast<kwiver::vital::simple_camera_rpc*>(cam.get());
-  kwiver::vital::vector_3d world_scale;
-  kwiver::vital::vector_3d world_offset;
-  kwiver::vital::vector_2d image_scale;
-  kwiver::vital::vector_2d image_offset;
-
-  world_scale[0] = md->find(kwiver::vital::VITAL_META_RPC_LONG_SCALE).as_double();
-  world_scale[1] = md->find(kwiver::vital::VITAL_META_RPC_LAT_SCALE).as_double();
-  world_scale[2] = md->find(kwiver::vital::VITAL_META_RPC_HEIGHT_SCALE).as_double();
-
-  world_offset[0] = md->find(kwiver::vital::VITAL_META_RPC_LONG_OFFSET).as_double();
-  world_offset[1] = md->find(kwiver::vital::VITAL_META_RPC_LAT_OFFSET).as_double();
-  world_offset[2] = md->find(kwiver::vital::VITAL_META_RPC_HEIGHT_OFFSET).as_double();
-
-  image_scale[0] = md->find(kwiver::vital::VITAL_META_RPC_COL_SCALE).as_double();
-  image_scale[1] = md->find(kwiver::vital::VITAL_META_RPC_ROW_SCALE).as_double();
-
-  image_offset[0] = md->find(kwiver::vital::VITAL_META_RPC_COL_OFFSET).as_double();
-  image_offset[1] = md->find(kwiver::vital::VITAL_META_RPC_ROW_OFFSET).as_double();
-
-  kwiver::vital::rpc_matrix rpc_coeffs;
-  std::stringstream ss;
-  ss << md->find(kwiver::vital::VITAL_META_RPC_COL_NUM_COEFF).as_string();
-  for (int i=0; i < 20; ++i)
-  {
-    ss >> rpc_coeffs(0, i);
-  }
-  ss.clear();
-  ss << md->find(kwiver::vital::VITAL_META_RPC_COL_DEN_COEFF).as_string();
-  for (int i=0; i < 20; ++i)
-  {
-    ss >> rpc_coeffs(1, i);
-  }
-  ss.clear();
-  ss << md->find(kwiver::vital::VITAL_META_RPC_ROW_NUM_COEFF).as_string();
-  for (int i=0; i < 20; ++i)
-  {
-    ss >> rpc_coeffs(2, i);
-  }
-  ss.clear();
-  ss << md->find(kwiver::vital::VITAL_META_RPC_ROW_DEN_COEFF).as_string();
-  for (int i=0; i < 20; ++i)
-  {
-    ss >> rpc_coeffs(3, i);
-  }
-
-  cam_pt->set_world_scale(world_scale);
-  cam_pt->set_world_offset(world_offset);
-  cam_pt->set_image_scale(image_scale);
-  cam_pt->set_image_offset(image_offset);
-  cam_pt->set_rpc_coeffs(rpc_coeffs);
-
-  return cam;
+  camera_sptr camera = camera_from_metadata(md, img->width(), img->height(), utm_zone);
+  return std::dynamic_pointer_cast<camera_rpc>(camera);
 }
 
 std::pair<kwiver::vital::vector_3d, kwiver::vital::rotation_d>
@@ -187,7 +136,6 @@ void test_compute_mesh_depthmap()
 //                                                                                 camera_intrinsic));
 
   kwiver::vital::camera_sptr camera = loadcamera_from_tif_image("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_pansharpen_8.tif", 17);
-
 
   std::pair<kwiver::vital::image_container_sptr,
       kwiver::vital::image_container_sptr> depthmap_pair = depthmap_generator->compute(mesh, camera);

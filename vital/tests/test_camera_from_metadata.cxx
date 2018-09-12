@@ -58,6 +58,10 @@ namespace
   constexpr double COL_OFFSET = 21249.0;
   constexpr double COL_SCALE = 21250.0;
 
+  const unsigned int image_width = 640;
+  const unsigned int image_height = 480;
+  const unsigned int utm_zone = 1;
+
   std::string const row_num_coeff =
     "0.0002703625 0.04284488 1.046869 0.004713542 "
     "-0.0001706129 -1.525177e-07 1.255623e-05 -0.0005820134 "
@@ -126,7 +130,7 @@ TEST(camera_from_metadata, invalid_metadata)
 
   EXPECT_THROW(
     camera_rpc_sptr cam = std::dynamic_pointer_cast<camera_rpc>(
-      camera_from_metadata( rpc_metadata ) ),
+      camera_from_metadata( rpc_metadata, image_width, image_height, utm_zone ) ),
     kwiver::vital::metadata_exception );
 }
 
@@ -147,7 +151,7 @@ TEST(camera_from_metadata, valid_metadata)
   rpc_coeff.row(3) = string_to_vector( col_den_coeff );
 
   camera_rpc_sptr cam = std::dynamic_pointer_cast<camera_rpc>(
-    camera_from_metadata( rpc_metadata ) );
+    camera_from_metadata( rpc_metadata, image_width, image_height, utm_zone ) );
 
   EXPECT_MATRIX_EQ( cam->world_scale(), world_scale );
   EXPECT_MATRIX_EQ( cam->world_offset(), world_offset );
@@ -159,7 +163,7 @@ TEST(camera_from_metadata, valid_metadata)
 TEST(camera_from_metadata, projection)
 {
   auto rpc_metadata = generate_metadata();
-  auto cam = camera_from_metadata( rpc_metadata );
+  auto cam = camera_from_metadata( rpc_metadata, image_width, image_height, utm_zone );
 
   std::vector<vector_3d> wld_pts;
   std::vector<vector_2d> img_pts;

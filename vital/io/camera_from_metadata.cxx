@@ -116,7 +116,8 @@ VITAL_EXPORT string_to_vector( std::string const& s )
 
 /// Produce RPC camera from metadata
 camera_sptr
-VITAL_EXPORT camera_from_metadata( metadata_sptr const& md )
+VITAL_EXPORT camera_from_metadata( metadata_sptr const& md, unsigned int image_width,
+                                   unsigned int image_height, unsigned int utm_zone )
 {
   vector_3d world_scale, world_offset;
   vector_2d image_scale, image_offset;
@@ -139,28 +140,29 @@ VITAL_EXPORT camera_from_metadata( metadata_sptr const& md )
   world_offset = tags_to_vector(md, world_offset_tags);
 
   std::vector<vital_metadata_tag> image_scale_tags = {
-    vital::VITAL_META_RPC_ROW_SCALE,
-    vital::VITAL_META_RPC_COL_SCALE
+    vital::VITAL_META_RPC_COL_SCALE,
+    vital::VITAL_META_RPC_ROW_SCALE
   };
   image_scale = tags_to_vector(md, image_scale_tags);
 
   std::vector<vital_metadata_tag> image_offset_tags = {
-    vital::VITAL_META_RPC_ROW_OFFSET,
-    vital::VITAL_META_RPC_COL_OFFSET
+    vital::VITAL_META_RPC_COL_OFFSET,
+    vital::VITAL_META_RPC_ROW_OFFSET
   };
   image_offset = tags_to_vector(md, image_offset_tags);
 
   std::vector<vital_metadata_tag> rpc_coeffs_tags = {
-    vital::VITAL_META_RPC_ROW_NUM_COEFF,
-    vital::VITAL_META_RPC_ROW_DEN_COEFF,
     vital::VITAL_META_RPC_COL_NUM_COEFF,
-    vital::VITAL_META_RPC_COL_DEN_COEFF
+    vital::VITAL_META_RPC_COL_DEN_COEFF,
+    vital::VITAL_META_RPC_ROW_NUM_COEFF,
+    vital::VITAL_META_RPC_ROW_DEN_COEFF
   };
   rpc_coeffs = tags_to_matrix(md, rpc_coeffs_tags);
 
   return std::make_shared<simple_camera_rpc>(world_scale, world_offset,
                                              image_scale, image_offset,
-                                             rpc_coeffs);
+                                             rpc_coeffs, image_width,
+                                             image_height, utm_zone);
 }
 
 } } // end of namespace

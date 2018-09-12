@@ -90,7 +90,7 @@ kwiver::vital::simple_camera_rpc read_rpc( std::string filename )
 
   return kwiver::vital::simple_camera_rpc( world_scale, world_offset,
                                            image_scale, image_offset,
-                                           rpc_coeffs );
+                                           rpc_coeffs, 0, 0, 0);
 }
 
 #endif // VITAL_TESTS_RPC_READER_H_

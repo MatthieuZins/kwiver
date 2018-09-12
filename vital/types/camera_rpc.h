@@ -141,7 +141,7 @@ class VITAL_EXPORT simple_camera_rpc :
 {
 public:
   /// Default Constructor - creates identity camera
-  simple_camera_rpc (unsigned int image_width=0, unsigned int image_height=0, unsigned int utm_zone=0) :
+  simple_camera_rpc (unsigned int image_width, unsigned int image_height, unsigned int utm_zone) :
     camera_rpc(image_width, image_height, utm_zone),
     world_scale_(1.0, 1.0, 1.0),
     world_offset_(0.0, 0.0, 0.0),
@@ -163,8 +163,8 @@ public:
    */
   simple_camera_rpc ( vector_3d &world_scale, vector_3d &world_offset,
                       vector_2d &image_scale, vector_2d &image_offset,
-                      rpc_matrix &rpc_coeffs, unsigned int image_width=0,
-                      unsigned int image_height=0, unsigned int utm_zone=0) :
+                      rpc_matrix &rpc_coeffs, unsigned int image_width,
+                      unsigned int image_height, unsigned int utm_zone) :
     camera_rpc(image_width, image_height, utm_zone),
     world_scale_( world_scale ),
     world_offset_( world_offset ),

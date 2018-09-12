@@ -55,10 +55,13 @@ VITAL_EXPORT string_to_vector( std::string const& s );
 /// Produce RPC camera from metadata
 /**
  * \param file_path   The path to the file to read in.
+ * \param image_width   The width of the image produced by the camera
+ * \param image_height   The height of the image produced by the camera
  * \return A new camera object representing the contents of the read-in file.
  */
 camera_sptr
-VITAL_EXPORT camera_from_metadata( metadata_sptr const& md );
+VITAL_EXPORT camera_from_metadata(metadata_sptr const& md , unsigned int image_width,
+                                  unsigned int image_height, unsigned int utm_zone);
 
 
 } } // end namespace

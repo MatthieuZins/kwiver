@@ -92,7 +92,7 @@ public:
 // ----------------------------------------------------------------------------
 TEST_F(camera_rpc, identity)
 {
-  kwiver::vital::simple_camera_rpc icam;
+  kwiver::vital::simple_camera_rpc icam(640, 480, 1);
 
   kwiver::vital::vector_3d pt(1.0, 2.0, 10.0);
 
