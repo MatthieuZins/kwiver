@@ -20,5 +20,5 @@ if(fletch_ENABLED_YAMLCPP)
 endif()
 
 add_executable(kwiver_examples ${SOURCE})
-target_link_libraries(kwiver_examples kwiver_algo_proj ${kwiver_examples_libraries})
+target_link_libraries(kwiver_examples ${kwiver_examples_libraries})
 target_compile_definitions(kwiver_examples PRIVATE ${kwiver_examples_flags})

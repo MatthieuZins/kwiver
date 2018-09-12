@@ -16,23 +16,25 @@ compute_mesh_depthmap::compute_mesh_depthmap()
 }
 
 std::pair<vital::image_container_sptr, vital::image_container_sptr>
-compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr camera,
-                               int width, int height, int utm_zone) const
+compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr camera) const
 {
   unsigned int nb_vertices = mesh->num_verts();
+  unsigned int width = camera->image_width();
+  unsigned int height = camera->image_height();
 
   kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
 
   // project all points on image
   std::vector<vector_2d> points_uvs(nb_vertices);
-  if (utm_zone > 0)
+  camera_rpc *rpc_camera = dynamic_cast<camera_rpc*>(camera.get());
+  if (rpc_camera != nullptr)
   {
-    // if utm is valid, the mesh points are first transformed to lat/long coordinates
+    // if camera rpc, the mesh points are first transformed to lat/long coordinates
     int i=0;
     for (auto pt3d : vertices)
     {
       vital::vector_2d pt2d_latlong = vital::geo_conv({pt3d[0], pt3d[1]},
-                                                      kwiver::vital::SRID::UTM_WGS84_north + utm_zone,
+                                                      kwiver::vital::SRID::UTM_WGS84_north + rpc_camera->utm_zone(),
                                                       kwiver::vital::SRID::lat_lon_WGS84);
       points_uvs[i++] = camera->project({pt2d_latlong[0], pt2d_latlong[1], pt3d[2]});
     }

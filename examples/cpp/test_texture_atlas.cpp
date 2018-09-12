@@ -71,7 +71,7 @@ loadcamera_from_tif_image(const std::string& filename, unsigned int utm_zone)
   kwiver::vital::image_container_sptr img = image_io->load(filename);
   kwiver::vital::metadata_sptr md = img->get_metadata();
 
-  kwiver::vital::camera_rpc_sptr cam(new kwiver::vital::simple_camera_rpc(utm_zone));
+  kwiver::vital::camera_rpc_sptr cam(new kwiver::vital::simple_camera_rpc(img->width(), img->height(), utm_zone));
   kwiver::vital::simple_camera_rpc* cam_pt = dynamic_cast<kwiver::vital::simple_camera_rpc*>(cam.get());
   kwiver::vital::vector_3d world_scale;
   kwiver::vital::vector_3d world_offset;
@@ -159,35 +159,38 @@ void test_compute_mesh_depthmap()
   kwiver::vital::algo::compute_mesh_depthmap_sptr depthmap_generator =
       kwiver::vital::algo::compute_mesh_depthmap::create("core");
 
-  kwiver::vital::algo::mesh_io_sptr mesh_io =
-      kwiver::vital::algo::mesh_io::create("core");
-  //    kwiver::vital::mesh_sptr mesh =  mesh_io->load("/home/matthieu/data_cube_texture/cube.obj");
-  //    kwiver::vital::mesh_sptr mesh =  mesh_io->load("/home/matthieu/data_plane/f16.obj");
-  kwiver::vital::mesh_sptr mesh =  mesh_io->load("/home/matthieu/data_towers/towers.obj");
+  kwiver::vital::algo::mesh_io_sptr mesh_io = kwiver::vital::algo::mesh_io::create("core");
+//  kwiver::vital::mesh_sptr mesh =  mesh_io->load("/home/matthieu/data_cube_texture/cube.obj");
+//  kwiver::vital::mesh_sptr mesh =  mesh_io->load("/home/matthieu/data_plane/f16.obj");
+//  kwiver::vital::mesh_sptr mesh =  mesh_io->load("/home/matthieu/data_towers/towers.obj");
+  kwiver::vital::mesh_sptr mesh =  mesh_io->load("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped2.obj");
+  kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
+  kwiver::vital::vector_3d mesh_offset = {435530.547508, 3354095.61004, -36.844062};
+  for (int i=0; i < vertices.size(); ++i)
+  {
+    vertices[i] += mesh_offset;
+  }
+
+//  kwiver::vital::camera_intrinsics_sptr camera_intrinsic(
+//        new kwiver::vital::simple_camera_intrinsics(1024, {480, 270}, 960, 540));
+//  kwiver::vital::camera_intrinsics_sptr camera_intrinsic(
+//        new kwiver::vital::simple_camera_intrinsics(4480, {2048, 1536}, 4096, 3072));
+//  kwiver::vital::camera_intrinsics_sptr camera_intrinsic(
+//        new kwiver::vital::simple_camera_intrinsics(2100, {1920/2, 1080/2}, 1920, 1080));
+
+//  auto param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam1.txt");
+//  auto param_cam = read_camera("/home/matthieu/data_plane/cam1.txt");
+//  auto param_cam = read_camera("/home/matthieu/data_towers/cam_2.txt");
+
+//  kwiver::vital::camera_sptr camera(new kwiver::vital::simple_camera_perspective(param_cam.first,
+//                                                                                 param_cam.second.inverse(),
+//                                                                                 camera_intrinsic));
+
+  kwiver::vital::camera_sptr camera = loadcamera_from_tif_image("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_pansharpen_8.tif", 17);
 
 
-  //    kwiver::vital::camera_intrinsics_sptr camera_intrinsic(
-  //                new kwiver::vital::simple_camera_intrinsics(1024, {480, 270}));
-  //    kwiver::vital::camera_intrinsics_sptr camera_intrinsic(
-  //                new kwiver::vital::simple_camera_intrinsics(4480, {2048, 1536}));
-  kwiver::vital::camera_intrinsics_sptr camera_intrinsic(
-        new kwiver::vital::simple_camera_intrinsics(2100, {1920/2, 1080/2}));
-  //    auto param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam1.txt");
-  //    auto param_cam = read_camera("/home/matthieu/data_plane/cam1.txt");
-  auto param_cam = read_camera("/home/matthieu/data_towers/cam_2.txt");
-
-  kwiver::vital::camera_sptr camera(new kwiver::vital::simple_camera_perspective(param_cam.first,
-                                                                                 param_cam.second.inverse(),
-                                                                                 camera_intrinsic));
-  std::cout << dynamic_cast<kwiver::vital::simple_camera_perspective*>(camera.get())->center() << std::endl;
-  std::cout << dynamic_cast<kwiver::vital::simple_camera_perspective*>(camera.get())->get_rotation() << std::endl;
-
-  //    std::pair<kwiver::vital::image_container_sptr,
-  //              kwiver::vital::image_container_sptr> depthmap_pair = depthmap_generator->compute(mesh, camera, 960, 540, 0);
-  //    std::pair<kwiver::vital::image_container_sptr,
-  //              kwiver::vital::image_container_sptr> depthmap_pair = depthmap_generator->compute(mesh, camera, 4096, 3072, 0);
   std::pair<kwiver::vital::image_container_sptr,
-      kwiver::vital::image_container_sptr> depthmap_pair = depthmap_generator->compute(mesh, camera, 1920, 1080, 0);
+      kwiver::vital::image_container_sptr> depthmap_pair = depthmap_generator->compute(mesh, camera);
 
 
   // write depthmap
@@ -300,7 +303,7 @@ void test_fuse_multi_pinhole_cameras()
   int i=0;
   for (auto cam: cameras)
   {
-    auto res = depthmap_generator->compute(mesh, cam, images[i]->width(), images[i]->height(), 0);
+    auto res = depthmap_generator->compute(mesh, cam);
     depthmaps.push_back(res.first);
     i++;
   }
@@ -399,7 +402,7 @@ void test_fuse_multi_rpc_cameras()
   int i=0;
   for (auto cam: cameras)
   {
-    auto res = depthmap_generator->compute(mesh, cam, images[i]->width(), images[i]->height(), 17);
+    auto res = depthmap_generator->compute(mesh, cam);
     depthmaps.push_back(res.first);
     i++;
   }

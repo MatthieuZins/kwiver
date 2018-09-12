@@ -53,7 +53,7 @@ rasterize_texture_atlas(mesh_sptr mesh, image_container_sptr triangles_id_map, i
   if (dynamic_cast<camera_rpc*>(camera.get()))
   {
     // RPC cameras expect points in lat/long coordinates
-    unsigned int utm_zone = dynamic_cast<camera_rpc*>(camera.get())->get_utm_zone();
+    unsigned int utm_zone = dynamic_cast<camera_rpc*>(camera.get())->utm_zone();
     for (unsigned int i=0; i < nb_vertices; ++i)
     {
       vital::vector_2d pt2d_latlong = vital::geo_conv({vertices[i][0], vertices[i][1]},

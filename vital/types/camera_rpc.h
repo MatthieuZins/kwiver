@@ -93,6 +93,13 @@ public:
   virtual vector_3d world_offset() const = 0;
   virtual vector_2d image_scale() const = 0;
   virtual vector_2d image_offset() const = 0;
+  virtual unsigned int image_width() const { return image_width_; }
+  virtual unsigned int image_height() const { return image_height_; }
+  virtual unsigned int utm_zone() const { return utm_zone_; }
+
+  /// Setters
+  void set_image_width(unsigned int width) { image_width_ = width; }
+  void set_image_height(unsigned int height) { image_height_ = height; }
 
   /// Project a 3D point into a 2D image point
   virtual vector_2d project( const vector_3d& pt ) const;
@@ -106,11 +113,8 @@ public:
    */
   virtual double depth(const vector_3d& pt) const;
 
-  // Get the UTM zone
-  unsigned int get_utm_zone() const { return utm_zone; }
-
 protected:
-  camera_rpc(unsigned int utm=0);
+  camera_rpc(unsigned int image_width, unsigned int image_height, unsigned int utm_zone=0);
 
   // Compute the Jacobian of the RPC at the given normalized world point
   // Currently this only computes the 2x2 Jacobian for X and Y parameters.
@@ -121,7 +125,9 @@ protected:
 
   kwiver::vital::logger_handle_t m_logger;
 
-  unsigned int utm_zone;
+  unsigned int image_width_;
+  unsigned int image_height_;
+  unsigned int utm_zone_;
 
 };
 
@@ -135,8 +141,8 @@ class VITAL_EXPORT simple_camera_rpc :
 {
 public:
   /// Default Constructor - creates identity camera
-  simple_camera_rpc ( unsigned int utm=0) :
-    camera_rpc(utm),
+  simple_camera_rpc (unsigned int image_width=0, unsigned int image_height=0, unsigned int utm_zone=0) :
+    camera_rpc(image_width, image_height, utm_zone),
     world_scale_(1.0, 1.0, 1.0),
     world_offset_(0.0, 0.0, 0.0),
     image_scale_(1.0, 1.0),
@@ -157,7 +163,9 @@ public:
    */
   simple_camera_rpc ( vector_3d &world_scale, vector_3d &world_offset,
                       vector_2d &image_scale, vector_2d &image_offset,
-                      rpc_matrix &rpc_coeffs ) :
+                      rpc_matrix &rpc_coeffs, unsigned int image_width=0,
+                      unsigned int image_height=0, unsigned int utm_zone=0) :
+    camera_rpc(image_width, image_height, utm_zone),
     world_scale_( world_scale ),
     world_offset_( world_offset ),
     image_scale_( image_scale ),
@@ -169,6 +177,7 @@ public:
 
   /// Constructor - from base class
   simple_camera_rpc ( const camera_rpc &base ) :
+    camera_rpc(base.image_width(), base.image_height(), base.utm_zone()),
     world_scale_( base.world_scale() ),
     world_offset_( base.world_offset() ),
     image_scale_( base.image_scale() ),

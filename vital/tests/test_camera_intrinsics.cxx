@@ -53,7 +53,9 @@ TEST(camera_intrinsics, map)
   double f = 1000.0;
   double a = 0.75;
   double s = 0.1;
-  simple_camera_intrinsics K{ f, pp, a, s };
+  unsigned int w = 640;
+  unsigned int h = 480;
+  simple_camera_intrinsics K{ f, pp, w, h, a, s };
 
   EXPECT_MATRIX_NEAR( pp, K.map( vector_2d{ 0, 0 } ), 1e-12 );
   EXPECT_MATRIX_NEAR( ( vector_2d{ 0, 0 } ), K.unmap( pp ), 1e-12 );

@@ -80,6 +80,11 @@ public:
    */
   virtual double depth(const vector_3d& pt) const = 0;
 
+  /// Accessor for the image width
+  virtual unsigned int image_width() const = 0;
+  /// Accessor for the image height
+  virtual unsigned int image_height() const = 0;
+
 protected:
   camera() {};
 };

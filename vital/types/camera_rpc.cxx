@@ -46,9 +46,9 @@ namespace vital {
 
 
 camera_rpc
-::camera_rpc(unsigned int utm)
+::camera_rpc(unsigned int image_width, unsigned int image_height, unsigned int utm_zone)
   : m_logger( kwiver::vital::get_logger( "vital.camera_rpc" ) ),
-    utm_zone(utm)
+    image_width_(image_width), image_height_(image_height), utm_zone_(utm_zone)
 {
 }
 
@@ -152,9 +152,9 @@ std::pair<vector_3d, vector_3d> camera_rpc::get_center_and_axis() const
 
     // transform to UTM
     vector_2d pt1_utm_xy = kwiver::vital::geo_conv(vector_2d(pt1_latlong[0], pt1_latlong[1]),
-            kwiver::vital::SRID::lat_lon_WGS84, kwiver::vital::SRID::UTM_WGS84_north + this->utm_zone);
+            kwiver::vital::SRID::lat_lon_WGS84, kwiver::vital::SRID::UTM_WGS84_north + this->utm_zone_);
     vector_2d pt2_utm_xy = kwiver::vital::geo_conv(vector_2d(pt2_latlong[0], pt2_latlong[1]),
-            kwiver::vital::SRID::lat_lon_WGS84, kwiver::vital::SRID::UTM_WGS84_north + this->utm_zone);
+            kwiver::vital::SRID::lat_lon_WGS84, kwiver::vital::SRID::UTM_WGS84_north + this->utm_zone_);
 
     vector_3d pt1_utm = {pt1_utm_xy[0], pt1_utm_xy[1], pt1_latlong[2]};
     vector_3d pt2_utm = {pt2_utm_xy[0], pt2_utm_xy[1], pt2_latlong[2]};

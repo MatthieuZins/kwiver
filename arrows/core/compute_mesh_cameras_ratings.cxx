@@ -33,7 +33,7 @@ void compute_mesh_cameras_ratings(mesh_sptr mesh, const camera_sptr_list& camera
     if (dynamic_cast<camera_rpc*>(cameras[cam_id].get()))
     {
       // RPC cameras expect lat/long points, we do the conversion only once
-      unsigned int utm_zone = dynamic_cast<camera_rpc*>(cameras[cam_id].get())->get_utm_zone();
+      unsigned int utm_zone = dynamic_cast<camera_rpc*>(cameras[cam_id].get())->utm_zone();
       if (latlong_vertices.size() != nb_vertices)
       {
         latlong_vertices.resize(nb_vertices);
