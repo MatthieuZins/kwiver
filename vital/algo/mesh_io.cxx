@@ -50,23 +50,23 @@ namespace algo {
 
 mesh_io::mesh_io()
 {
-    attach_logger("algo.mesh_io");
+  attach_logger("algo.mesh_io");
 }
 
 
 mesh_sptr mesh_io::load(std::string const& filename) const
 {
-    // Make sure that the given file path exists and is a file.
-    if ( ! kwiversys::SystemTools::FileExists( filename ) )
-    {
-      VITAL_THROW( path_not_exists, filename);
-    }
-    else if ( kwiversys::SystemTools::FileIsDirectory( filename ) )
-    {
-      VITAL_THROW( path_not_a_file, filename);
-    }
+  // Make sure that the given file path exists and is a file.
+  if ( ! kwiversys::SystemTools::FileExists( filename ) )
+  {
+    VITAL_THROW( path_not_exists, filename);
+  }
+  else if ( kwiversys::SystemTools::FileIsDirectory( filename ) )
+  {
+    VITAL_THROW( path_not_a_file, filename);
+  }
 
-    return this->load_(filename);
+  return this->load_(filename);
 }
 
 
@@ -74,21 +74,21 @@ void mesh_io::save(const std::string& filename, mesh_sptr data,
                    unsigned int tex_width, unsigned int tex_height,
                    bool flip_v_axis) const
 {
-    // Make sure that the given file path's containing directory exists and is
-    // actually a directory.
-    std::string containing_dir = kwiversys::SystemTools::GetFilenamePath(
-      kwiversys::SystemTools::CollapseFullPath( filename ) );
+  // Make sure that the given file path's containing directory exists and is
+  // actually a directory.
+  std::string containing_dir = kwiversys::SystemTools::GetFilenamePath(
+        kwiversys::SystemTools::CollapseFullPath( filename ) );
 
-    if ( ! kwiversys::SystemTools::FileExists( containing_dir ) )
-    {
-      VITAL_THROW( path_not_exists, containing_dir);
-    }
-    else if ( ! kwiversys::SystemTools::FileIsDirectory( containing_dir ) )
-    {
-      VITAL_THROW( path_not_a_directory, containing_dir );
-    }
+  if ( ! kwiversys::SystemTools::FileExists( containing_dir ) )
+  {
+    VITAL_THROW( path_not_exists, containing_dir);
+  }
+  else if ( ! kwiversys::SystemTools::FileIsDirectory( containing_dir ) )
+  {
+    VITAL_THROW( path_not_a_directory, containing_dir );
+  }
 
-    this->save_(filename, data, tex_width, tex_height, flip_v_axis);
+  this->save_(filename, data, tex_width, tex_height, flip_v_axis);
 }
 
 } } } // end namespace

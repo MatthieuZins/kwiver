@@ -17,34 +17,34 @@ class KWIVER_ALGO_CORE_EXPORT mesh_io
 {
 public:
 
-    /// Name of the algorithm
-    static constexpr char const* name = "core";
+  /// Name of the algorithm
+  static constexpr char const* name = "core";
 
-    /// Description of the algorithm
-    static constexpr char const* description =
+  /// Description of the algorithm
+  static constexpr char const* description =
       "A reader / writer for OBJ mesh.";
 
-    // No configuration for this class yet
-    /// \cond DoxygenSuppress
-    virtual void set_configuration(vital::config_block_sptr /*config*/) { }
-    virtual bool check_configuration(vital::config_block_sptr /*config*/) const { return true; }
-    /// \endcond
+  // No configuration for this class yet
+  /// \cond DoxygenSuppress
+  virtual void set_configuration(vital::config_block_sptr /*config*/) { }
+  virtual bool check_configuration(vital::config_block_sptr /*config*/) const { return true; }
+  /// \endcond
 
 
-    mesh_io();
+  mesh_io();
 
-    virtual ~mesh_io() {}
+  virtual ~mesh_io() {}
 
-    /**
+  /**
      * @brief load an OBJ mesh (only vertices and faces)
      * @param filename
      * @return
      */
-    virtual kwiver::vital::mesh_sptr load_(const std::string& filename) const;
+  virtual kwiver::vital::mesh_sptr load_(const std::string& filename) const;
 
-    virtual void save_(const std::string& filename, vital::mesh_sptr data,
-                       unsigned int tex_width=1, unsigned int tex_height=1,
-                       bool flip_v_axis=false) const;
+  virtual void save_(const std::string& filename, vital::mesh_sptr data,
+                     unsigned int tex_width=1, unsigned int tex_height=1,
+                     bool flip_v_axis=false) const;
 };
 
 }

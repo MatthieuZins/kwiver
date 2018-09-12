@@ -16,26 +16,26 @@ class KWIVER_ALGO_CORE_EXPORT compute_mesh_depthmap
     : public vital::algorithm_impl<compute_mesh_depthmap, vital::algo::compute_mesh_depthmap>
 {
 public:
-    /// Name of the algorithm
-    static constexpr char const* name = "core";
+  /// Name of the algorithm
+  static constexpr char const* name = "core";
 
-    /// Description of the algorithm
-    static constexpr char const* description = "Compute the depthmap of a mesh from a camera";
+  /// Description of the algorithm
+  static constexpr char const* description = "Compute the depthmap of a mesh from a camera";
 
-    // No configuration for this class yet
-    /// \cond DoxygenSuppress
-    virtual void set_configuration(vital::config_block_sptr /*config*/) { }
-    virtual bool check_configuration(vital::config_block_sptr /*config*/) const { return true; }
-    /// \endcond
+  // No configuration for this class yet
+  /// \cond DoxygenSuppress
+  virtual void set_configuration(vital::config_block_sptr /*config*/) { }
+  virtual bool check_configuration(vital::config_block_sptr /*config*/) const { return true; }
+  /// \endcond
 
-    /// Constructor
-    compute_mesh_depthmap();
+  /// Constructor
+  compute_mesh_depthmap();
 
-    /// Destructor
-    virtual ~compute_mesh_depthmap() {}
+  /// Destructor
+  virtual ~compute_mesh_depthmap() {}
 
-    virtual std::pair<kwiver::vital::image_container_sptr, kwiver::vital::image_container_sptr>
-    compute(kwiver::vital::mesh_sptr mesh, kwiver::vital::camera_sptr camera, int width, int height, int utm_zone) const;
+  virtual std::pair<kwiver::vital::image_container_sptr, kwiver::vital::image_container_sptr>
+  compute(kwiver::vital::mesh_sptr mesh, kwiver::vital::camera_sptr camera, int width, int height, int utm_zone) const;
 };
 
 }

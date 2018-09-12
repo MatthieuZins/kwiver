@@ -54,7 +54,7 @@ namespace algo {
  * images.
  */
 class VITAL_ALGO_EXPORT mesh_io
-  : public kwiver::vital::algorithm_def<mesh_io>
+    : public kwiver::vital::algorithm_def<mesh_io>
 {
 public:
   virtual ~mesh_io() = default;
