@@ -47,7 +47,7 @@ rasterize_texture_atlas(mesh_sptr mesh, image_container_sptr triangles_id_map, i
   unsigned int nb_vertices = mesh->num_verts();
 
   kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
-  vital::mesh_regular_face_array<3>& faces = dynamic_cast< vital::mesh_regular_face_array<3>& >(mesh->faces());
+  vital::mesh_face_array& faces = dynamic_cast< vital::mesh_face_array& >(mesh->faces());
   // project all points on image
   std::vector<vector_2d> points_image(nb_vertices);
   if (dynamic_cast<camera_rpc*>(camera.get()))

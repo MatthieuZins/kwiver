@@ -22,7 +22,7 @@ void compute_mesh_cameras_ratings(mesh_sptr mesh, const camera_sptr_list& camera
   ratings.resize(nb_cameras, std::vector<float>(nb_faces, 0.0));
 
   kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
-  vital::mesh_regular_face_array<3>& faces = dynamic_cast< vital::mesh_regular_face_array<3>& >(mesh->faces());
+  vital::mesh_face_array& faces = dynamic_cast< vital::mesh_face_array& >(mesh->faces());
 
 
   std::vector< vector_2d> latlong_vertices;

@@ -437,18 +437,42 @@ read_obj(std::istream& is)
 
 /// Write a mesh to a wavefront OBJ file
 void
-write_obj(const std::string& filename, const mesh& mesh)
+write_obj(const std::string& filename, const mesh& mesh, const std::string& texture_filename)
 {
   check_output_file(filename);
   std::ofstream output_stream(filename.c_str());
-  write_obj(output_stream, mesh);
+
+  std::string material_name("");
+  std::string mtl_filename("");
+  if (mesh.has_tex_coords() && !texture_filename.empty())
+  {
+    mtl_filename = filename.substr(0, filename.size()-3) + ".mtl";
+    material_name = "mat";
+    // Write default material file
+    std::ofstream mtl_file(mtl_filename);
+    mtl_file << "newmtl " << material_name << '\n';
+    mtl_file << "Ka 1.0 1.0 1.0\n";
+    mtl_file << "Kd 1.0 1.0 1.0\n";
+    mtl_file << "Ks 1 1 1\n";
+    mtl_file << "d 1\n";
+    mtl_file << "Ns 75\n";
+    mtl_file << "illum 1\n";
+    mtl_file << "map_Kd " << texture_filename << '\n';
+    mtl_file.close();
+  }
+
+  write_obj(output_stream, mesh, mtl_filename, material_name);
 }
 
 
 /// Write a mesh to a wavefront OBJ stream
 void
-write_obj(std::ostream& os, const mesh& mesh)
+write_obj(std::ostream& os, const mesh& mesh, const std::string& mtl_filename, const std::string& mtl_name)
 {
+  if (!mtl_filename.empty())
+  {
+    os << "mtllib " << mtl_filename << '\n';
+  }
   const mesh_vertex_array_base& verts = mesh.vertices();
   for (unsigned int v=0; v<verts.size(); ++v)
   {
@@ -487,6 +511,10 @@ write_obj(std::ostream& os, const mesh& mesh)
   {
     os << "g " << groups[0].first << '\n';
   }
+  if (!mtl_name.empty())
+  {
+    os << "usemtl " << mtl_name << '\n';
+  }
   unsigned int g=0;
   unsigned int e=0;
   for (unsigned int f=0; f<faces.size(); ++f)
@@ -510,7 +538,8 @@ write_obj(std::ostream& os, const mesh& mesh)
       if (write_extra)
       {
         os << '/';
-        if (mesh.has_tex_coords() == mesh::TEX_COORD_ON_CORNER)
+        if (mesh.has_tex_coords() == mesh::TEX_COORD_ON_CORNER ||
+            mesh.has_tex_coords() == mesh::TEX_COORD_ON_FACE_CORNERS)
         {
           os << ++e;
         }

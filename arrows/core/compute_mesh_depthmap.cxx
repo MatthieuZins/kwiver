@@ -68,13 +68,12 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
   }
 
   // Write faces on z_buffer and id_map with depth test
-  vital::mesh_regular_face_array<3>& faces = dynamic_cast< vital::mesh_regular_face_array<3>& >(mesh->faces());
+  vital::mesh_face_array& faces = dynamic_cast< vital::mesh_face_array& >(mesh->faces());
   for (unsigned int f_id=0; f_id < faces.size(); ++f_id)
   {
-    vital::mesh_regular_face<3> f = faces[f_id];
-    const vector_2d& a_uv = points_uvs[f[0]];
-    const vector_2d& b_uv = points_uvs[f[1]];
-    const vector_2d& c_uv = points_uvs[f[2]];
+    const vector_2d& a_uv = points_uvs[faces(f_id, 0)];
+    const vector_2d& b_uv = points_uvs[faces(f_id, 1)];
+    const vector_2d& c_uv = points_uvs[faces(f_id, 2)];
 
     // skip the face if the three points are outside the image
     if ((a_uv[0] < 0 || a_uv[0] >= width || a_uv[1] < 0 || a_uv[1] >= height) &&
@@ -82,9 +81,9 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
         (c_uv[0] < 0 || c_uv[0] >= width || c_uv[1] < 0 || c_uv[1] >= height))
       continue;
 
-    double a_depth = points_depth[f[0]];
-    double b_depth = points_depth[f[1]];
-    double c_depth = points_depth[f[2]];
+    double a_depth = points_depth[faces(f_id, 0)];
+    double b_depth = points_depth[faces(f_id, 1)];
+    double c_depth = points_depth[faces(f_id, 2)];
 
     // the rasterization is done over the face bounding box
     int u_min = static_cast<int>(std::floor(std::min(a_uv[0], std::min(b_uv[0], c_uv[0]))));

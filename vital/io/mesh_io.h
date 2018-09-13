@@ -97,11 +97,11 @@ mesh_sptr read_obj(const std::string& filename);
 
 /// Write a mesh to a wavefront OBJ stream
 VITAL_EXPORT
-void write_obj(std::ostream& os, const mesh& mesh);
+void write_obj(std::ostream& os, const mesh& mesh, const std::string &mtl_filename="", const std::string &mtl_name="");
 
 /// Write a mesh to a wavefront OBJ file
 VITAL_EXPORT
-void write_obj(const std::string& filename, const mesh& mesh);
+void write_obj(const std::string& filename, const mesh& mesh, const std::string &texture_filename="");
 
 
 /// Write a mesh into a kml stream
