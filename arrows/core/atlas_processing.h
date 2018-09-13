@@ -325,10 +325,10 @@ rasterize_texture_atlas(mesh_sptr mesh, image_container_sptr triangles_id_map, i
   dilate_atlas<unsigned char>(shadow, mask, 2);
   dilate_atlas<float>(scores, mask, 2);
 
-  return std::tuple<image_container_sptr, image_container_sptr, image_container_sptr>(
-        image_container_sptr(new simple_image_container(texture)),
-        image_container_sptr(new simple_image_container(visibility)),
-        image_container_sptr(new simple_image_container(scores)));
+  return std::make_tuple(
+        std::make_shared<simple_image_container>(texture),
+        std::make_shared<simple_image_container>(visibility),
+        std::make_shared<simple_image_container>(scores));
 }
 
 
@@ -582,7 +582,7 @@ image_container_sptr fuse_texture_atlases(image_container_sptr_list textures,
   }
 
   // no dilation because the input were already dilated
-  return image_container_sptr(new simple_image_container(output));
+  return std::make_shared<simple_image_container>(output);
 }
 
 

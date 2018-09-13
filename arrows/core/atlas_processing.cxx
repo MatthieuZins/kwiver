@@ -119,7 +119,7 @@ vital::image_container_sptr generate_triangles_map(kwiver::vital::mesh_sptr mesh
       }
     }
   }
-  return image_container_sptr(new simple_image_container(id_grid));
+  return std::make_shared<simple_image_container>(id_grid);
 }
 
 

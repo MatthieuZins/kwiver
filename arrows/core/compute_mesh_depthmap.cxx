@@ -112,12 +112,8 @@ compute_mesh_depthmap::compute(vital::mesh_sptr mesh, kwiver::vital::camera_sptr
       }
     }
   }
-  //    vital::simple_image_container z_buffer_containercontainer(z_buffer);
-  vital::image_container_sptr z_buffer_container(new vital::simple_image_container(z_buffer));
-  vital::image_container_sptr id_map_container(new vital::simple_image_container(id_map));
-
-  return std::pair<vital::image_container_sptr, vital::image_container_sptr>(z_buffer_container,
-                                                                             id_map_container);
+  return std::make_pair(std::make_shared<simple_image_container>(z_buffer),
+                        std::make_shared<simple_image_container>(id_map));
 }
 
 }

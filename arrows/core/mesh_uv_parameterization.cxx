@@ -198,7 +198,7 @@ std::pair<unsigned int, unsigned int> parameterize(kwiver::vital::mesh_sptr mesh
 
   mesh->set_tex_coords(tcoords);
 
-  return std::pair<unsigned int, unsigned int>(width, height);
+  return std::make_pair(width, height);
 }
 
 }
