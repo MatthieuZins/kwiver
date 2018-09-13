@@ -1,4 +1,4 @@
-#include "atlas_processing.h"
+#include "generate_texture_atlas.h"
 
 #include <vital/types/camera_rpc.h>
 #include <vital/types/geodesy.h>

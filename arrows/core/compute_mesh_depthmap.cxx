@@ -1,6 +1,6 @@
 #include "compute_mesh_depthmap.h"
 
-#include <arrows/core/atlas_processing.h>
+#include <arrows/core/generate_texture_atlas.h>
 #include <vital/types/camera_perspective.h>
 #include <vital/types/camera_rpc.h>
 #include <vital/types/geodesy.h>

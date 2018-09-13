@@ -53,7 +53,7 @@
 #include <vital/types/image_container.h>
 #include <vital/algo/image_io.h>
 
-#include <arrows/core/atlas_processing.h>
+#include <arrows/core/generate_texture_atlas.h>
 #include <arrows/core/compute_mesh_cameras_ratings.h>
 #include <fstream>
 #include <vital/util/cpu_timer.h>

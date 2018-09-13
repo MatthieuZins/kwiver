@@ -1,5 +1,5 @@
-#ifndef KWIVER_ARROWS_CORE_ATLAS_PROCESSING_H
-#define KWIVER_ARROWS_CORE_ATLAS_PROCESSING_H
+#ifndef KWIVER_ARROWS_CORE_GENERATE_TEXTURE_ATLAS_H
+#define KWIVER_ARROWS_CORE_GENERATE_TEXTURE_ATLAS_H
 
 #include <arrows/core/kwiver_algo_core_export.h>
 #include <arrows/core/mesh_uv_parameterization.h>
@@ -26,6 +26,10 @@ vector_3d barycentric_coordinates(const vector_2d& p,
                                   const vector_2d& a,
                                   const vector_2d& b,
                                   const vector_2d& c);
+
+/**
+ * \brief This function returns a texture atlas generate_triangles_map
+ */
 KWIVER_ALGO_CORE_EXPORT
 kwiver::vital::image_container_sptr generate_triangles_map(kwiver::vital::mesh_sptr mesh, unsigned int width, unsigned int height);
 
@@ -38,6 +42,10 @@ template <class T>
 T bilinear_interpolation(const vital::image& image,  double u, double v, unsigned int depth);
 
 
+/**
+ * \brief This function fill the texture atlas with pixel values from image
+ *
+ */
 template<class T>
 KWIVER_ALGO_CORE_EXPORT
 std::tuple<image_container_sptr, image_container_sptr, image_container_sptr>
@@ -77,7 +85,6 @@ rasterize_texture_atlas(mesh_sptr mesh, image_container_sptr triangles_id_map, i
     points_depth[i] = camera->depth(vertices[i]);
   }
 
-  std::cout << "points projected and depth computed" << std::endl;
   //    std::vector<Eigen::Vector2d> uvs_in_sun;
   //    std::vector<double> points_sun_depth(nb_vertices);
   //    if (!sun_depth_map.empty() && sun_camera)     // only if shadow is enabled
@@ -271,16 +278,6 @@ rasterize_texture_atlas(mesh_sptr mesh, image_container_sptr triangles_id_map, i
       //            }
 
 
-      // Score computation:
-      //  We take the absolute value to handle wrong oriented faces
-      // - score = 0 : the face area in the image is 0. In this case,
-      //               the pixel is considered as occluded
-      // - score > 0 : the face area is not null, either positive
-      //               or negative depending on the face orientation
-      // score = -1 (default value for the score image) when the pixel
-      // is outside all the triangles. This kind of pixels are skipped.
-      //            pixel_score = std::abs(pixel_score);
-      //            score.at<float>(v, u) = pixel_score;
       if (is_occluded)
       {
         // by default, occluded faces get 0 for every band
@@ -299,7 +296,6 @@ rasterize_texture_atlas(mesh_sptr mesh, image_container_sptr triangles_id_map, i
         for (unsigned int b=0; b < depth; ++b)
         {
           texture(u, v, b) = bilinear_interpolation<T>(image->get_image(), p_img[0], p_img[1], b);
-          //                    texture(u, v, b) = image->get_image().at<T>(p_img[0], p_img[1], b);
         }
       }
     }
@@ -308,8 +304,6 @@ rasterize_texture_atlas(mesh_sptr mesh, image_container_sptr triangles_id_map, i
   // create the mask used for dilation
   //  0 -> outside triangles
   //  1 -> inside triangles
-  //    cv::Mat mask = cv::min(0, triangles_id_map);      // between -1 and 0
-  //    mask.convertTo(mask, CV_8U, 1.0, 1);              // between 0 and 1
   image_of<unsigned char> mask(width, height);
   for (unsigned int v=0; v < height; ++v)
   {
@@ -432,6 +426,9 @@ void dilate_atlas(image& atlas, image_of<unsigned char> _mask, int nb_iter)
   }
 }
 
+/**
+ * \brief This function returns pixel value at non-integer coordinates using a bilinear interpolation
+ */
 template <class T>
 T bilinear_interpolation(const vital::image& image,  double u, double v, unsigned int depth)
 {
@@ -466,6 +463,10 @@ T bilinear_interpolation(const vital::image& image,  double u, double v, unsigne
   return  0;
 }
 
+
+/**
+ * \brief This function fuses multiples texture atlases based on visibility and scores
+ */
 template <class T>
 image_container_sptr fuse_texture_atlases(image_container_sptr_list textures,
                                           image_container_sptr_list visibilities,
@@ -592,4 +593,4 @@ image_container_sptr fuse_texture_atlases(image_container_sptr_list textures,
 }
 
 
-#endif // KWIVER_ARROWS_CORE_ATLAS_PROCESSING_H
+#endif // KWIVER_ARROWS_CORE_GENERATE_TEXTURE_ATLAS_H

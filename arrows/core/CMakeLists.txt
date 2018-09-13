@@ -1,7 +1,6 @@
 # Build / Install Plugin containing core algorithm implementations
 
 set( plugin_core_headers
-  atlas_processing.h
   associate_detections_to_tracks_threshold.h
   class_probablity_filter.h
   close_loops_appearance_indexed.h
@@ -28,6 +27,7 @@ set( plugin_core_headers
   formulate_query_core.h
   filter_features_scale.h
   filter_tracks.h
+  generate_texture_atlas.h
   hierarchical_bundle_adjust.h
   initialize_cameras_landmarks.h
   initialize_object_tracks_threshold.h
@@ -74,7 +74,6 @@ kwiver_install_headers(
   )
 
 set( plugin_core_sources
-  atlas_processing.cxx
   associate_detections_to_tracks_threshold.cxx
   class_probablity_filter.cxx
   close_loops_appearance_indexed.cxx
@@ -101,6 +100,7 @@ set( plugin_core_sources
   formulate_query_core.cxx
   filter_features_scale.cxx
   filter_tracks.cxx
+  generate_texture_atlas.cxx
   hierarchical_bundle_adjust.cxx
   initialize_cameras_landmarks.cxx
   initialize_object_tracks_threshold.cxx
