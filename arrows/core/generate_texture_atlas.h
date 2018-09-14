@@ -39,7 +39,7 @@ void dilate_atlas(image& atlas, image_of<unsigned char> _mask, int nb_iter);
 
 
 template <class T>
-T bilinear_interpolation(const vital::image& image,  double u, double v, unsigned int depth);
+T bilinear_interpolate(const vital::image& image,  double u, double v, unsigned int depth);
 
 
 /**
@@ -295,7 +295,7 @@ rasterize_texture_atlas(mesh_sptr mesh, image_container_sptr triangles_id_map, i
       {
         for (unsigned int b=0; b < depth; ++b)
         {
-          texture(u, v, b) = bilinear_interpolation<T>(image->get_image(), p_img[0], p_img[1], b);
+          texture(u, v, b) = bilinear_interpolate<T>(image->get_image(), p_img[0], p_img[1], b);
         }
       }
     }
@@ -430,7 +430,7 @@ void dilate_atlas(image& atlas, image_of<unsigned char> _mask, int nb_iter)
  * \brief This function returns pixel value at non-integer coordinates using a bilinear interpolation
  */
 template <class T>
-T bilinear_interpolation(const vital::image& image,  double u, double v, unsigned int depth)
+T bilinear_interpolate(const vital::image& image,  double u, double v, unsigned int depth)
 {
   // bilateral interpolation
   int rounded_u = static_cast<int>(std::round(u));

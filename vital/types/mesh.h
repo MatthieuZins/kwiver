@@ -989,7 +989,7 @@ public:
   enum tex_coord_type { TEX_COORD_NONE = 0,
                         TEX_COORD_ON_VERT = 1,
                         TEX_COORD_ON_CORNER = 2,
-                        TEX_COORD_ON_FACE_CORNERS = 3};
+                        TEX_COORD_ON_FACE_CORNER = 3};
 
   /// Returns texture coordinate availability
   tex_coord_type has_tex_coords() const { return tex_coord_status_; }

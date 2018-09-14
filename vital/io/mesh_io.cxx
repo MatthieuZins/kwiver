@@ -539,7 +539,7 @@ write_obj(std::ostream& os, const mesh& mesh, const std::string& mtl_filename, c
       {
         os << '/';
         if (mesh.has_tex_coords() == mesh::TEX_COORD_ON_CORNER ||
-            mesh.has_tex_coords() == mesh::TEX_COORD_ON_FACE_CORNERS)
+            mesh.has_tex_coords() == mesh::TEX_COORD_ON_FACE_CORNER)
         {
           os << ++e;
         }

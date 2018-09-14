@@ -459,7 +459,7 @@ mesh
   }
   else if (tc.size() == sum_of_face_corners)
   {
-      tex_coord_status_ = TEX_COORD_ON_FACE_CORNERS;
+      tex_coord_status_ = TEX_COORD_ON_FACE_CORNER;
   }
   else if (tc.size() == 2*this->num_edges())
   {
