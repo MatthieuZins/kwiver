@@ -157,8 +157,7 @@ std::pair<unsigned int, unsigned int> parameterize(kwiver::vital::mesh_sptr mesh
   double current_y = 0.0;
   double next_y = 0.0;
 
-  current_x = -interior_margin;    // initialized to -interior_margin so that
-  // the first triangle is set at x=0. The exterior is added at the end
+  current_x = -interior_margin;  // initialized to -interior_margin so that the first triangle is at x=0
   double bounds[4];
   for (int i=0; i < static_cast<int>(triangles.size()); ++i)
   {
@@ -178,14 +177,14 @@ std::pair<unsigned int, unsigned int> parameterize(kwiver::vital::mesh_sptr mesh
     next_y = std::max(next_y, current_y + (bounds[3]-bounds[2]));
   }
 
-  // add a interior_margin at the top and left borders
-  vector_2d interior_margin_out(exterior_margin, exterior_margin);
+  // add margin at the top and left borders
+  vector_2d margin(exterior_margin, exterior_margin);
   for (int it=0; it < static_cast<int>(tcoords.size()); ++it)
   {
-    tcoords[it] += interior_margin_out;
+    tcoords[it] += margin;
   }
 
-  // find width and height
+  // add margin at the bottom and right borders
   double max_x = (*std::max_element(tcoords.begin(), tcoords.end(), [](const vector_2d& v1, const vector_2d& v2) {
     return v1[0] < v2[0];
   }))[0];
@@ -195,6 +194,13 @@ std::pair<unsigned int, unsigned int> parameterize(kwiver::vital::mesh_sptr mesh
 
   unsigned int width = std::ceil(max_x) + 1 + exterior_margin;
   unsigned int height = std::ceil(max_y) + 1 + exterior_margin;
+
+  // normalize tcoords
+  for (vector_2d& v: tcoords)
+  {
+    v(0) /= width;
+    v(1) /= height;
+  }
 
   mesh->set_tex_coords(tcoords);
 

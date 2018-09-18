@@ -498,7 +498,7 @@ write_obj(std::ostream& os, const mesh& mesh, const std::string& mtl_filename, c
     const std::vector<vector_2d >& tex = mesh.tex_coords();
     for (unsigned int t=0; t<tex.size(); ++t)
     {
-      os << "vt " << tex[t].x() << ' ' << tex[t].y() << '\n';
+      os << "vt " << tex[t].x() << ' ' << 1.0-tex[t].y() << '\n';
     }
   }
 

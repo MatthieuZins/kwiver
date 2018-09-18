@@ -190,14 +190,6 @@ void test_fuse_multi_pinhole_cameras()
   //    std::pair<unsigned int, unsigned int> atlas_dim = kwiver::arrows::core::parameterize(mesh, 0.03, 8000, 10, 5);
   // id map
   kwiver::vital::image_container_sptr id_map = kwiver::arrows::core::generate_triangles_map(mesh, atlas_dim.first, atlas_dim.second);
-  // compute normalized tcoords for mesh writing
-  std::vector<vector_2d> tcoords_init = mesh->tex_coords();
-  std::vector<vector_2d> tcoords_normalized = tcoords_init;
-  for (vector_2d& tc: tcoords_normalized)
-  {
-    tc[0] /= id_map->width();
-    tc[1] = 1.0 - (tc[1]/id_map->height());
-  }
 
   // perspective cameras
   kwiver::vital::camera_intrinsics_sptr camera_intrinsic(new kwiver::vital::simple_camera_intrinsics(1024, {480, 270}));
@@ -285,9 +277,7 @@ void test_fuse_multi_pinhole_cameras()
     cv::cvtColor(cv_tex, cv_tex, CV_BGR2RGB);
     std::string output_name = "mesh_texture_" + std::to_string(i) + ".obj";
     cv::imwrite(output_name+".png", cv_tex);
-    mesh->set_tex_coords(tcoords_normalized);
     kwiver::vital::write_obj(output_name, *mesh, output_name+".png");
-    mesh->set_tex_coords(tcoords_init);
   }
 
   // fusion
@@ -301,7 +291,6 @@ void test_fuse_multi_pinhole_cameras()
   std::string texture_filename = output_filename.substr(0, output_filename.size()-3) + "png";
   cv::imwrite(texture_filename, cv_fused);
 
-  mesh->set_tex_coords(tcoords_normalized);
   kwiver::vital::write_obj(output_filename, *mesh, texture_filename);
 }
 
@@ -325,15 +314,6 @@ void test_fuse_multi_rpc_cameras()
   std::pair<unsigned int, unsigned int> atlas_dim = kwiver::arrows::core::parameterize(mesh, 0.3, 8000, 10, 5);
   // id map
   kwiver::vital::image_container_sptr id_map = kwiver::arrows::core::generate_triangles_map(mesh, atlas_dim.first, atlas_dim.second);
-
-  // compute normalized tcoords for writing mesh to obj
-  std::vector<vector_2d> tcoords_init = mesh->tex_coords();
-  std::vector<vector_2d> tcoords_normalized = mesh->tex_coords();
-  for (vector_2d& tc: tcoords_normalized)
-  {
-    tc[0] /= id_map->width();
-    tc[1] = 1.0 - (tc[1]/id_map->height());
-  }
 
   std::vector<std::string> images_filenames;
   //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/27JAN15WV031100015JAN27160845-P1BS-500648062010_01_P001_________AAE_0AAAAABPABS0_pansharpen_8.tif");
@@ -413,9 +393,7 @@ void test_fuse_multi_rpc_cameras()
     cv::merge(rgb_splitted, cv_tex);
     std::string output_name = "texture_" + std::to_string(i) + ".obj";
     cv::imwrite(output_name+".png", cv_tex);
-    mesh->set_tex_coords(tcoords_normalized);
     kwiver::vital::write_obj(output_name, *mesh, output_name+".png");
-    mesh->set_tex_coords(tcoords_init);
   }
 
   // remove offset
@@ -441,6 +419,5 @@ void test_fuse_multi_rpc_cameras()
   std::string output_filename = "mesh_texture_fused.obj";
   std::string texture_filename = output_filename.substr(0, output_filename.size()-3) + "png";
   cv::imwrite(texture_filename, cv_fused);
-  mesh->set_tex_coords(tcoords_normalized);
   kwiver::vital::write_obj(output_filename, *mesh, texture_filename);
 }

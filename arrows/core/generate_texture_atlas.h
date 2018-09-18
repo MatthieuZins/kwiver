@@ -124,6 +124,7 @@ rasterize_texture_atlas(mesh_sptr mesh, image_container_sptr triangles_id_map, i
     }
   }
 
+  vector_2d atlas_dimension(width, height);
   const std::vector<vector_2d>& tcoords = mesh->tex_coords();
   for (unsigned int v=0; v < height; ++v)
   {
@@ -135,9 +136,9 @@ rasterize_texture_atlas(mesh_sptr mesh, image_container_sptr triangles_id_map, i
         continue; // empty pixel (no texture)
       }
       // Get the uvs of the corresponding face
-      const vector_2d& a_uv = tcoords[face_id * 3 + 0];
-      const vector_2d& b_uv = tcoords[face_id * 3 + 1];
-      const vector_2d& c_uv = tcoords[face_id * 3 + 2];
+      const vector_2d& a_uv = tcoords[face_id * 3 + 0].cwiseProduct(atlas_dimension);
+      const vector_2d& b_uv = tcoords[face_id * 3 + 1].cwiseProduct(atlas_dimension);
+      const vector_2d& c_uv = tcoords[face_id * 3 + 2].cwiseProduct(atlas_dimension);
 
       unsigned int A_id = faces(face_id, 0);
       unsigned int B_id = faces(face_id, 1);

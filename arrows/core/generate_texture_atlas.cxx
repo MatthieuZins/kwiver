@@ -69,12 +69,13 @@ vital::image_container_sptr generate_triangles_map(kwiver::vital::mesh_sptr mesh
 
   const int number_of_faces = mesh->num_faces();
   const std::vector<vector_2d>& tcoords = mesh->tex_coords();
+  vector_2d atlas_dimension(width, height);
   for (int f=0; f < number_of_faces; ++f)
   {
     // get the face uv coordinates
-    const vector_2d& a_uv = tcoords[f * 3 + 0];
-    const vector_2d& b_uv = tcoords[f * 3 + 1];
-    const vector_2d& c_uv = tcoords[f * 3 + 2];
+    const vector_2d& a_uv = tcoords[f * 3 + 0].cwiseProduct(atlas_dimension);
+    const vector_2d& b_uv = tcoords[f * 3 + 1].cwiseProduct(atlas_dimension);
+    const vector_2d& c_uv = tcoords[f * 3 + 2].cwiseProduct(atlas_dimension);
 
     // get the 2d bounding box
     int u_min = static_cast<int>(std::floor(std::min(a_uv[0], std::min(b_uv[0], c_uv[0]))));
