@@ -446,7 +446,7 @@ write_obj(const std::string& filename, const mesh& mesh, const std::string& text
   std::string mtl_filename("");
   if (mesh.has_tex_coords() && !texture_filename.empty())
   {
-    mtl_filename = filename.substr(0, filename.size()-3) + ".mtl";
+    mtl_filename = filename.substr(0, filename.find_last_of(".")+1) + "mtl";
     material_name = "mat";
     // Write default material file
     std::ofstream mtl_file(mtl_filename);

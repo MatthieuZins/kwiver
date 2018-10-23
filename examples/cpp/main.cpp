@@ -40,7 +40,7 @@ int main()
   // use comments to execute a particular method
 //  test_read_mesh();
 
-  test_compute_mesh_depthmap();
+//  test_compute_mesh_depthmap();
   test_fuse_multi_pinhole_cameras();
 //  test_fuse_multi_rpc_cameras();
 

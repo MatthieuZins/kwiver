@@ -34,7 +34,6 @@
 #include <vital/types/image_container.h>
 
 #include <vital/plugin_loader/plugin_manager.h>
-
 #include <opencv2/opencv_modules.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -65,6 +64,29 @@
 #include <vital/io/mesh_io.h>
 
 
+// Draw parametrization on an image
+void draw_uv_parameterization(mesh_sptr mesh, unsigned int w, unsigned int h, const std::string &filename)
+{
+    cv::Mat image(h, w, CV_8UC3, 0.0);
+    const std::vector<vector_2d >& tex = mesh->tex_coords();
+
+    std::vector<cv::Point2i> points(3);
+    for (int f=0; f < tex.size(); f+=3)
+    {
+        points[0].x = std::round(tex[f+0][0] * w);
+        points[0].y = std::round(tex[f+0][1] * h);
+
+        points[1].x = std::round(tex[f+1][0] * w);
+        points[1].y = std::round(tex[f+1][1] * h);
+
+        points[2].x = std::round(tex[f+2][0] * w);
+        points[2].y = std::round(tex[f+2][1] * h);
+
+        cv::Scalar random_color(255, 255, 255);
+        cv::polylines(image, points, true, random_color);
+    }
+    cv::imwrite(filename, image);
+}
 
 kwiver::vital::camera_rpc_sptr
 loadcamera_from_tif_image(const std::string& filename, unsigned int utm_zone)
@@ -110,9 +132,10 @@ void test_compute_mesh_depthmap()
   kwiver::vital::algo::compute_mesh_depthmap_sptr depthmap_generator =
       kwiver::vital::algo::compute_mesh_depthmap::create("core");
 
-  kwiver::vital::mesh_sptr mesh = kwiver::vital::read_obj("/home/matthieu/data_cube_texture/cube.obj");
-  mesh = kwiver::vital::read_obj("/home/matthieu/data_plane/f16.obj");
-  mesh = kwiver::vital::read_obj("/home/matthieu/data_towers/towers.obj");
+  kwiver::vital::mesh_sptr mesh;
+//  mesh= kwiver::vital::read_obj("/home/matthieu/data_cube_texture/cube.obj");
+//  mesh = kwiver::vital::read_obj("/home/matthieu/data_plane/f16.obj");
+//  mesh = kwiver::vital::read_obj("/home/matthieu/data_towers/towers.obj");
   mesh = kwiver::vital::read_obj("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped2.obj");
   kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
   kwiver::vital::vector_3d mesh_offset = {435530.547508, 3354095.61004, -36.844062};
@@ -135,12 +158,9 @@ void test_compute_mesh_depthmap()
 //  kwiver::vital::camera_sptr camera(new kwiver::vital::simple_camera_perspective(param_cam.first,
 //                                                                                 param_cam.second.inverse(),
 //                                                                                 camera_intrinsic));
-
-  kwiver::vital::camera_sptr camera = loadcamera_from_tif_image("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_pansharpen_8.tif", 17);
-
+  kwiver::vital::camera_sptr camera = loadcamera_from_tif_image("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/01MAY15WV031200015MAY01160357-P1BS-500648062030_01_P001_________AAE_0AAAAABPABQ0_crop_pansharpened_processed.tif", 17);
   std::pair<kwiver::vital::image_container_sptr,
       kwiver::vital::image_container_sptr> depthmap_pair = depthmap_generator->compute(mesh, camera);
-
 
   // write depthmap
   cv::Mat image = kwiver::arrows::ocv::image_container_to_ocv_matrix(*depthmap_pair.first,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
@@ -177,45 +197,54 @@ void test_fuse_multi_pinhole_cameras()
 {
   kwiver::vital::plugin_manager::instance().load_all_plugins();
 
-  std::string mesh_filename = ("/home/matthieu/data_cube_texture/cube.obj");
-//  std::string mesh_filename = ("/home/matthieu/data_plane/f16.obj");
+//  std::string mesh_filename = ("/home/matthieu/data_cube_texture/cube.obj");
+  std::string mesh_filename = ("/home/matthieu/data_plane/f16.obj");
 //  std::string mesh_filename("/home/matthieu/data_towers/towers.obj");
 
   // mesh
   kwiver::vital::mesh_sptr mesh = kwiver::vital::read_obj(mesh_filename);
 
   // uv parameterization
-  std::pair<unsigned int, unsigned int> atlas_dim = kwiver::arrows::core::parameterize(mesh, 0.03, 8000, 10, 5);
-//      std::pair<unsigned int, unsigned int> atlas_dim = kwiver::arrows::core::parameterize(mesh, 0.003, 8000, 10, 5);
+//  std::pair<unsigned int, unsigned int> atlas_dim = kwiver::arrows::core::parameterize(mesh, 0.03, 8000, 10, 5);
+      std::pair<unsigned int, unsigned int> atlas_dim = kwiver::arrows::core::parameterize(mesh, 0.0003, 8000, 10, 5);
   //    std::pair<unsigned int, unsigned int> atlas_dim = kwiver::arrows::core::parameterize(mesh, 0.03, 8000, 10, 5);
+
+  // correct the half-pixel shift of tcoords
+//  std::vector<vector_2d> tcoords = mesh->tex_coords();
+//  std::vector<vector_2d> corrected_tcoords(tcoords.size());
+//  for (unsigned int i = 0; i < tcoords.size(); ++i)
+//  {
+//    corrected_tcoords[i] = {tcoords[i][0] + 0.5 / atlas_dim.first, tcoords[i][1] + 0.5 / atlas_dim.second };
+//  }
+
   // id map
   kwiver::vital::image_container_sptr id_map = kwiver::arrows::core::generate_triangles_map(mesh, atlas_dim.first, atlas_dim.second);
 
   // perspective cameras
-  kwiver::vital::camera_intrinsics_sptr camera_intrinsic(new kwiver::vital::simple_camera_intrinsics(1024, {480, 270}));
-//      kwiver::vital::camera_intrinsics_sptr camera_intrinsic(new kwiver::vital::simple_camera_intrinsics(4480, {2048, 1536}));
+//  kwiver::vital::camera_intrinsics_sptr camera_intrinsic(new kwiver::vital::simple_camera_intrinsics(1024, {480, 270}));
+      kwiver::vital::camera_intrinsics_sptr camera_intrinsic(new kwiver::vital::simple_camera_intrinsics(4480, {2048, 1536}));
 //  kwiver::vital::camera_intrinsics_sptr camera_intrinsic(new kwiver::vital::simple_camera_intrinsics(2100, {1920/2, 1080/2}));
 
   kwiver::vital::camera_sptr_list cameras;
-  auto param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam1.txt");
-  cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
-  param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam2.txt");
-  cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
-  param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam3.txt");
-  cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
-  param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam4.txt");
-  cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
-  param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam5.txt");
-  cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
-  param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam6.txt");
-  cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
+//  auto param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam1.txt");
+//  cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
+//  param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam2.txt");
+//  cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
+//  param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam3.txt");
+//  cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
+//  param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam4.txt");
+//  cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
+//  param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam5.txt");
+//  cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
+//  param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam6.txt");
+//  cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
 
-//      auto param_cam = read_camera("/home/matthieu/data_plane/cam1.txt");
-//      cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
-//      param_cam = read_camera("/home/matthieu/data_plane/cam2.txt");
-//      cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
-//      param_cam = read_camera("/home/matthieu/data_plane/cam3.txt");
-//      cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
+      auto param_cam = read_camera("/home/matthieu/data_plane/cam1.txt");
+      cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
+      param_cam = read_camera("/home/matthieu/data_plane/cam2.txt");
+      cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
+      param_cam = read_camera("/home/matthieu/data_plane/cam3.txt");
+      cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
 
 //      auto param_cam = read_camera("/home/matthieu/data_towers/cam_0.txt");
 //      cameras.push_back(kwiver::vital::camera_sptr(new kwiver::vital::simple_camera_perspective(param_cam.first, param_cam.second.inverse(), camera_intrinsic)));
@@ -228,16 +257,17 @@ void test_fuse_multi_pinhole_cameras()
   // images
   kwiver::vital::image_container_sptr_list images;
   kwiver::vital::algo::image_io_sptr image_io = kwiver::vital::algo::image_io::create("ocv");
-  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam1.png"));
-  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam2.png"));
-  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam3.png"));
-  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam4.png"));
-  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam5.png"));
-  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam6.png"));
 
-//      images.push_back(image_io->load("/home/matthieu/data_plane/cam1.png"));
-//      images.push_back(image_io->load("/home/matthieu/data_plane/cam2.png"));
-//      images.push_back(image_io->load("/home/matthieu/data_plane/cam3.png"));
+//  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam1.png"));
+//  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam2.png"));
+//  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam3.png"));
+//  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam4.png"));
+//  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam5.png"));
+//  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam6.png"));
+
+    images.push_back(image_io->load("/home/matthieu/data_plane/cam1.png"));
+    images.push_back(image_io->load("/home/matthieu/data_plane/cam2.png"));
+    images.push_back(image_io->load("/home/matthieu/data_plane/cam3.png"));
 
 //  images.push_back(image_io->load("/home/matthieu/data_towers/img_0.png"));
 //  images.push_back(image_io->load("/home/matthieu/data_towers/img_1.png"));
@@ -275,9 +305,11 @@ void test_fuse_multi_pinhole_cameras()
                                                                         kwiver::arrows::ocv::image_container::RGB_COLOR);
     cv_tex.convertTo(cv_tex, CV_8UC3);
     cv::cvtColor(cv_tex, cv_tex, CV_BGR2RGB);
-    std::string output_name = "mesh_texture_" + std::to_string(i) + ".obj";
-    cv::imwrite(output_name+".png", cv_tex);
-    kwiver::vital::write_obj(output_name, *mesh, output_name+".png");
+    std::string output_name = "mesh_texture_" + std::to_string(i);
+    cv::imwrite(output_name + ".png", cv_tex);
+//    mesh->set_tex_coords(corrected_tcoords);
+    kwiver::vital::write_obj(output_name + ".obj", *mesh, output_name+".png");
+//    mesh->set_tex_coords(tcoords);
   }
 
   // fusion
@@ -290,7 +322,7 @@ void test_fuse_multi_pinhole_cameras()
   std::string output_filename = "mesh_texture_fused.obj";
   std::string texture_filename = output_filename.substr(0, output_filename.size()-3) + "png";
   cv::imwrite(texture_filename, cv_fused);
-
+//  mesh->set_tex_coords(corrected_tcoords);
   kwiver::vital::write_obj(output_filename, *mesh, texture_filename);
 }
 
@@ -312,6 +344,15 @@ void test_fuse_multi_rpc_cameras()
 
   // uv parameterization
   std::pair<unsigned int, unsigned int> atlas_dim = kwiver::arrows::core::parameterize(mesh, 0.3, 8000, 10, 5);
+
+//  draw_uv_parameterization(mesh, atlas_dim.first, atlas_dim.second, "param.png");
+  // correct the half-pixel shift of tcoords
+  std::vector<vector_2d> tcoords = mesh->tex_coords();
+  std::vector<vector_2d> corrected_tcoords(tcoords.size());
+  for (unsigned int i = 0; i < tcoords.size(); ++i)
+  {
+    corrected_tcoords[i] = {tcoords[i][0] + 0.5 / atlas_dim.first, tcoords[i][1] + 0.5 / atlas_dim.second };
+  }
   // id map
   kwiver::vital::image_container_sptr id_map = kwiver::arrows::core::generate_triangles_map(mesh, atlas_dim.first, atlas_dim.second);
 
@@ -391,13 +432,23 @@ void test_fuse_multi_rpc_cameras()
     cv::split(cv_tex, splitted);
     std::vector<cv::Mat> rgb_splitted = {splitted[1], splitted[2], splitted[4]};
     cv::merge(rgb_splitted, cv_tex);
-    std::string output_name = "texture_" + std::to_string(i) + ".obj";
-    cv::imwrite(output_name+".png", cv_tex);
-    kwiver::vital::write_obj(output_name, *mesh, output_name+".png");
+    std::string output_name = "texture_" + std::to_string(i);
+    cv::imwrite(output_name + ".png", cv_tex);
+    mesh->set_tex_coords(corrected_tcoords);
+    for (unsigned int i=0; i < vertices.size(); ++i)
+    {
+      vertices[i] -= mesh_offset;
+    }
+    kwiver::vital::write_obj(output_name + ".obj", *mesh, output_name + ".png");
+    for (unsigned int i=0; i < vertices.size(); ++i)
+    {
+      vertices[i] += mesh_offset;
+    }
+    mesh->set_tex_coords(tcoords);
   }
 
   // remove offset
-  for (int i=0; i < vertices.size(); ++i)
+  for (unsigned int i=0; i < vertices.size(); ++i)
   {
     vertices[i] -= mesh_offset;
   }
@@ -419,5 +470,6 @@ void test_fuse_multi_rpc_cameras()
   std::string output_filename = "mesh_texture_fused.obj";
   std::string texture_filename = output_filename.substr(0, output_filename.size()-3) + "png";
   cv::imwrite(texture_filename, cv_fused);
+  mesh->set_tex_coords(corrected_tcoords);
   kwiver::vital::write_obj(output_filename, *mesh, texture_filename);
 }
