@@ -23,7 +23,7 @@ vector_2d camera_affine::project(const vector_3d &pt) const
 /// Compute the depth from the camera to pt along the ray
 double camera_affine::depth(const vector_3d &pt) const
 {
-  return pt.dot(this->get_center().head(3)) - this->get_viewing_distance();
+  return this->get_viewing_distance() - pt.dot(this->get_center().head(3));
 }
 
 
@@ -83,6 +83,7 @@ simple_camera_affine::simple_camera_affine(const matrix_3x4d &camera_matrix, uns
                                            unsigned int image_height)
   : view_distance_(0.0), image_width_(image_width), image_height_(image_height)
 {
+  ray_dir_ = {0.0, 0.0, 1.0};   // default ray
   set_matrix(camera_matrix);
 }
 

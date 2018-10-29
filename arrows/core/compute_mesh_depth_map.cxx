@@ -56,16 +56,34 @@ compute_mesh_depth_map(vital::mesh_sptr mesh, vital::camera_sptr camera)
   // project all points on image
   std::vector<vital::vector_2d> points_2d(nb_vertices);
   vital::camera_rpc *rpc_camera = dynamic_cast<vital::camera_rpc*>(camera.get());
+  std::vector<double> points_depth(nb_vertices);
   if (rpc_camera != nullptr)
   {
+    std::vector<vital::vector_2d> latlong_points(nb_vertices);
     // For rpc cameras, the mesh coordinates are first transformed to lat/long coordinates
+    vital::vector_3d center(0.0, 0.0, 0.0);
     for (int i = 0; i < vertices.size(); ++i)
     {
-      vital::vector_2d pt2d_latlong = vital::geo_conv(vertices[i].head<2>(),
-                                                      vital::SRID::UTM_WGS84_north + rpc_camera->utm_zone(),
+      latlong_points[i] = vital::geo_conv(vertices[i].head<2>(),
+                                                      vital::SRID::UTM_WGS84_north + rpc_camera->determine_utm_zone(),
                                                       vital::SRID::lat_lon_WGS84);
-      points_2d[i] = camera->project({pt2d_latlong[0], pt2d_latlong[1], vertices[i](2)});
+      center[0] += latlong_points[i][0];
+      center[1] += latlong_points[i][1];
+      center[2] += vertices[i][2];
     }
+    center /= vertices.size();
+    vital::camera_affine_sptr affine_approx_cam = rpc_camera->approximate_affine_camera(center);
+    std::cout << "Camera center =  " << affine_approx_cam->get_center() << std::endl;
+    for (int i = 0; i < vertices.size(); ++i)
+    {
+      points_2d[i] = affine_approx_cam->project({latlong_points[i][0], latlong_points[i][1], vertices[i](2)});
+      points_depth[i] = affine_approx_cam->depth({latlong_points[i][0], latlong_points[i][1], vertices[i](2)});
+    }
+    // Compute the points depth
+//    for (unsigned int i=0; i < vertices.size(); ++i)
+//    {
+//      points_depth[i] = affine_approx_cam->depth(vertices[i]);
+//    }
   }
   else
   {
@@ -73,12 +91,11 @@ compute_mesh_depth_map(vital::mesh_sptr mesh, vital::camera_sptr camera)
     {
       points_2d[i] = camera->project(vertices[i]);
     }
-  }
-  // Compute the points depth
-  std::vector<double> points_depth(nb_vertices);
-  for (unsigned int i=0; i < vertices.size(); ++i)
-  {
-    points_depth[i] = camera->depth(vertices[i]);
+    // Compute the points depth
+    for (unsigned int i=0; i < vertices.size(); ++i)
+    {
+      points_depth[i] = std::dynamic_pointer_cast<vital::camera_perspective>(camera)->depth(vertices[i]);
+    }
   }
 
   // Initialize z_buffer with max double and id_buffer with -1
@@ -108,10 +125,10 @@ compute_mesh_depth_map(vital::mesh_sptr mesh, vital::camera_sptr camera)
     double b_depth = points_depth[faces(f_id, 1)];
     double c_depth = points_depth[faces(f_id, 2)];
     // the rasterization is done over the face axis-aligned bounding box
-    int u_min = static_cast<int>(std::round(std::min(a_uv[0], std::min(b_uv[0], c_uv[0]))));
-    int u_max = static_cast<int>(std::round(std::max(a_uv[0], std::max(b_uv[0], c_uv[0]))));
-    int v_min = static_cast<int>(std::round(std::min(a_uv[1], std::min(b_uv[1], c_uv[1]))));
-    int v_max = static_cast<int>(std::round(std::max(a_uv[1], std::max(b_uv[1], c_uv[1]))));
+    int u_min = std::max(0, static_cast<int>(std::round(std::min(a_uv[0], std::min(b_uv[0], c_uv[0])))));
+    int u_max = std::min(static_cast<int>(width) - 1, static_cast<int>(std::round(std::max(a_uv[0], std::max(b_uv[0], c_uv[0])))));
+    int v_min = std::max(0, static_cast<int>(std::round(std::min(a_uv[1], std::min(b_uv[1], c_uv[1])))));
+    int v_max = std::min(static_cast<int>(height) - 1, static_cast<int>(std::round(std::max(a_uv[1], std::max(b_uv[1], c_uv[1])))));
     for (int v = v_min; v <= v_max; ++v)
     {
       for (int u = u_min; u <= u_max; ++u)

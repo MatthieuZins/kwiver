@@ -44,6 +44,7 @@
 
 #include <vital/vital_config.h>
 #include <vital/types/camera.h>
+#include <vital/types/camera_affine.h>
 #include <vital/types/matrix.h>
 #include <vital/types/vector.h>
 #include <vital/logger/logger.h>
@@ -102,13 +103,19 @@ public:
   /// Project a 2D image back to a 3D point in space
   virtual vector_3d back_project( const vector_2d& image_pt, double elev ) const;
 
+  /// Get an approximated affine camera
+  camera_affine_sptr approximate_affine_camera(const vector_3d &pt) const;
+
+  ///
+  int determine_utm_zone() const;
+
 protected:
   camera_rpc();
 
   // Compute the Jacobian of the RPC at the given normalized world point
   // Currently this only computes the 2x2 Jacobian for X and Y parameters.
   // This function also returns the normalized projected point
-  virtual void jacobian( const vector_3d& pt, matrix_2x2d& J, vector_2d& norm_pt ) const = 0;
+  virtual void jacobian( const vector_3d& pt, matrix_2x3d& J, vector_2d& norm_pt ) const = 0;
 
   kwiver::vital::logger_handle_t m_logger;
 
@@ -202,7 +209,7 @@ public:
 
 protected:
 
-  virtual void jacobian( const vector_3d& pt, matrix_2x2d& J, vector_2d& norm_pt ) const;
+  virtual void jacobian( const vector_3d& pt, matrix_2x3d& J, vector_2d& norm_pt ) const;
 
   // Update the partial derivatives needed to compute the jacobian
   void update_partial_deriv() const;
@@ -212,6 +219,7 @@ protected:
   // The partial derivatives coefficients
   mutable rpc_deriv_matrix dx_coeffs_;
   mutable rpc_deriv_matrix dy_coeffs_;
+  mutable rpc_deriv_matrix dz_coeffs_;
   // The world scale and offset
   vector_3d world_scale_;
   vector_3d world_offset_;

@@ -35,6 +35,7 @@
  */
 
 #include <vital/types/camera_rpc.h>
+#include <vital/types/geodesy.h>
 #include <vital/io/eigen_io.h>
 #include <Eigen/Geometry>
 
@@ -101,13 +102,14 @@ camera_rpc
   // in a few interations.
   for ( int i = 0; i < 10; ++i )
   {
-    matrix_2x2d J;
+    matrix_2x3d J;
     vector_2d pt;
 
     this->jacobian( rslt, J, pt );
 
-    vector_2d step = J.colPivHouseholderQr().solve( norm_pt - pt );
-    rslt.head( 2 ) += step;
+    vector_3d step = J.colPivHouseholderQr().solve( norm_pt - pt );
+//    rslt.head( 2 ) += step;
+    rslt += step;
     if ( step.cwiseAbs().maxCoeff() < 1.e-16 )
     {
       break;
@@ -115,6 +117,92 @@ camera_rpc
   }
 
   return rslt.cwiseProduct( this->world_scale() ) + this->world_offset();
+}
+
+
+///
+/// \brief camera_rpc::approximate_affine_camera
+/// \param pt The point around which the Taylor development is done
+/// \return
+///
+camera_affine_sptr camera_rpc::approximate_affine_camera(const vector_3d &pt) const
+{
+
+  //vector_3d pt = {-84.083787, 39.780415, 200};
+  vector_3d pt_norm = ( pt - world_offset() ).cwiseQuotient( world_scale() );
+  vector_2d q,  q_norm;
+  matrix_2x3d J;
+  this->jacobian(pt_norm, J, q_norm);
+  q = q_norm.cwiseProduct( image_scale() ) + image_offset();
+
+  J.row(0) *= image_scale()[0];
+  J.row(1) *= image_scale()[1];
+
+  J.col(0) /= world_scale()[0];
+  J.col(1) /= world_scale()[1];
+  J.col(2) /= world_scale()[2];
+
+
+  std::cout << J << std::endl;
+
+  matrix_3x4d A = matrix_3x4d::Zero();
+  A.block<2, 3>(0, 0) = J;
+  A.block<2, 1>(0, 3) = q - J * pt;
+  A(2, 3) = 1.0;
+
+  camera_affine_sptr affine_cam = std::make_shared<simple_camera_affine>(A, this->image_width(), this->image_height());
+  dynamic_cast<simple_camera_affine*>(affine_cam.get())->set_viewing_distance(500);
+  return affine_cam;
+
+  // optical axis direction
+//  rpc_matrix rpc_coeffs = this->rpc_coeffs();
+//  matrix_3x4d P = matrix_3x4d::Zero();
+//  P << rpc_coeffs(0, 1), rpc_coeffs(0, 2), rpc_coeffs(0, 3), rpc_coeffs(0, 0),
+//       rpc_coeffs(2, 1), rpc_coeffs(2, 2), rpc_coeffs(2, 3), rpc_coeffs(2, 0);
+//  Eigen::FullPivLU<matrix_3x4d> lu(P);
+//  matrix_3x4d nullspace = lu.kernel();
+//  vector_3d cc = nullspace.col(0);
+//  cc.normalize();
+//  std::cout << "cc " << cc << std::endl;
+
+//  // take a second point on the this axis
+//  vector_3d pt1 = cc;
+//  vector_3d pt2 = pt1 + 1000*cc;
+
+//  // transform to world scale
+//  vector_3d pt1_latlong = pt1.cwiseProduct(this->world_scale()) + this->world_offset();
+//  vector_3d pt2_latlong = pt2.cwiseProduct(this->world_scale()) + this->world_offset();
+
+//  // transform to UTM
+//  vector_2d pt1_utm_xy = kwiver::vital::geo_conv(vector_2d(pt1_latlong[0], pt1_latlong[1]),
+//          kwiver::vital::SRID::lat_lon_WGS84, kwiver::vital::SRID::UTM_WGS84_north + utm_zone);
+//  vector_2d pt2_utm_xy = kwiver::vital::geo_conv(vector_2d(pt2_latlong[0], pt2_latlong[1]),
+//          kwiver::vital::SRID::lat_lon_WGS84, kwiver::vital::SRID::UTM_WGS84_north + utm_zone);
+
+//  vector_3d pt1_utm = {pt1_utm_xy[0], pt1_utm_xy[1], pt1_latlong[2]};
+//  vector_3d pt2_utm = {pt2_utm_xy[0], pt2_utm_xy[1], pt2_latlong[2]};
+
+//  // get optical axis in utm
+//  vector_3d axis = pt2_utm - pt1_utm;
+//  axis.normalize();
+
+//  // force axis z-component to be negative
+//  if (axis[2] > 0) {
+//      axis *= -1;
+//  }
+
+//  // force satellite position to be at z = 700km
+//  double k = (700000 - pt1_utm[2]) / axis[2];
+//  vector_3d sat_pos = pt1_utm + k * axis;
+
+//  return std::make_shared<simple_camera_affine>();
+}
+
+int camera_rpc::determine_utm_zone() const
+{
+  // Find the UTM zone of the center of the image
+  vector_3d point_3d = this->back_project({0.0, 0.0}, 0.0);
+  return static_cast<int>(std::ceil((point_3d(0) + 180) / 6));
 }
 
 Eigen::Matrix<double, 20, 1>
@@ -157,6 +245,7 @@ simple_camera_rpc
 {
   std::vector<int> dx_ind = { 1, 7, 4, 5, 14 ,17 ,10, 11, 12, 13 };
   std::vector<int> dy_ind = { 2, 4, 8, 6, 12, 10, 18, 14, 15, 16 };
+  std::vector<int> dz_ind = { 3, 5, 6, 9, 13, 16 ,10, 17, 18, 19};
   for ( int i = 0; i < 10; ++i )
   {
     double pwr = 1.0;
@@ -181,22 +270,36 @@ simple_camera_rpc
     }
     dy_coeffs_.block<4, 1>( 0, i ) =
       pwr * rpc_coeffs().block<4, 1>( 0, dy_ind[i] );
+    pwr = 1.0;
+    if ( i == 3 || i == 4 || i == 5 )
+    {
+      pwr = 2.;
+    }
+    else if ( i == 9 )
+    {
+      pwr = 3.;
+    }
+    dz_coeffs_.block<4, 1>( 0, i ) =
+      pwr * rpc_coeffs().block<4, 1>( 0, dz_ind[i] );
   }
 }
 
 void
 simple_camera_rpc
-::jacobian( const vector_3d& pt, matrix_2x2d& J, vector_2d& norm_pt ) const
+::jacobian( const vector_3d& pt, matrix_2x3d& J, vector_2d& norm_pt ) const
 {
   Eigen::Matrix<double, 20, 1> pv = this->power_vector( pt );
   vector_4d ply = this->rpc_coeffs() * pv;
   vector_4d dx_ply = this->dx_coeffs_ * pv.head(10);
   vector_4d dy_ply = this->dy_coeffs_ * pv.head(10);
+  vector_4d dz_ply = this->dz_coeffs_ * pv.head(10);
 
   J( 0, 0 ) = ( ply[1] * dx_ply[0] - ply[0] * dx_ply[1] ) / ( ply[1] * ply[1] );
   J( 0, 1 ) = ( ply[1] * dy_ply[0] - ply[0] * dy_ply[1] ) / ( ply[1] * ply[1] );
+  J( 0, 2 ) = ( ply[1] * dz_ply[0] - ply[0] * dz_ply[1] ) / ( ply[1] * ply[1] );
   J( 1, 0 ) = ( ply[3] * dx_ply[2] - ply[2] * dx_ply[3] ) / ( ply[3] * ply[3] );
   J( 1, 1 ) = ( ply[3] * dy_ply[2] - ply[2] * dy_ply[3] ) / ( ply[3] * ply[3] );
+  J( 1, 2 ) = ( ply[3] * dz_ply[2] - ply[2] * dz_ply[3] ) / ( ply[3] * ply[3] );
 
   norm_pt << ply[0] / ply[1], ply[2] / ply[3];
 }
