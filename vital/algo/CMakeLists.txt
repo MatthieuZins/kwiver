@@ -16,6 +16,7 @@ set( public_headers
   close_loops.h
   compute_association_matrix.h
   compute_depth.h
+  compute_mesh_uv_parameterization.h
   compute_ref_homography.h
   compute_stereo_depth_map.h
   compute_track_descriptors.h
@@ -73,6 +74,7 @@ set( sources
   close_loops.cxx
   compute_association_matrix.cxx
   compute_depth.cxx
+  compute_mesh_uv_parameterization.cxx
   compute_ref_homography.cxx
   compute_stereo_depth_map.cxx
   compute_track_descriptors.cxx
