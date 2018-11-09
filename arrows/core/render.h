@@ -103,16 +103,16 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
   for (tsi.reset(); tsi.next(); )
   {
     int y = tsi.scan_y();
-    if (y < 0 || y >= img.height())
+    if (y < 0 || y >= texture.height())
       continue;
     int min_x = tsi.start_x();
     int max_x = tsi.end_x();
-    if (max_x < 0 || min_x >= img.width())
+    if (max_x < 0 || min_x >= texture.width())
       continue;
     if (min_x < 0)
       min_x = 0;
-    if (max_x >= img.width())
-      max_x = img.width() - 1;
+    if (max_x >= texture.width())
+      max_x = texture.width() - 1;
 
 
     vital::vector_2d v1v2 = v2 - v1;
