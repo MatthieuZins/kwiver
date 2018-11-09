@@ -51,6 +51,7 @@
 #include <memory>
 #include <arrows/core/render.h>
 #include <vital/types/image_container.h>
+#include <fstream>
 
 kwiver::vital::camera_rpc_sptr
 loadcamera_from_tif_image(const std::string& filename)
@@ -261,8 +262,8 @@ int main()
 
   kwiver::vital::plugin_manager::instance().load_all_plugins();
   kwiver::vital::algo::image_io_sptr ocv_io = kwiver::vital::algo::image_io::create("ocv");
-  kwiver::vital::image_container_sptr im = ocv_io->load("./input_image.png");
-  kwiver::vital::image input_img = im->get_image();
+//  kwiver::vital::image_container_sptr im = ocv_io->load("./input_image.png");
+//  kwiver::vital::image input_img = im->get_image();
 
 
   kwiver::vital::image_of<double> depth(400, 400);
@@ -331,6 +332,18 @@ int main()
   ocv_io->save("texture.png", out_texture);
 
   kwiver::vital::write_obj("texture_mesh.obj", *mesh);
+
+  std::ofstream mtl_file("./material.mtl");
+
+  mtl_file << "newmtl mat\n";
+  mtl_file << "Ka 1.0 1.0 1.0\n";
+  mtl_file << "Kd 1.0 1.0 1.0\n";
+  mtl_file << "Ks 1 1 1\n";
+  mtl_file << "d 1\n";
+  mtl_file << "Ns 75\n";
+  mtl_file << "illum 1\n";
+  mtl_file << "map_Kd texture.png";
+  mtl_file.close();
 
   //  kwiver::vital::image_of<double> depth(400, 400);
   //  kwiver::vital::image_of<double> img(400, 400);
