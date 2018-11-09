@@ -155,8 +155,8 @@ double bilinear_interp_safe(const vital::image& img, double x, double y, int d)
   if (normx == 0) return img.at<T>(p1x, p1y, d) + (img.at<T>(p1x, p1y + 1, d) - img.at<T>(p1x, p1y, d)) * normy;
   if (normy == 0) return img.at<T>(p1x, p1y, d) + (img.at<T>(p1x + 1, p1y, d) - img.at<T>(p1x, p1y, d)) * normx;
 
-  double i1 = img.at<T>(p1x, p1y, d) + (img.at<T>(p1x, p1y + 1, d) - img.at<T>(p1x, p1y + 1, d)) * normy;
-  double i2 = img.at<T>(p1x + 1, p1y, d) + (img.at<T>(p1x + 1, p1y + 1, d) - img.at<T>(p1x + 1, p1y + 1, d)) * normy;
+  double i1 = img.at<T>(p1x, p1y, d) + (img.at<T>(p1x, p1y + 1, d) - img.at<T>(p1x, p1y , d)) * normy;
+  double i2 = img.at<T>(p1x + 1, p1y, d) + (img.at<T>(p1x + 1, p1y + 1, d) - img.at<T>(p1x + 1, p1y, d)) * normy;
 
   return i1 + (i2 - i1) * normx;
 }
