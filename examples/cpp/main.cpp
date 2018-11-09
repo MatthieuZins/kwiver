@@ -50,7 +50,7 @@
 #include <vital/exceptions.h>
 #include <memory>
 #include <arrows/core/render.h>
-
+#include <vital/types/image_container.h>
 //kwiver::vital::camera_rpc_sptr
 //loadcamera_from_tif_image(const std::string& filename)
 //{
@@ -170,61 +170,81 @@ int main()
 
 //  kwiver::vital::image_container_sptr depth_map = kwiver::arrows::render_mesh_height_map(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_rpc>(camera));
 
-
-
-
+  kwiver::vital::plugin_manager::instance().load_all_plugins();
+  kwiver::vital::algo::image_io_sptr ocv_io = kwiver::vital::algo::image_io::create("ocv");
+  kwiver::vital::image_container_sptr im = ocv_io->load("./input_image.png");
+  kwiver::vital::image input_img = im->get_image();
 
 
   kwiver::vital::image_of<double> depth(400, 400);
-  kwiver::vital::image_of<double> img(400, 400);
+  kwiver::vital::image_of<unsigned char> img(400, 400);
+  kwiver::vital::image_of<unsigned char> texture(400, 400);
   for (int i = 0; i < img.height(); ++i)
   {
     for (int j= 0 ;j < img.width(); ++j)
     {
-      depth(j, i) = 0;
-      img(j, i) = 0;
+      texture(j, i) = 0;
     }
   }
-  kwiver::vital::vector_2d v1(0, 0);
-  kwiver::vital::vector_2d v2(390, 0);
-  kwiver::vital::vector_2d v3(150, 390);
-  double d1 = 10;
-  double d2 = 10;
-  double d3 = 1;
-  double i1 = 1.0/10.0;
-  double i2 = 1.0/10.0;
-  double i3 = 1.0/1.0;
+  kwiver::vital::vector_2d a(0, 0), b(100, 0), c(50, 100);
+  kwiver::vital::vector_3d pt_a(0, 0, 1), pt_b(100, 0, 1), pt_c(50, 100, 1);
 
-  kwiver::vital::vector_2d g = (v1 + v2 + v3) / 3;
+  kwiver::vital::camera_sptr cam(new kwiver::vital::simple_camera_perspective());
 
-  kwiver::arrows::render_triangle<double>(v1, v2, v3, d1, d2, d3, i1, i2, i3,  depth, img, false);
+  double d1 = 1, d2 = 1, d3 = 1;
 
-  for (int i = 0; i < img.height(); ++i)
-  {
-    for (int j= 0 ;j < img.width(); ++j)
-    {
-      if (img(j, i) > 0.01)
-        img(j, i) = 1.0 / img(j, i);
-    }
-  }
 
-  std::cout << "Barycenter " << (int)img((int)g(0), (int)g(1)) << std::endl;
+  kwiver::arrows::render_triangle_from_image<unsigned char>(a, b, c, pt_a, pt_b, pt_c, cam, input_img, d1, d2, d3, depth, texture);
 
-  kwiver::vital::simple_image_container image_temp(img);
 
-  // write depthmap
-  cv::Mat image = kwiver::arrows::ocv::image_container_to_ocv_matrix(image_temp,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
+  kwiver::vital::image_container_sptr out_texture(new kwiver::vital::simple_image_container(texture));
 
-    double min, max;
-  cv::minMaxLoc(image, &min, &max, 0, 0);
-  std::cout << "min max " << min << " " << max << std::endl;
-  image -= min;
-  image /= (max-min);
-  image *= 255;
-//  // threshold max to 255
-//  cv::threshold(image, image, 255, 0, cv::THRESH_TRUNC);
-//  // threshold min to 0
-//  cv::threshold(image, image, 0, 0, cv::THRESH_TOZERO);
-  image.convertTo(image, CV_8U);
-  cv::imwrite("depthmap.png", image);
+  ocv_io->save("texture.png", out_texture);
+
+
+
+
+//  kwiver::vital::image_of<double> depth(400, 400);
+//  kwiver::vital::image_of<double> img(400, 400);
+//  for (int i = 0; i < img.height(); ++i)
+//  {
+//    for (int j= 0 ;j < img.width(); ++j)
+//    {
+//      depth(j, i) = std::numeric_limits<double>::infinity();
+//      img(j, i) = 0;
+//    }
+//  }
+//  kwiver::vital::vector_2d v1(0, 0);
+//  kwiver::vital::vector_2d v2(390, 0);
+//  kwiver::vital::vector_2d v3(150, 390);
+//  double d1 = 10;
+//  double d2 = 10;
+//  double d3 = 1;
+//  double i1 = 10.0;
+//  double i2 = 10.0;
+//  double i3 = 1.0;
+
+//  kwiver::vital::vector_2d g = (v1 + v2 + v3) / 3;
+
+//  kwiver::arrows::render_triangle<double>(v1, v2, v3, d1, d2, d3, i1, i2, i3,  depth, img, true);
+
+//  std::cout << "Barycenter " << (int)img((int)g(0), (int)g(1)) << std::endl;
+
+//  kwiver::vital::simple_image_container image_temp(img);
+
+//  // write depthmap
+//  cv::Mat image = kwiver::arrows::ocv::image_container_to_ocv_matrix(image_temp,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
+
+//    double min, max;
+//  cv::minMaxLoc(image, &min, &max, 0, 0);
+//  std::cout << "min max " << min << " " << max << std::endl;
+//  image -= min;
+//  image /= (max-min);
+//  image *= 255;
+////  // threshold max to 255
+////  cv::threshold(image, image, 255, 0, cv::THRESH_TRUNC);
+////  // threshold min to 0
+////  cv::threshold(image, image, 0, 0, cv::THRESH_TOZERO);
+//  image.convertTo(image, CV_8U);
+//  cv::imwrite("depthmap.png", image);
 }
