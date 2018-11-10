@@ -299,6 +299,9 @@ int main()
     kwiver::vital::vector_2d a = tcoords[f * 3 + 0];
     kwiver::vital::vector_2d b = tcoords[f * 3 + 1];
     kwiver::vital::vector_2d c = tcoords[f * 3 + 2];
+    a.y() = 1.0 - a.y();
+    b.y() = 1.0 - b.y();
+    c.y() = 1.0 - c.y();
     a = a.cwiseProduct(scale);
     b = b.cwiseProduct(scale);
     c = c.cwiseProduct(scale);
