@@ -20,7 +20,7 @@ template<class T>
 void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2, const vital::vector_2d& v3,
                      double depth_v1, double depth_v2, double depth_v3,
                      T attrib_v1, T attrib_v2, T attrib_v3,
-                     const vital::image_of<double>& depth_img,
+                     vital::image_of<double>& depth_img,
                      vital::image_of<T>& img,
                      bool use_perspect_correct)
 {
@@ -85,10 +85,12 @@ void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2, con
       if (depth < depth_img(x, y))
       {
         img(x, y) =  static_cast<T>(attrib);
+        depth_img(x, y) = depth;
       }
     }
   }
 }
+
 
 template <class T>
 void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_2d& v2, const vital::vector_2d& v3,

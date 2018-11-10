@@ -35,6 +35,8 @@
 
 #include "render_mesh_depth_map.h"
 
+#include "render.h"
+
 #include <vital/types/camera_perspective.h>
 #include <vital/types/image.h>
 #include <vital/types/vector.h>
@@ -208,6 +210,52 @@ void rasterize_depth(const vital::mesh_regular_face_array<3> &triangles,
       }
     }
   }
+}
+
+vital::image_container_sptr render_mesh_depth_map2(vital::mesh_sptr mesh, vital::camera_perspective_sptr camera)
+{
+  vital::mesh_vertex_array<3>& vertices = dynamic_cast< vital::mesh_vertex_array<3>& >(mesh->vertices());
+
+  std::vector<vital::vector_2d> points_2d(vertices.size());
+  for (unsigned int i = 0; i < vertices.size(); ++i)
+  {
+    points_2d[i] = camera->project(vertices[i]);
+  }
+
+  vital::image_of<double> zbuffer(camera->image_width(), camera->image_height(), 1);
+  vital::image_of<double> img(camera->image_width(), camera->image_height(), 1);
+  for (size_t j = 0; j < zbuffer.height(); ++j)
+  {
+    for (size_t i = 0; i < zbuffer.width(); ++i)
+    {
+      zbuffer(i, j) = std::numeric_limits<double>::infinity();
+    }
+  }
+
+  if (mesh->faces().regularity() == 3)
+  {
+    auto const& triangles = static_cast< const vital::mesh_regular_face_array<3>& >(mesh->faces());
+    for (unsigned int f = 0; f < triangles.size(); ++f)
+    {
+      vital::vector_2d& v1 = points_2d[triangles(f, 0)];
+      vital::vector_2d& v2 = points_2d[triangles(f, 1)];
+      vital::vector_2d& v3 = points_2d[triangles(f, 2)];
+
+      double d1 = camera->depth(vertices[triangles(f, 0)]);
+      double d2 = camera->depth(vertices[triangles(f, 1)]);
+      double d3 = camera->depth(vertices[triangles(f, 2)]);
+
+      render_triangle(v1, v2, v3,
+                      d1, d2, d3,
+                      d1, d2, d3,
+                      zbuffer, img, true);
+    }
+  }
+  else
+  {
+    LOG_ERROR(vital::get_logger("arrows.core.render_mesh_depth_map" ), "The mesh has to be triangular.");
+  }
+  return std::make_shared<vital::simple_image_container>(zbuffer);
 }
 
 }

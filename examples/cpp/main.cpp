@@ -52,6 +52,16 @@
 #include <arrows/core/render.h>
 #include <vital/types/image_container.h>
 #include <fstream>
+#include <arrows/core/render_mesh_depth_map.h>
+
+#define PROFILE(str, ...)      \
+{                              \
+    std::cout << str << " ... \t\t" << std::flush;    \
+    clock_t profile_t0 = clock();   \
+    __VA_ARGS__;                    \
+    std::cout << double(clock() - profile_t0) / CLOCKS_PER_SEC   \
+    << " s" << std::endl;           \
+}
 
 kwiver::vital::camera_rpc_sptr
 loadcamera_from_tif_image(const std::string& filename)
@@ -348,6 +358,14 @@ int main()
   mtl_file << "map_Kd texture.png";
   mtl_file.close();
 
+
+  std::cout << "image " << sizeof(kwiver::vital::image) << std::endl;
+  std::cout << "image_memory_sptr " << sizeof(kwiver::vital::image_memory_sptr) << std::endl;
+  std::cout << "image_pixel_traits " << sizeof(kwiver::vital::image_pixel_traits) << std::endl;
+  std::cout << "size_t " << sizeof(size_t) << std::endl;
+  std::cout << "ptrdiff_t " << sizeof(ptrdiff_t) << std::endl;
+  std::cout << "image container " << sizeof(kwiver::vital::simple_image_container) << std::endl;
+
   //  kwiver::vital::image_of<double> depth(400, 400);
   //  kwiver::vital::image_of<double> img(400, 400);
   //  for (int i = 0; i < img.height(); ++i)
@@ -374,23 +392,61 @@ int main()
 
   //  std::cout << "Barycenter " << (int)img((int)g(0), (int)g(1)) << std::endl;
 
-  //  kwiver::vital::simple_image_container image_temp(img);
+  kwiver::vital::image_container_sptr res;
+  PROFILE("render_mesh_depth map",
+    res = kwiver::arrows::render_mesh_depth_map(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_perspective>(camera));
+)
+    //  // write depthmap
+    cv::Mat image = kwiver::arrows::ocv::image_container_to_ocv_matrix(*res,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
 
-  //  // write depthmap
-  //  cv::Mat image = kwiver::arrows::ocv::image_container_to_ocv_matrix(image_temp,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
+    double min, max;
+    cv::minMaxLoc(image, &min, &max, 0, 0);
+    for (int i = 0; i < image.rows; ++i)
+    {
+      for (int j= 0 ; j < image.cols; ++j)
+      {
+        if (std::isinf(image.at<double>(i, j) ))
+        {
+          image.at<double>(i, j) = min;
+        }
+      }
+    }
+    cv::minMaxLoc(image, &min, &max, 0, 0);
+    std::cout << "min max " << min << " " << max << std::endl;
+    image -= min;
+    image /= (max-min);
+    image *= 255;
+    image.convertTo(image, CV_8U);
+    cv::imwrite("depthmap.png", image);
 
-  //    double min, max;
-  //  cv::minMaxLoc(image, &min, &max, 0, 0);
-  //  std::cout << "min max " << min << " " << max << std::endl;
-  //  image -= min;
-  //  image /= (max-min);
-  //  image *= 255;
-  ////  // threshold max to 255
-  ////  cv::threshold(image, image, 255, 0, cv::THRESH_TRUNC);
-  ////  // threshold min to 0
-  ////  cv::threshold(image, image, 0, 0, cv::THRESH_TOZERO);
-  //  image.convertTo(image, CV_8U);
-  //  cv::imwrite("depthmap.png", image);
+
+
+  kwiver::vital::image_container_sptr res2;
+  PROFILE("render_mesh_depth map 2",
+    res2 = kwiver::arrows::render_mesh_depth_map2(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_perspective>(camera));
+)
+    //  // write depthmap
+    cv::Mat image2 = kwiver::arrows::ocv::image_container_to_ocv_matrix(*res2,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
+
+    double min2, max2;
+    cv::minMaxLoc(image2, &min2, &max2, 0, 0);
+    for (int i = 0; i < image2.rows; ++i)
+    {
+      for (int j= 0 ; j < image2.cols; ++j)
+      {
+        if (std::isinf(image2.at<double>(i, j) ))
+        {
+          image2.at<double>(i, j) = min2;
+        }
+      }
+    }
+    cv::minMaxLoc(image2, &min2, &max2, 0, 0);
+    std::cout << "min max " << min2 << " " << max2 << std::endl;
+    image2 -= min2;
+    image2 /= (max2-min2);
+    image2 *= 255;
+    image2.convertTo(image2, CV_8U);
+    cv::imwrite("depthmap2.png", image2);
 
 
 

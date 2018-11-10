@@ -58,6 +58,17 @@ KWIVER_ALGO_CORE_EXPORT
 vital::image_container_sptr render_mesh_depth_map(kwiver::vital::mesh_sptr mesh,
                                                   kwiver::vital::camera_perspective_sptr camera);
 
+/// This function renders a depthmap of a mesh seen by a camera
+/**
+ * @brief render_mesh_depth_map
+ * @param mesh [in]
+ * @param camera [in]
+ * @return a depth map
+ */
+KWIVER_ALGO_CORE_EXPORT
+vital::image_container_sptr render_mesh_depth_map2(kwiver::vital::mesh_sptr mesh,
+                                                   kwiver::vital::camera_perspective_sptr camera);
+
 
 /// This function fills image with depth interpolated
 /**
