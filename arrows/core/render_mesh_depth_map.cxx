@@ -235,15 +235,16 @@ vital::image_container_sptr render_mesh_depth_map2(vital::mesh_sptr mesh, vital:
   if (mesh->faces().regularity() == 3)
   {
     auto const& triangles = static_cast< const vital::mesh_regular_face_array<3>& >(mesh->faces());
+    double d1, d2, d3;
     for (unsigned int f = 0; f < triangles.size(); ++f)
     {
       vital::vector_2d& v1 = points_2d[triangles(f, 0)];
       vital::vector_2d& v2 = points_2d[triangles(f, 1)];
       vital::vector_2d& v3 = points_2d[triangles(f, 2)];
 
-      double d1 = camera->depth(vertices[triangles(f, 0)]);
-      double d2 = camera->depth(vertices[triangles(f, 1)]);
-      double d3 = camera->depth(vertices[triangles(f, 2)]);
+      d1 = camera->depth(vertices[triangles(f, 0)]);
+      d2 = camera->depth(vertices[triangles(f, 1)]);
+      d3 = camera->depth(vertices[triangles(f, 2)]);
 
       render_triangle(v1, v2, v3,
                       d1, d2, d3,
@@ -256,6 +257,74 @@ vital::image_container_sptr render_mesh_depth_map2(vital::mesh_sptr mesh, vital:
     LOG_ERROR(vital::get_logger("arrows.core.render_mesh_depth_map" ), "The mesh has to be triangular.");
   }
   return std::make_shared<vital::simple_image_container>(zbuffer);
+}
+
+vital::image_container_sptr render_mesh_height_map(vital::mesh_sptr mesh, vital::camera_sptr camera)
+{
+  vital::mesh_vertex_array<3>& vertices = dynamic_cast< vital::mesh_vertex_array<3>& >(mesh->vertices());
+
+  std::vector<vital::vector_2d> points_2d(vertices.size());
+  for (unsigned int i = 0; i < vertices.size(); ++i)
+  {
+    points_2d[i] = camera->project(vertices[i]);
+  }
+
+  vital::image_of<double> height_buffer(camera->image_width(), camera->image_height(), 1);
+  vital::image_of<double> img(camera->image_width(), camera->image_height(), 1);
+  for (size_t j = 0; j < height_buffer.height(); ++j)
+  {
+    for (size_t i = 0; i < height_buffer.width(); ++i)
+    {
+      height_buffer(i, j) = std::numeric_limits<double>::infinity();
+    }
+  }
+
+  if (mesh->faces().regularity() == 3)
+  {
+    auto const& triangles = static_cast< const vital::mesh_regular_face_array<3>& >(mesh->faces());
+    double d1, d2, d3;
+    double a1, a2, a3;
+    vital::camera_perspective* perspective_camera = dynamic_cast<vital::camera_perspective*>(camera.get());
+    for (unsigned int f = 0; f < triangles.size(); ++f)
+    {
+      vital::vector_2d& v1 = points_2d[triangles(f, 0)];
+      vital::vector_2d& v2 = points_2d[triangles(f, 1)];
+      vital::vector_2d& v3 = points_2d[triangles(f, 2)];
+
+      a1 = -vertices[triangles(f, 0)](2);
+      a2 = -vertices[triangles(f, 1)](2);
+      a3 = -vertices[triangles(f, 2)](2);
+      if (perspective_camera)
+      { // depth
+        d1 = perspective_camera->depth(vertices[triangles(f, 0)]);
+        d2 = perspective_camera->depth(vertices[triangles(f, 1)]);
+        d3 = perspective_camera->depth(vertices[triangles(f, 2)]);
+      }
+      else
+      { // - height
+        d1 = -vertices[triangles(f, 0)](2);
+        d2 = -vertices[triangles(f, 1)](2);
+        d3 = -vertices[triangles(f, 2)](2);
+      }
+
+      render_triangle(v1, v2, v3,
+                      d1, d2, d3,
+                      a1, a2, a3,
+                      height_buffer, img, perspective_camera != nullptr);
+    }
+    for (unsigned int y = 0; y < img.height(); ++y)
+    {
+      for (unsigned int x = 0; x < img.width(); ++x)
+      {
+        img(x, y) = -img(x, y);
+      }
+    }
+  }
+  else
+  {
+    LOG_ERROR(vital::get_logger("arrows.core.render_mesh_depth_map" ), "The mesh has to be triangular.");
+  }
+  return std::make_shared<vital::simple_image_container>(img);
 }
 
 }

@@ -422,8 +422,8 @@ int main()
 
 
   kwiver::vital::image_container_sptr res2;
-  PROFILE("render_mesh_depth map 2",
-    res2 = kwiver::arrows::render_mesh_depth_map2(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_perspective>(camera));
+  PROFILE("render_mesh_height map 2",
+    res2 = kwiver::arrows::render_mesh_height_map(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_perspective>(camera));
 )
     //  // write depthmap
     cv::Mat image2 = kwiver::arrows::ocv::image_container_to_ocv_matrix(*res2,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
@@ -446,7 +446,7 @@ int main()
     image2 /= (max2-min2);
     image2 *= 255;
     image2.convertTo(image2, CV_8U);
-    cv::imwrite("depthmap2.png", image2);
+    cv::imwrite("heightmap2.png", image2);
 
 
 

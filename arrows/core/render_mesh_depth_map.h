@@ -70,6 +70,10 @@ vital::image_container_sptr render_mesh_depth_map2(kwiver::vital::mesh_sptr mesh
                                                    kwiver::vital::camera_perspective_sptr camera);
 
 
+KWIVER_ALGO_CORE_EXPORT
+vital::image_container_sptr render_mesh_height_map(kwiver::vital::mesh_sptr mesh,
+                                                   kwiver::vital::camera_sptr camera);
+
 /// This function fills image with depth interpolated
 /**
  * @brief rasterize_depth
