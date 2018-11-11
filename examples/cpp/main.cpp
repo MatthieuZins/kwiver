@@ -302,6 +302,10 @@ int main()
 
   kwiver::vital::image temp = images[0]->get_image();
 
+
+  auto depth_map = kwiver::arrows::render_mesh_depth_map2(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_perspective>(camera));
+
+
   kwiver::vital::vector_2d scale(texture.width(), texture.height());
   int nb=0;
   for (int f = 0; f < triangles.size(); ++f)
@@ -323,6 +327,9 @@ int main()
 //    std::cout << c(0) << " " << c(1) << std::endl;
 //    std::cout << "-----------------------------\n";
 
+    d1 = dynamic_cast<kwiver::vital::camera_perspective*>(camera.get())->depth(pt_a);
+    d2 = dynamic_cast<kwiver::vital::camera_perspective*>(camera.get())->depth(pt_b);
+    d3 = dynamic_cast<kwiver::vital::camera_perspective*>(camera.get())->depth(pt_c);
 
     kwiver::vital::vector_2d t1 = b-a;
     kwiver::vital::vector_2d t2 = c-a;
@@ -332,8 +339,10 @@ int main()
     }
   nb++;
 
+
+
 //    std::cout << pt_a << " " << pt_b << " " << pt_c << std::endl;
-    kwiver::arrows::render_triangle_from_image<unsigned char>(a, b, c, pt_a, pt_b, pt_c, camera, temp, d1, d2, d3, depth, texture);
+    kwiver::arrows::render_triangle_from_image<unsigned char>(a, b, c, pt_a, pt_b, pt_c, camera, temp, d1, d2, d3, depth_map->get_image(), texture);
   }
 
   std::cout << "NB FACES = " << nb << " over " << triangles.size() << std::endl;

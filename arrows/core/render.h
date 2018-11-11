@@ -2,6 +2,7 @@
 #define KWIVER_ARROWS_CORE_RENDER_H
 
 #include <vital/types/camera.h>
+#include <vital/types/camera_perspective.h>
 #include <vital/types/image.h>
 #include <vital/types/triangle_scan_iterator.h>
 #include <vital/types/vector.h>
@@ -9,7 +10,6 @@
 
 namespace kwiver {
 namespace arrows {
-
 
 
 template <class T>
@@ -92,6 +92,7 @@ void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2, con
 }
 
 
+
 template <class T>
 void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_2d& v2, const vital::vector_2d& v3,
                                 const vital::vector_3d& pt1, const vital::vector_3d& pt2, const vital::vector_3d& pt3,
@@ -100,6 +101,14 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
                                 const vital::image& depth, vital::image& texture)
 {
   assert(img.depth() == texture.depth());
+
+  // TODO add a check on orientation of the face w.r.t. the camera view point (maybe remove ? or put outside the function)
+  vital::vector_2d p1 = camera->project(pt1);
+  vital::vector_2d p2 = camera->project(pt2);
+  vital::vector_2d p3 = camera->project(pt3);
+  // check the projected triangle orientatio
+  if ((p2(0) - p1(0)) * (p3(1) - p1(1)) - (p2(1) - p1(1)) * (p3(0) - p1(0)) >= 0)
+    return;
 
   vital::triangle_scan_iterator tsi(v1, v2, v3);
   for (tsi.reset(); tsi.next(); )
@@ -130,11 +139,15 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
       double b = (v1v2(0) * coord(1) - v1v2(1) * coord(0)) / (v1v2(0) * v1v3(1) - v1v2(1) * v1v3(0));
 
       vital::vector_3d pt3d = pt1 + a * pt1pt2 + b * pt1pt3;
+      double interpolated_depth = depth_pt1 + a * (depth_pt2-depth_pt1) + b * (depth_pt3-depth_pt1);
 
       vital::vector_2d pt_img = camera->project(pt3d);
 
-      for (int d = 0; d < texture.depth(); ++d)
-        texture.at<T>(x, y, d) = bilinear_interp_safe<T>(img, pt_img(0), pt_img(1), d);
+      if (std::abs(interpolated_depth - depth.at<double>(pt_img(0), pt_img(1))) < 0.001 )
+      {
+        for (int d = 0; d < texture.depth(); ++d)
+          texture.at<T>(x, y, d) = bilinear_interp_safe<T>(img, pt_img(0), pt_img(1), d);
+      }
     }
   }
 }
