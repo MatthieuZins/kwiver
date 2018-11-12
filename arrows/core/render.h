@@ -158,10 +158,12 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
       for (int i = 0; i < images.size(); ++i)
       {
         vital::vector_2d pt_img = cameras[i]->project(pt3d);
-        double interpolated_depth = depths[i](0) + a * (depths[i](1)-depths[i](0)) + b * (depths[i](2)-depths[i](0));
-        if (std::abs(interpolated_depth - depth_maps[i].at<double>(pt_img(0), pt_img(1))) > 0.1 )
+        if (pt_img(0) < 0 || pt_img(0) >= images[i].width() || pt_img(1) < 0 || pt_img(1) >= images[i].height())
           continue;
-        if (scores[i] > score_max)
+        double interpolated_depth = depths[i](0) + a * (depths[i](1)-depths[i](0)) + b * (depths[i](2)-depths[i](0));
+//        if (std::abs(interpolated_depth - depth_maps[i].at<double>(pt_img(0), pt_img(1))) > 0.1 )
+//          continue;
+        if (scores[i] >= score_max)
         {
           score_max = scores[i];
           for (int d = 0; d < texture.depth(); ++d)

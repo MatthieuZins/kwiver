@@ -161,7 +161,7 @@ int main()
 
   kwiver::vital::camera_intrinsics_sptr camera_intrinsic;
 //    camera_intrinsic.reset(new kwiver::vital::simple_camera_intrinsics(1024, {480, 270}, 1.0, 0.0, {}, 960, 540));
-  camera_intrinsic.reset(new kwiver::vital::simple_camera_intrinsics(4480, {2048, 1536}, 1.0, 0.0, {}, 4096, 3072));
+//  camera_intrinsic.reset(new kwiver::vital::simple_camera_intrinsics(4480, {2048, 1536}, 1.0, 0.0, {}, 4096, 3072));
 //    camera_intrinsic.reset(new kwiver::vital::simple_camera_intrinsics(2100, {1920/2, 1080/2}, 1.0, 0.0, {}, 1920, 1080));
 
   std::vector< std::pair<kwiver::vital::vector_3d, kwiver::vital::rotation_d> > param_cams;
@@ -172,9 +172,9 @@ int main()
 //  param_cams.push_back(read_camera("/home/matthieu/data_cube_texture/cameras/cam5.txt"));
 //  param_cams.push_back(read_camera("/home/matthieu/data_cube_texture/cameras/cam6.txt"));
 
-  param_cams.push_back(read_camera("/home/matthieu/data_plane/cam1.txt"));
-  param_cams.push_back(read_camera("/home/matthieu/data_plane/cam2.txt"));
-  param_cams.push_back(read_camera("/home/matthieu/data_plane/cam3.txt"));
+//  param_cams.push_back(read_camera("/home/matthieu/data_plane/cam1.txt"));
+//  param_cams.push_back(read_camera("/home/matthieu/data_plane/cam2.txt"));
+//  param_cams.push_back(read_camera("/home/matthieu/data_plane/cam3.txt"));
 
 //  param_cams.push_back(read_camera("/home/matthieu/data_towers/cam_0.txt"));
 //  param_cams.push_back(read_camera("/home/matthieu/data_towers/cam_1.txt"));
@@ -182,65 +182,29 @@ int main()
 
 
 
-  std::vector<kwiver::vital::camera_sptr> cameras;
+//  std::vector<kwiver::vital::camera_sptr> cameras;
   for (int c = 0; c < param_cams.size(); ++c)
   {
-    cameras.push_back(std::make_shared<kwiver::vital::simple_camera_perspective>(param_cams[c].first, param_cams[c].second.inverse(), camera_intrinsic));
-    //  cameras.push_back(loadcamera_from_tif_image("/media/matthieu/DATA/core3D-data/AOI2/images/pansharpen/rescaled/07OCT16WV031100016OCT07164906-P1BS-500941044050_01_P001_________AAE_0AAAAABPABJ0_pansharpen_8.tif"));
-    //  cameras.push_back(loadcamera_from_tif_image("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/18FEB16WV031200016FEB18164007-P1BS-501504472090_01_P001_________AAE_0AAAAABPABP0_crop_pansharpened_processed.tif"));
+//    cameras.push_back(std::make_shared<kwiver::vital::simple_camera_perspective>(param_cams[c].first, param_cams[c].second.inverse(), camera_intrinsic));
+//      cameras.push_back(loadcamera_from_tif_image("/media/matthieu/DATA/core3D-data/AOI2/images/pansharpen/rescaled/07OCT16WV031100016OCT07164906-P1BS-500941044050_01_P001_________AAE_0AAAAABPABJ0_pansharpen_8.tif"));
+//      cameras.push_back(loadcamera_from_tif_image("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/18FEB16WV031200016FEB18164007-P1BS-501504472090_01_P001_________AAE_0AAAAABPABP0_crop_pansharpened_processed.tif"));
   }
 
   kwiver::vital::mesh_sptr mesh;
 //    mesh= kwiver::vital::read_obj("/home/matthieu/data_cube_texture/cube.obj");
-  mesh = kwiver::vital::read_obj("/home/matthieu/data_plane/f16.obj");
+//    mesh = kwiver::vital::read_obj("/home/matthieu/data_plane/f16.obj");
 //    mesh = kwiver::vital::read_obj("/home/matthieu/data_towers/towers.obj");
 
   //  kwiver::vital::vector_3d mesh_offset = {749376.2, 4407080.0, 239.85687};
   //  mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI2/meshes/test/mesh.obj");
 
-  //  kwiver::vital::vector_3d mesh_offset = {435516.726081, 3354093.8, -47.911346};
-  //  mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI4/meshes/concatenated/concatenated.obj");
+    kwiver::vital::vector_3d mesh_offset = {435516.726081, 3354093.8, -47.911346};
+    mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI4/meshes/triangulated/ground.obj");
+    kwiver::vital::mesh_sptr occlusion_mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI4/meshes/concatenated/concatenated.obj");
 
 
-
-
-  //  // Turn the mesh into a triangular mesh
-  //  std::vector< kwiver::vital::mesh_regular_face<3> > regular_faces(mesh->faces().size());
-  //  for (unsigned int f = 0; f < mesh->faces().size(); ++f)
-  //  {
-  //    std::vector<unsigned int> face(3);
-  //    for (int i = 0; i < 3; ++i)
-  //    {
-  //      face[i] = mesh->faces()(f, i);
-  //    }
-  //    regular_faces[f] = kwiver::vital::mesh_regular_face<3>(face);
-  //  }
-  //  std::unique_ptr< kwiver::vital::mesh_regular_face_array<3> > new_faces(new kwiver::vital::mesh_regular_face_array<3>(regular_faces));
-  //  mesh->set_faces(std::move(new_faces));
-
-
-  //  kwiver::vital::camera_rpc_sptr cam_rpc = std::dynamic_pointer_cast<kwiver::vital::camera_rpc>(camera);
-  //  kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
-  //  int dest_coord_sys = kwiver::vital::SRID::lat_lon_WGS84;
-  //  kwiver::vital::utm_ups_zone_t utm_zone = kwiver::vital::utm_ups_zone(cam_rpc->back_project({0.0, 0.0}, 0.0).head(2));
-  //  int src_coord_sys = (utm_zone.north ? kwiver::vital::SRID::UTM_WGS84_north : kwiver::vital::SRID::UTM_WGS84_south) + utm_zone.number;
-  //  kwiver::vital::vector_3d center(0.0, 0.0, 0.0);
-  //  for (int i = 0; i < vertices.size(); ++i)
-  //  {
-  //    vertices[i] += mesh_offset;
-  //    auto res = kwiver::vital::geo_conv(vertices[i].head<2>(), src_coord_sys, dest_coord_sys);
-  //    vertices[i].head<2>() = res;
-  //    center += vertices[i];
-  //  }
-  //  center /= vertices.size();
-  ////  camera = cam_rpc->approximate_affine_camera(center);
-
-
-  ////  kwiver::vital::image_container_sptr depth_map = kwiver::arrows::render_mesh_depth_map(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_perspective>(camera));
-  //  kwiver::vital::image_container_sptr depth_map = kwiver::arrows::render_mesh_height_map(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_rpc>(camera));
-
-  kwiver::vital::image_container_sptr_list images;
-  kwiver::vital::algo::image_io_sptr image_io = kwiver::vital::algo::image_io::create("ocv");
+//  kwiver::vital::image_container_sptr_list images;
+//  kwiver::vital::algo::image_io_sptr image_io = kwiver::vital::algo::image_io::create("ocv");
 //  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam1.png"));
 //  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam2.png"));
 //  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam3.png"));
@@ -248,16 +212,89 @@ int main()
 //  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam5.png"));
 //  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam6.png"));
 
-  images.push_back(image_io->load("/home/matthieu/data_plane/cam1.png"));
-  images.push_back(image_io->load("/home/matthieu/data_plane/cam2.png"));
-  images.push_back(image_io->load("/home/matthieu/data_plane/cam3.png"));
+//  images.push_back(image_io->load("/home/matthieu/data_plane/cam1.png"));
+//  images.push_back(image_io->load("/home/matthieu/data_plane/cam2.png"));
+//  images.push_back(image_io->load("/home/matthieu/data_plane/cam3.png"));
 
 //    images.push_back(image_io->load("/home/matthieu/data_towers/img_0.png"));
 //    images.push_back(image_io->load("/home/matthieu/data_towers/img_1.png"));
 //    images.push_back(image_io->load("/home/matthieu/data_towers/img_2.png"));
 
 
-  double resolution = 0.001;   // mesh unit/pixel
+
+
+  std::vector<std::string> images_filenames;
+  //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/27JAN15WV031100015JAN27160845-P1BS-500648062010_01_P001_________AAE_0AAAAABPABS0_pansharpen_8.tif");
+  //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/26APR15WV031200015APR26162435-P1BS-501504472050_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
+  //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_pansharpen_8.tif");
+  //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/11OCT14WV031100014OCT11155720-P1BS-500648061020_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
+  //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/08FEB15WV031100015FEB08160130-P1BS-500648061090_01_P001_________AAE_0AAAAABPABP0_pansharpen_8.tif");
+  //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/02MAY15WV031100015MAY02161943-P1BS-500648061030_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
+  //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01MAY15WV031200015MAY01160357-P1BS-500648062030_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif");
+
+  images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_pansharpen_8.tif");
+//  images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/05JUL15WV031100015JUL05162954-P1BS-500648062020_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif");
+//  images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01NOV15WV031100015NOV01162034-P1BS-500648061060_01_P001_________AAE_0AAAAABPABE0_pansharpen_8.tif");
+//  images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01NOV15WV031100015NOV01161954-P1BS-500648062080_01_P001_________AAE_0AAAAABPABS0_pansharpen_8.tif");
+//  images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01MAY15WV031200015MAY01160357-P1BS-500648062030_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif");
+
+  // camera
+  kwiver::vital::camera_sptr_list cameras;
+  for (auto s: images_filenames)
+  {
+    cameras.push_back(loadcamera_from_tif_image(s));
+  }
+
+  // image
+  kwiver::vital::image_container_sptr_list images;
+  kwiver::vital::algo::image_io_sptr image_tif_io = kwiver::vital::algo::image_io::create("gdal");
+  for (auto s: images_filenames)
+  {
+    images.push_back(image_tif_io->load(s));
+  }
+
+
+
+  /** ----- */
+  std::unique_ptr< kwiver::vital::mesh_vertex_array<3> > v_mesh_utm(new kwiver::vital::mesh_vertex_array<3>(mesh->num_verts()));
+  std::unique_ptr< kwiver::vital::mesh_vertex_array<3> > v_occlusion_utm(new kwiver::vital::mesh_vertex_array<3>(occlusion_mesh->num_verts()));
+  std::unique_ptr< kwiver::vital::mesh_vertex_array<3> > v_mesh_latlong(new kwiver::vital::mesh_vertex_array<3>(mesh->num_verts()));
+  std::unique_ptr< kwiver::vital::mesh_vertex_array<3> > v_occlusion_latlong(new kwiver::vital::mesh_vertex_array<3>(occlusion_mesh->num_verts()));
+
+  *v_mesh_utm = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
+  *v_occlusion_utm = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(occlusion_mesh->vertices());
+
+  int dest_coord_sys = kwiver::vital::SRID::lat_lon_WGS84;
+
+  kwiver::vital::utm_ups_zone_t utm_zone = kwiver::vital::utm_ups_zone(std::dynamic_pointer_cast<kwiver::vital::camera_rpc>(cameras[0])->back_project({0.0, 0.0}, 0.0).head(2));
+  int src_coord_sys = (utm_zone.north ? kwiver::vital::SRID::UTM_WGS84_north : kwiver::vital::SRID::UTM_WGS84_south) + utm_zone.number;
+
+  for (int i = 0; i < v_mesh_utm->size(); ++i)
+  {
+//    std::cout << "utm " << v_mesh_utm[i] << std::endl;
+    (*v_mesh_latlong)[i] = (*v_mesh_utm)[i] + mesh_offset;
+    auto res = kwiver::vital::geo_conv((*v_mesh_latlong)[i].head<2>(), src_coord_sys, dest_coord_sys);
+    (*v_mesh_latlong)[i].head<2>() = res;
+//    std::cout << "latlong " << v_mesh_latlong[i] << std::endl;
+  }
+
+  for (int i = 0; i < v_occlusion_utm->size(); ++i)
+  {
+    (*v_occlusion_latlong)[i] = (*v_occlusion_utm)[i] + mesh_offset;
+    auto res = kwiver::vital::geo_conv((*v_occlusion_latlong)[i].head<2>(), src_coord_sys, dest_coord_sys);
+    (*v_occlusion_latlong)[i].head<2>() = res;
+  }
+
+
+
+  /** ------ */
+
+
+
+
+
+
+  double resolution = 0.3;   // mesh unit/pixel
   int interior_margin = 2;
   int exterior_margin = 2;
 
@@ -292,11 +329,17 @@ int main()
   std::cout << "uv param is drawed" << std::endl;
   std::cout << "atlas dim " << atlas_dim.first << " " << atlas_dim.second << std::endl;
 
+
+  //  use LatLong vertices
+  mesh->set_vertices(std::move(v_mesh_latlong));
+  occlusion_mesh->set_vertices(std::move(v_occlusion_latlong));
+
+
   kwiver::vital::plugin_manager::instance().load_all_plugins();
   kwiver::vital::algo::image_io_sptr ocv_io = kwiver::vital::algo::image_io::create("ocv");
 
 
-  kwiver::vital::image_of<unsigned char> texture(atlas_dim.first, atlas_dim.second, 3);
+  kwiver::vital::image_of<unsigned short> texture(atlas_dim.first, atlas_dim.second, images[0]->depth());
   for (int i = 0; i < texture.height(); ++i)
   {
     for (int j= 0 ;j < texture.width(); ++j)
@@ -316,13 +359,14 @@ int main()
   {
     temps[i] = images[i]->get_image();
   }
-
+  std::cout << "before depth map generation " << std::endl;
 
   std::vector<kwiver::vital::image> depth_maps(images.size());
   for (int i = 0; i < images.size(); ++i)
   {
-    depth_maps[i] = kwiver::arrows::render_mesh_height_map(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_perspective>(cameras[i]))->get_image();
+    depth_maps[i] = kwiver::arrows::render_mesh_height_map(mesh, cameras[i])->get_image();
   }
+  std::cout << "Depth maps rendered " << std::endl;
 
 //  cv::Mat points_projected(temp.height(), temp.width(), CV_8U);
   kwiver::vital::vector_2d scale(texture.width(), texture.height());
@@ -375,7 +419,7 @@ int main()
 //   points_projected.at<uchar>(std::round(tmp3(1)), std::round(tmp3(0))) = 255;
 
 
-    kwiver::arrows::render_triangle_from_image<unsigned char>(a, b, c, pt_a, pt_b, pt_c, cameras, temps, depths, depth_maps, texture);
+    kwiver::arrows::render_triangle_from_image<unsigned short>(a, b, c, pt_a, pt_b, pt_c, cameras, temps, depths, depth_maps, texture);
   }
 
 //  cv::imwrite("projected_points.png", points_projected);
@@ -386,7 +430,29 @@ int main()
 
   std::cout << "depth  = " << out_texture->depth() << std::endl;
 
-  ocv_io->save("texture.png", out_texture);
+
+  // write 3-channel texture
+//  ocv_io->save("texture.png", out_texture);
+
+  //---------------- write tif texture
+  cv::Mat tex = kwiver::arrows::ocv::image_container_to_ocv_matrix(*out_texture, kwiver::arrows::ocv::image_container::OTHER_COLOR);
+  std::cout << "tex size " << tex.size() << std::endl;
+  std::vector<cv::Mat> channels;
+  cv::split(tex, channels);
+  std::cout << "channels " << channels.size() << std::endl;
+  std::vector<cv::Mat> rgb;
+  rgb.push_back(channels[4]);
+  rgb.push_back(channels[2]);
+  rgb.push_back(channels[1]);
+  cv::Mat rgb_tex;
+  cv::merge(rgb, rgb_tex);
+  rgb_tex.convertTo(rgb_tex, CV_8UC3);
+  cv::imwrite("texture.png", rgb_tex);
+
+
+
+  //------------------
+
 
 
 
@@ -405,7 +471,8 @@ int main()
     }
     mesh->set_tex_coords(tcoords2);
 
-
+  mesh->set_vertices(std::move(v_mesh_utm));
+  occlusion_mesh->set_vertices(std::move(v_occlusion_utm));
 
   kwiver::vital::write_obj("texture_mesh.obj", *mesh);
 
@@ -455,6 +522,8 @@ int main()
 
   //  std::cout << "Barycenter " << (int)img((int)g(0), (int)g(1)) << std::endl;
 
+
+  return 0; //#####################################
 
 // ----- depth map 1
   kwiver::vital::image_container_sptr res;
