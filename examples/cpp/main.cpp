@@ -232,26 +232,25 @@ int main()
   //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/02MAY15WV031100015MAY02161943-P1BS-500648061030_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
   //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01MAY15WV031200015MAY01160357-P1BS-500648062030_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif");
 
-  images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_pansharpen_8.tif");
-//  images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/05JUL15WV031100015JUL05162954-P1BS-500648062020_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif");
-//  images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01NOV15WV031100015NOV01162034-P1BS-500648061060_01_P001_________AAE_0AAAAABPABE0_pansharpen_8.tif");
-//  images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01NOV15WV031100015NOV01161954-P1BS-500648062080_01_P001_________AAE_0AAAAABPABS0_pansharpen_8.tif");
-//  images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01MAY15WV031200015MAY01160357-P1BS-500648062030_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif");
-
-  // camera
-  kwiver::vital::camera_sptr_list cameras;
-  for (auto s: images_filenames)
-  {
-    cameras.push_back(loadcamera_from_tif_image(s));
-  }
+  images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_crop_pansharpened_processed.tif");
 
   // image
-  kwiver::vital::image_container_sptr_list images;
+  kwiver::vital::image_container_sptr_list images(images_filenames.size());
   kwiver::vital::algo::image_io_sptr image_tif_io = kwiver::vital::algo::image_io::create("gdal");
-  for (auto s: images_filenames)
+  for (int i = 0; i < images.size(); ++i)
   {
-    images.push_back(image_tif_io->load(s));
+    images[i] = image_tif_io->load(images_filenames[i]);
   }
+
+  // camera
+  kwiver::vital::camera_sptr_list cameras(images_filenames.size());
+  for (int i = 0; i < cameras.size(); ++i)
+  {
+    cameras[i] = loadcamera_from_tif_image(images_filenames[i]);
+    std::cout << "camera " << i << " = " << cameras[i]->image_width() << " " << cameras[i]->image_height() << std::endl;
+  }
+
+
 
 
 
@@ -441,9 +440,9 @@ int main()
   cv::split(tex, channels);
   std::cout << "channels " << channels.size() << std::endl;
   std::vector<cv::Mat> rgb;
-  rgb.push_back(channels[4]);
-  rgb.push_back(channels[2]);
   rgb.push_back(channels[1]);
+  rgb.push_back(channels[2]);
+  rgb.push_back(channels[4]);
   cv::Mat rgb_tex;
   cv::merge(rgb, rgb_tex);
   rgb_tex.convertTo(rgb_tex, CV_8UC3);

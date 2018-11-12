@@ -215,9 +215,7 @@ compute_mesh_uv_parameterization::parameterize(kwiver::vital::mesh_sptr mesh) co
       // Scale B and C by the resolution
       b /= d_->resolution;
       c /= d_->resolution;
-      std::cout << "b = " << b(0) << " " << b(1) << std::endl;
-      std::cout << "c = " << c(0) << " " << c(1) << std::endl;
-      std::cout << "tri area = " << 0.5 * (b(0) * c(1)) << std::endl;
+
       total_area += 0.5 * (b(0) * c(1));
       int w = std::floor(std::max(b(0), c(0))) + 1;
       int h = std::floor(c(1)) + 1;
@@ -238,7 +236,6 @@ compute_mesh_uv_parameterization::parameterize(kwiver::vital::mesh_sptr mesh) co
       }
     }
   }
-  std::cout << "-------------------------------> total area " << total_area << std::endl;
 
   // sort triangles by height
   std::vector<int> face_indices(triangles.size(), 0);
