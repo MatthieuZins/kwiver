@@ -112,8 +112,10 @@ void draw_uv_parameterization(const std::vector<kwiver::vital::vector_2d>& tcoor
 
     std::vector<cv::Point2i> points(3);
     kwiver::vital::vector_2d scale(w, h);
+    std::cout << "start uv drawing" << std::endl;
     for (int f=0; f < tcoords.size(); f+=3)
     {
+        std::cout << "face " << f << std::endl;
         kwiver::vital::vector_2d tcoord_0 = tcoords[f + 0];
         kwiver::vital::vector_2d tcoord_1 = tcoords[f + 1];
         kwiver::vital::vector_2d tcoord_2 = tcoords[f + 2];
@@ -135,7 +137,11 @@ void draw_uv_parameterization(const std::vector<kwiver::vital::vector_2d>& tcoor
         cv::polylines(image, points, true, random_color);
     }
 
+    std::cout << "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::" << std::endl;
+    std::cout << image.size() << std::endl;
     cv::imwrite(filename, image);
+    std::cout << "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::" << std::endl;
+
 }
 
 
@@ -154,13 +160,17 @@ int main()
   ////  how_to_part_02_detections();
 
   kwiver::vital::camera_intrinsics_sptr camera_intrinsic;
-  //  camera_intrinsic.reset(new kwiver::vital::simple_camera_intrinsics(1024, {480, 270}, 1.0, 0.0, {}, 960, 540));
-  camera_intrinsic.reset(new kwiver::vital::simple_camera_intrinsics(4480, {2048, 1536}, 1.0, 0.0, {}, 4096, 3072));
-  //  camera_intrinsic.reset(new kwiver::vital::simple_camera_intrinsics(2100, {1920/2, 1080/2}, 1.0, 0.0, {}, 1920, 1080));
+    camera_intrinsic.reset(new kwiver::vital::simple_camera_intrinsics(1024, {480, 270}, 1.0, 0.0, {}, 960, 540));
+//  camera_intrinsic.reset(new kwiver::vital::simple_camera_intrinsics(4480, {2048, 1536}, 1.0, 0.0, {}, 4096, 3072));
+//    camera_intrinsic.reset(new kwiver::vital::simple_camera_intrinsics(2100, {1920/2, 1080/2}, 1.0, 0.0, {}, 1920, 1080));
   std::pair<kwiver::vital::vector_3d, kwiver::vital::rotation_d> param_cam;
-  //  param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam1.txt");
-  param_cam = read_camera("/home/matthieu/data_plane/cam1.txt");
-  //  param_cam = read_camera("/home/matthieu/data_towers/cam_2.txt");
+  param_cam = read_camera("/home/matthieu/data_cube_texture/cameras/cam1.txt");
+
+//  param_cam = read_camera("/home/matthieu/data_plane/cam1.txt");
+
+//  param_cam = read_camera("/home/matthieu/data_towers/cam_0.txt");
+//  param_cam = read_camera("/home/matthieu/data_towers/cam_1.txt");
+//  param_cam = read_camera("/home/matthieu/data_towers/cam_2.txt");
 
 
 
@@ -170,9 +180,9 @@ int main()
   //  camera = loadcamera_from_tif_image("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/18FEB16WV031200016FEB18164007-P1BS-501504472090_01_P001_________AAE_0AAAAABPABP0_crop_pansharpened_processed.tif");
 
   kwiver::vital::mesh_sptr mesh;
-  //  mesh= kwiver::vital::read_obj("/home/matthieu/data_cube_texture/test.obj");
-  mesh = kwiver::vital::read_obj("/home/matthieu/data_plane/f16.obj");
-  //  mesh = kwiver::vital::read_obj("/home/matthieu/data_towers/towers.obj");
+    mesh= kwiver::vital::read_obj("/home/matthieu/data_cube_texture/cube.obj");
+//  mesh = kwiver::vital::read_obj("/home/matthieu/data_plane/f16.obj");
+//    mesh = kwiver::vital::read_obj("/home/matthieu/data_towers/towers.obj");
 
   //  kwiver::vital::vector_3d mesh_offset = {749376.2, 4407080.0, 239.85687};
   //  mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI2/meshes/test/mesh.obj");
@@ -220,23 +230,23 @@ int main()
 
   kwiver::vital::image_container_sptr_list images;
   kwiver::vital::algo::image_io_sptr image_io = kwiver::vital::algo::image_io::create("ocv");
-//  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam1.png"));
+  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam1.png"));
 //  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam2.png"));
 //  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam3.png"));
 //  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam4.png"));
 //  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam5.png"));
 //  images.push_back(image_io->load("/home/matthieu/data_cube_texture/images/cam6.png"));
 
-  images.push_back(image_io->load("/home/matthieu/data_plane/cam1.png"));
-  images.push_back(image_io->load("/home/matthieu/data_plane/cam2.png"));
-  images.push_back(image_io->load("/home/matthieu/data_plane/cam3.png"));
+//  images.push_back(image_io->load("/home/matthieu/data_plane/cam1.png"));
+//  images.push_back(image_io->load("/home/matthieu/data_plane/cam2.png"));
+//  images.push_back(image_io->load("/home/matthieu/data_plane/cam3.png"));
 
-  //  images.push_back(image_io->load("/home/matthieu/data_towers/img_0.png"));
-  //  images.push_back(image_io->load("/home/matthieu/data_towers/img_1.png"));
-  //  images.push_back(image_io->load("/home/matthieu/data_towers/img_2.png"));
+//    images.push_back(image_io->load("/home/matthieu/data_towers/img_0.png"));
+//    images.push_back(image_io->load("/home/matthieu/data_towers/img_1.png"));
+//    images.push_back(image_io->load("/home/matthieu/data_towers/img_2.png"));
 
 
-  double resolution = 0.0005;   // mesh unit/pixel
+  double resolution = 0.001;   // mesh unit/pixel
   int interior_margin = 2;
   int exterior_margin = 2;
 
@@ -264,10 +274,11 @@ int main()
 
 
   std::pair<unsigned int, unsigned int> atlas_dim = uv_param->parameterize(mesh);
+  std::cout << "uv param is computed " << std::endl;
 
   auto const& param = mesh->tex_coords();
   draw_uv_parameterization(param, atlas_dim.first, atlas_dim.second, "uv_param.png");
-
+  std::cout << "uv param is drawed" << std::endl;
   std::cout << "atlas dim " << atlas_dim.first << " " << atlas_dim.second << std::endl;
 
   kwiver::vital::plugin_manager::instance().load_all_plugins();
@@ -303,9 +314,9 @@ int main()
   kwiver::vital::image temp = images[0]->get_image();
 
 
-  auto depth_map = kwiver::arrows::render_mesh_depth_map2(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_perspective>(camera));
+  auto depth_map = kwiver::arrows::render_mesh_height_map(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_perspective>(camera));
 
-
+  cv::Mat points_projected(temp.height(), temp.width(), CV_8U);
   kwiver::vital::vector_2d scale(texture.width(), texture.height());
   int nb=0;
   for (int f = 0; f < triangles.size(); ++f)
@@ -327,23 +338,35 @@ int main()
 //    std::cout << c(0) << " " << c(1) << std::endl;
 //    std::cout << "-----------------------------\n";
 
-    d1 = dynamic_cast<kwiver::vital::camera_perspective*>(camera.get())->depth(pt_a);
-    d2 = dynamic_cast<kwiver::vital::camera_perspective*>(camera.get())->depth(pt_b);
-    d3 = dynamic_cast<kwiver::vital::camera_perspective*>(camera.get())->depth(pt_c);
+//    d1 = dynamic_cast<kwiver::vital::camera_perspective*>(camera.get())->depth(pt_a);
+//    d2 = dynamic_cast<kwiver::vital::camera_perspective*>(camera.get())->depth(pt_b);
+//    d3 = dynamic_cast<kwiver::vital::camera_perspective*>(camera.get())->depth(pt_c);
+
+    d1 = pt_a(2);
+    d2 = pt_b(2);
+    d3 = pt_c(2);
 
     kwiver::vital::vector_2d t1 = b-a;
     kwiver::vital::vector_2d t2 = c-a;
-    if ( std::abs(t1(0)*t2(1)-t1(1)*t2(0)) < 0.001)
+    if ( std::abs(t1(0)*t2(1)-t1(1)*t2(0)) < 0.01)
     {
       continue;
     }
   nb++;
 
+   auto tmp1 = camera->project(pt_a);
+   auto tmp2 = camera->project(pt_b);
+   auto tmp3 = camera->project(pt_c);
+   points_projected.at<uchar>(std::round(tmp1(1)), std::round(tmp1(0))) = 255;
+   points_projected.at<uchar>(std::round(tmp2(1)), std::round(tmp2(0))) = 255;
+   points_projected.at<uchar>(std::round(tmp3(1)), std::round(tmp3(0))) = 255;
 
 
 //    std::cout << pt_a << " " << pt_b << " " << pt_c << std::endl;
     kwiver::arrows::render_triangle_from_image<unsigned char>(a, b, c, pt_a, pt_b, pt_c, camera, temp, d1, d2, d3, depth_map->get_image(), texture);
   }
+
+  cv::imwrite("projected_points.png", points_projected);
 
   std::cout << "NB FACES = " << nb << " over " << triangles.size() << std::endl;
 
@@ -352,6 +375,25 @@ int main()
   std::cout << "depth  = " << out_texture->depth() << std::endl;
 
   ocv_io->save("texture.png", out_texture);
+
+
+
+    std::vector<kwiver::vital::vector_2d> tcoords2 = mesh->tex_coords();
+
+    for (auto& tc : tcoords2)
+    {
+      tc(0) *= texture.width();
+      tc(1) *= texture.height();
+
+      tc(0) += 0.5;
+      tc(1) -= 0.5;
+
+      tc(0) /= texture.width();
+      tc(1) /= texture.height();
+    }
+    mesh->set_tex_coords(tcoords2);
+
+
 
   kwiver::vital::write_obj("texture_mesh.obj", *mesh);
 
@@ -401,9 +443,11 @@ int main()
 
   //  std::cout << "Barycenter " << (int)img((int)g(0), (int)g(1)) << std::endl;
 
+
+// ----- depth map 1
   kwiver::vital::image_container_sptr res;
   PROFILE("render_mesh_depth map",
-    res = kwiver::arrows::render_mesh_depth_map(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_perspective>(camera));
+    res = kwiver::arrows::render_mesh_depth_map2(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_perspective>(camera));
 )
     //  // write depthmap
     cv::Mat image = kwiver::arrows::ocv::image_container_to_ocv_matrix(*res,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
@@ -416,7 +460,7 @@ int main()
       {
         if (std::isinf(image.at<double>(i, j) ))
         {
-          image.at<double>(i, j) = min;
+          image.at<double>(i, j) = 0;
         }
       }
     }
@@ -428,11 +472,11 @@ int main()
     image.convertTo(image, CV_8U);
     cv::imwrite("depthmap.png", image);
 
-
+// ---- height map 2
 
   kwiver::vital::image_container_sptr res2;
   PROFILE("render_mesh_height map 2",
-    res2 = kwiver::arrows::render_mesh_height_map(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_perspective>(camera));
+    res2 = kwiver::arrows::render_mesh_height_map(mesh, camera);
 )
     //  // write depthmap
     cv::Mat image2 = kwiver::arrows::ocv::image_container_to_ocv_matrix(*res2,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
@@ -455,7 +499,7 @@ int main()
     image2 /= (max2-min2);
     image2 *= 255;
     image2.convertTo(image2, CV_8U);
-    cv::imwrite("heightmap2.png", image2);
+    cv::imwrite("heightmap.png", image2);
 
 
 
