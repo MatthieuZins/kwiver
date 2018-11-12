@@ -259,6 +259,9 @@ vital::image_container_sptr render_mesh_depth_map2(vital::mesh_sptr mesh, vital:
   return std::make_shared<vital::simple_image_container>(zbuffer);
 }
 
+
+
+
 vital::image_container_sptr render_mesh_height_map(vital::mesh_sptr mesh, vital::camera_sptr camera)
 {
   vital::mesh_vertex_array<3>& vertices = dynamic_cast< vital::mesh_vertex_array<3>& >(mesh->vertices());
@@ -311,7 +314,7 @@ vital::image_container_sptr render_mesh_height_map(vital::mesh_sptr mesh, vital:
 //      std::cout << v1(0) << " " << v1(1) << std::endl;
 //      std::cout << v2(0) << " " << v2(1) << std::endl;
 //      std::cout << v3(0) << " " << v3(1) << std::endl;
-      render_triangle(v1, v2, v3,
+      render_triangle<double>(v1, v2, v3,
                       d1, d2, d3,
                       a1, a2, a3,
                       height_buffer, img, perspective_camera != nullptr);

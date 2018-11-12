@@ -72,7 +72,7 @@ void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2, con
 
     double new_i = B * y + C;
     double new_i_d = B_d * y + C_d;
-    for (int x = tsi.start_x(); x <= tsi.end_x(); ++x)
+    for (int x = min_x; x <= max_x; ++x)
     {
       double attrib = new_i + A * x;
       double depth = new_i_d + A_d * x;
@@ -101,7 +101,7 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
                                 const std::vector<vital::image>& depth_maps,
                                 vital::image& texture)
 {
-  assert(img.depth() == texture.depth());
+  assert(images[0].depth() == texture.depth());
 
   std::vector<double> scores(images.size(), 0.0);
   std::vector<vital::matrix_2x3d> points(images.size());
@@ -143,7 +143,7 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
 
     vital::vector_3d pt1pt2 = pt2 - pt1;
     vital::vector_3d pt1pt3 = pt3 - pt1;
-    for (int x = tsi.start_x(); x <= tsi.end_x(); ++x)
+    for (int x = min_x; x <= max_x; ++x)
     {
       vital::vector_2d coord(x, y);
       coord -= v1;
@@ -161,9 +161,9 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
         if (pt_img(0) < 0 || pt_img(0) >= images[i].width() || pt_img(1) < 0 || pt_img(1) >= images[i].height())
           continue;
         double interpolated_depth = depths[i](0) + a * (depths[i](1)-depths[i](0)) + b * (depths[i](2)-depths[i](0));
-//        if (std::abs(interpolated_depth - depth_maps[i].at<double>(pt_img(0), pt_img(1))) > 0.1 )
-//          continue;
-        if (scores[i] >= score_max)
+        if (std::abs(interpolated_depth - depth_maps[i].at<double>(pt_img(0), pt_img(1))) > 2 )
+          continue;
+        if (scores[i] >= score_max && scores[i] > 0)
         {
           score_max = scores[i];
           for (int d = 0; d < texture.depth(); ++d)
@@ -179,7 +179,7 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
 template <class T>
 double bilinear_interp_safe(const vital::image& img, double x, double y, int d)
 {
-  if (x <0 || y < 0 || x > img.width() || y >= img.height())
+  if (x < 0 || y < 0 || x > img.width() - 1|| y > img.height() - 1)
     return 0.0;
 
   int p1x = static_cast<int>(x);

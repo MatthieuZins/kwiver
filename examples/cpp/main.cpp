@@ -115,7 +115,6 @@ void draw_uv_parameterization(const std::vector<kwiver::vital::vector_2d>& tcoor
     std::cout << "start uv drawing" << std::endl;
     for (int f=0; f < tcoords.size(); f+=3)
     {
-        std::cout << "face " << f << std::endl;
         kwiver::vital::vector_2d tcoord_0 = tcoords[f + 0];
         kwiver::vital::vector_2d tcoord_1 = tcoords[f + 1];
         kwiver::vital::vector_2d tcoord_2 = tcoords[f + 2];
@@ -198,9 +197,12 @@ int main()
   //  kwiver::vital::vector_3d mesh_offset = {749376.2, 4407080.0, 239.85687};
   //  mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI2/meshes/test/mesh.obj");
 
-    kwiver::vital::vector_3d mesh_offset = {435516.726081, 3354093.8, -47.911346};
-    mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI4/meshes/triangulated/ground.obj");
-    kwiver::vital::mesh_sptr occlusion_mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI4/meshes/concatenated/concatenated.obj");
+//    kwiver::vital::vector_3d mesh_offset = {435516.726081, 3354093.8, -47.911346};
+    kwiver::vital::vector_3d mesh_offset = {435531.480325, 3354095.24186, -36.561596}; // for jido
+//    mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI4/meshes/triangulated/55_building_59.obj");
+    mesh = kwiver::vital::read_obj("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped4.obj");
+//    kwiver::vital::mesh_sptr occlusion_mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI4/meshes/concatenated/concatenated.obj");
+    kwiver::vital::mesh_sptr occlusion_mesh = kwiver::vital::read_obj("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped4.obj");
 
 
 //  kwiver::vital::image_container_sptr_list images;
@@ -233,6 +235,9 @@ int main()
   //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01MAY15WV031200015MAY01160357-P1BS-500648062030_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif");
 
   images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_crop_pansharpened_processed.tif");
+//  images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/01NOV15WV031100015NOV01161954-P1BS-500648062080_01_P001_________AAE_0AAAAABPABS0_crop_pansharpened_processed.tif");
+//  images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/18OCT14WV031100014OCT18160722-P1BS-500648062090_01_P001_________AAE_0AAAAABPABS0_crop_pansharpened_processed.tif");
+//  images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/21JAN15WV031100015JAN21161253-P1BS-500648062050_01_P001_________AAE_0AAAAABPABO0_crop_pansharpened_processed.tif");
 
   // image
   kwiver::vital::image_container_sptr_list images(images_filenames.size());
@@ -343,7 +348,10 @@ int main()
   {
     for (int j= 0 ;j < texture.width(); ++j)
     {
-      texture(j, i) = 0;
+      for (int k = 0; k < texture.depth(); ++k)
+      {
+        texture(j, i, k) = 0;
+      }
     }
   }
   std::cout << "ATLAS DIM " << texture.width() << " " << texture.height() << std::endl;
@@ -364,6 +372,30 @@ int main()
   for (int i = 0; i < images.size(); ++i)
   {
     depth_maps[i] = kwiver::arrows::render_mesh_height_map(mesh, cameras[i])->get_image();
+
+
+    //  // write depthmap
+//    kwiver::vital::image_container_sptr container(new kwiver::vital::simple_image_container(depth_maps[i]));
+//    cv::Mat image2 = kwiver::arrows::ocv::image_container_to_ocv_matrix(*container,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
+//    double min2, max2;
+//    cv::minMaxLoc(image2, &min2, &max2, 0, 0);
+//    for (int i = 0; i < image2.rows; ++i)
+//    {
+//      for (int j= 0 ; j < image2.cols; ++j)
+//      {
+//        if (std::isinf(image2.at<double>(i, j) ))
+//        {
+//          image2.at<double>(i, j) = min2;
+//        }
+//      }
+//    }
+//    cv::minMaxLoc(image2, &min2, &max2, 0, 0);
+//    std::cout << "min max " << min2 << " " << max2 << std::endl;
+//    image2 -= min2;
+//    image2 /= (max2-min2);
+//    image2 *= 255;
+//    image2.convertTo(image2, CV_8U);
+//    cv::imwrite("heightmap_" + std::to_string(i) + ".png", image2);
   }
   std::cout << "Depth maps rendered " << std::endl;
 
@@ -448,7 +480,7 @@ int main()
   rgb_tex.convertTo(rgb_tex, CV_8UC3);
   cv::imwrite("texture.png", rgb_tex);
 
-
+  std::cout << "texture written " << std::endl;
 
   //------------------
 
