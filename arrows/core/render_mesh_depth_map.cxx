@@ -310,16 +310,10 @@ vital::image_container_sptr render_mesh_height_map(vital::mesh_sptr mesh, vital:
         d3 = -vertices[triangles(f, 2)](2);
       }
 
-//      std::cout << "face " << f << std::endl;
-//      std::cout << v1(0) << " " << v1(1) << std::endl;
-//      std::cout << v2(0) << " " << v2(1) << std::endl;
-//      std::cout << v3(0) << " " << v3(1) << std::endl;
       render_triangle<double>(v1, v2, v3,
                       d1, d2, d3,
                       a1, a2, a3,
                       height_buffer, img, perspective_camera != nullptr);
-//      std::cout << "face " << f << std::endl;
-
     }
     for (unsigned int y = 0; y < img.height(); ++y)
     {

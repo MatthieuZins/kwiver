@@ -161,7 +161,7 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
         if (pt_img(0) < 0 || pt_img(0) >= images[i].width() || pt_img(1) < 0 || pt_img(1) >= images[i].height())
           continue;
         double interpolated_depth = depths[i](0) + a * (depths[i](1)-depths[i](0)) + b * (depths[i](2)-depths[i](0));
-        if (std::abs(interpolated_depth -  bilinear_interp_safe<double>(depth_maps[i], pt_img(0), pt_img(1))) > 0.01 )
+        if (std::abs(interpolated_depth -  bilinear_interp_safe<double>(depth_maps[i], pt_img(0), pt_img(1))) > 0.1 )
           continue;
         if (scores[i] >= score_max && scores[i] > 0)
         {

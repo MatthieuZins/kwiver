@@ -109,10 +109,8 @@ read_camera(const std::string& filename)
 void draw_uv_parameterization(const std::vector<kwiver::vital::vector_2d>& tcoords, int w, int h, const std::string &filename)
 {
     cv::Mat image(h, w, CV_8UC3, 0.0);
-
     std::vector<cv::Point2i> points(3);
     kwiver::vital::vector_2d scale(w, h);
-    std::cout << "start uv drawing" << std::endl;
     for (int f=0; f < tcoords.size(); f+=3)
     {
         kwiver::vital::vector_2d tcoord_0 = tcoords[f + 0];
@@ -135,12 +133,7 @@ void draw_uv_parameterization(const std::vector<kwiver::vital::vector_2d>& tcoor
         cv::Scalar random_color(rand() % 255, rand() % 255, rand() % 255);
         cv::polylines(image, points, true, random_color);
     }
-
-    std::cout << "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::" << std::endl;
-    std::cout << image.size() << std::endl;
     cv::imwrite(filename, image);
-    std::cout << "::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::" << std::endl;
-
 }
 
 
@@ -200,10 +193,22 @@ int main()
 //    kwiver::vital::vector_3d mesh_offset = {435516.726081, 3354093.8, -47.911346};
     kwiver::vital::vector_3d mesh_offset = {435531.480325, 3354095.24186, -36.561596}; // for jido
 //    mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI4/meshes/triangulated/55_building_59.obj");
-    mesh = kwiver::vital::read_obj("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped4.obj");
+    mesh = kwiver::vital::read_obj("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped2.obj");
 //    kwiver::vital::mesh_sptr occlusion_mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI4/meshes/concatenated/concatenated.obj");
     kwiver::vital::mesh_sptr occlusion_mesh = kwiver::vital::read_obj("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped4.obj");
 
+
+    /// Turn mesh into reglar faces (should be done also for the occlusion mesh)
+    std::unique_ptr< kwiver::vital::mesh_regular_face_array<3> > regular_faces(new kwiver::vital::mesh_regular_face_array<3>);
+    for (int i = 0; i < mesh->faces().size(); ++i)
+    {
+      kwiver::vital::mesh_regular_face<3> f;
+      f[0] = mesh->faces()(i, 0);
+      f[1] = mesh->faces()(i, 1);
+      f[2] = mesh->faces()(i, 2);
+      regular_faces->push_back(f);
+    }
+    mesh->set_faces(std::move(regular_faces));
 
 //  kwiver::vital::image_container_sptr_list images;
 //  kwiver::vital::algo::image_io_sptr image_io = kwiver::vital::algo::image_io::create("ocv");
@@ -223,23 +228,14 @@ int main()
 //    images.push_back(image_io->load("/home/matthieu/data_towers/img_2.png"));
 
 
-
-
+  /// Load cameras and images
   std::vector<std::string> images_filenames;
-  //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/27JAN15WV031100015JAN27160845-P1BS-500648062010_01_P001_________AAE_0AAAAABPABS0_pansharpen_8.tif");
-  //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/26APR15WV031200015APR26162435-P1BS-501504472050_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
-  //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_pansharpen_8.tif");
-  //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/11OCT14WV031100014OCT11155720-P1BS-500648061020_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
-  //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/08FEB15WV031100015FEB08160130-P1BS-500648061090_01_P001_________AAE_0AAAAABPABP0_pansharpen_8.tif");
-  //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/02MAY15WV031100015MAY02161943-P1BS-500648061030_01_P001_________AAE_0AAAAABPABR0_pansharpen_8.tif");
-  //    images_filenames.push_back("/media/matthieu/DATA/core3D-data/AOI4/images/pansharpen/rescaled/01MAY15WV031200015MAY01160357-P1BS-500648062030_01_P001_________AAE_0AAAAABPABQ0_pansharpen_8.tif");
-
-  images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_crop_pansharpened_processed.tif");
-//  images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/01NOV15WV031100015NOV01161954-P1BS-500648062080_01_P001_________AAE_0AAAAABPABS0_crop_pansharpened_processed.tif");
+//  images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_crop_pansharpened_processed.tif");
+  images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/01NOV15WV031100015NOV01161954-P1BS-500648062080_01_P001_________AAE_0AAAAABPABS0_crop_pansharpened_processed.tif");
 //  images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/18OCT14WV031100014OCT18160722-P1BS-500648062090_01_P001_________AAE_0AAAAABPABS0_crop_pansharpened_processed.tif");
 //  images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/21JAN15WV031100015JAN21161253-P1BS-500648062050_01_P001_________AAE_0AAAAABPABO0_crop_pansharpened_processed.tif");
 
-  // image
+  // images
   kwiver::vital::image_container_sptr_list images(images_filenames.size());
   kwiver::vital::algo::image_io_sptr image_tif_io = kwiver::vital::algo::image_io::create("gdal");
   for (int i = 0; i < images.size(); ++i)
@@ -247,19 +243,15 @@ int main()
     images[i] = image_tif_io->load(images_filenames[i]);
   }
 
-  // camera
+  // cameras
   kwiver::vital::camera_sptr_list cameras(images_filenames.size());
   for (int i = 0; i < cameras.size(); ++i)
   {
     cameras[i] = loadcamera_from_tif_image(images_filenames[i]);
-    std::cout << "camera " << i << " = " << cameras[i]->image_width() << " " << cameras[i]->image_height() << std::endl;
   }
 
 
-
-
-
-  /** ----- */
+  /// Create arrays of points in lat long
   std::unique_ptr< kwiver::vital::mesh_vertex_array<3> > v_mesh_utm(new kwiver::vital::mesh_vertex_array<3>(mesh->num_verts()));
   std::unique_ptr< kwiver::vital::mesh_vertex_array<3> > v_occlusion_utm(new kwiver::vital::mesh_vertex_array<3>(occlusion_mesh->num_verts()));
   std::unique_ptr< kwiver::vital::mesh_vertex_array<3> > v_mesh_latlong(new kwiver::vital::mesh_vertex_array<3>(mesh->num_verts()));
@@ -275,11 +267,9 @@ int main()
 
   for (int i = 0; i < v_mesh_utm->size(); ++i)
   {
-//    std::cout << "utm " << v_mesh_utm[i] << std::endl;
     (*v_mesh_latlong)[i] = (*v_mesh_utm)[i] + mesh_offset;
     auto res = kwiver::vital::geo_conv((*v_mesh_latlong)[i].head<2>(), src_coord_sys, dest_coord_sys);
     (*v_mesh_latlong)[i].head<2>() = res;
-//    std::cout << "latlong " << v_mesh_latlong[i] << std::endl;
   }
 
   for (int i = 0; i < v_occlusion_utm->size(); ++i)
@@ -291,13 +281,8 @@ int main()
 
 
 
-  /** ------ */
 
-
-
-
-
-
+  /// Mesh uv parameterization
   double resolution = 0.3;   // mesh unit/pixel
   int interior_margin = 2;
   int exterior_margin = 2;
@@ -311,30 +296,14 @@ int main()
   algo_config->set_value<double>("exterior_margin", exterior_margin);
   uv_param->set_configuration(algo_config);
 
-  std::cout << "mesh regularity = " << mesh->faces().regularity() << std::endl;
-
-  std::unique_ptr< kwiver::vital::mesh_regular_face_array<3> > regular_faces(new kwiver::vital::mesh_regular_face_array<3>);
-  for (int i = 0; i < mesh->faces().size(); ++i)
-  {
-    kwiver::vital::mesh_regular_face<3> f;
-    f[0] = mesh->faces()(i, 0);
-    f[1] = mesh->faces()(i, 1);
-    f[2] = mesh->faces()(i, 2);
-    regular_faces->push_back(f);
-  }
-  mesh->set_faces(std::move(regular_faces));
-
-
   std::pair<unsigned int, unsigned int> atlas_dim = uv_param->parameterize(mesh);
-  std::cout << "uv param is computed " << std::endl;
-
   auto const& param = mesh->tex_coords();
   draw_uv_parameterization(param, atlas_dim.first, atlas_dim.second, "uv_param.png");
-  std::cout << "uv param is drawed" << std::endl;
-  std::cout << "atlas dim " << atlas_dim.first << " " << atlas_dim.second << std::endl;
 
 
-  //  use LatLong vertices
+
+
+  /// Use mesh in lat long
   mesh->set_vertices(std::move(v_mesh_latlong));
   occlusion_mesh->set_vertices(std::move(v_occlusion_latlong));
 
@@ -343,6 +312,7 @@ int main()
   kwiver::vital::algo::image_io_sptr ocv_io = kwiver::vital::algo::image_io::create("ocv");
 
 
+  /// Create empty texture
   kwiver::vital::image_of<unsigned short> texture(atlas_dim.first, atlas_dim.second, images[0]->depth());
   for (int i = 0; i < texture.height(); ++i)
   {
@@ -354,52 +324,52 @@ int main()
       }
     }
   }
-  std::cout << "ATLAS DIM " << texture.width() << " " << texture.height() << std::endl;
 
+
+
+  /// Render mesh depth/height maps
   kwiver::vital::mesh_vertex_array<3>& vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
   auto const& triangles = static_cast< const kwiver::vital::mesh_regular_face_array<3>& >(mesh->faces());
   auto const& tcoords =  mesh->tex_coords();
-  double d1 = 1, d2 = 1, d3 = 1;
 
   std::vector<kwiver::vital::image> temps(images.size());
   for (int i = 0; i < images.size(); ++i)
   {
     temps[i] = images[i]->get_image();
   }
-  std::cout << "before depth map generation " << std::endl;
 
   std::vector<kwiver::vital::image> depth_maps(images.size());
   for (int i = 0; i < images.size(); ++i)
   {
     depth_maps[i] = kwiver::arrows::render_mesh_height_map(mesh, cameras[i])->get_image();
-
-
     //  // write depthmap
-//    kwiver::vital::image_container_sptr container(new kwiver::vital::simple_image_container(depth_maps[i]));
-//    cv::Mat image2 = kwiver::arrows::ocv::image_container_to_ocv_matrix(*container,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
-//    double min2, max2;
-//    cv::minMaxLoc(image2, &min2, &max2, 0, 0);
-//    for (int i = 0; i < image2.rows; ++i)
-//    {
-//      for (int j= 0 ; j < image2.cols; ++j)
-//      {
-//        if (std::isinf(image2.at<double>(i, j) ))
-//        {
-//          image2.at<double>(i, j) = min2;
-//        }
-//      }
-//    }
-//    cv::minMaxLoc(image2, &min2, &max2, 0, 0);
-//    std::cout << "min max " << min2 << " " << max2 << std::endl;
-//    image2 -= min2;
-//    image2 /= (max2-min2);
-//    image2 *= 255;
-//    image2.convertTo(image2, CV_8U);
-//    cv::imwrite("heightmap_" + std::to_string(i) + ".png", image2);
+    kwiver::vital::image_container_sptr container(new kwiver::vital::simple_image_container(depth_maps[i]));
+    cv::Mat image2 = kwiver::arrows::ocv::image_container_to_ocv_matrix(*container,  kwiver::arrows::ocv::image_container::OTHER_COLOR).clone();
+    double min2, max2;
+    cv::minMaxLoc(image2, &min2, &max2, 0, 0);
+    for (int i = 0; i < image2.rows; ++i)
+    {
+      for (int j= 0 ; j < image2.cols; ++j)
+      {
+        if (std::isinf(image2.at<double>(i, j) ))
+        {
+          image2.at<double>(i, j) = min2;
+        }
+      }
+    }
+    cv::minMaxLoc(image2, &min2, &max2, 0, 0);
+    std::cout << "min max " << min2 << " " << max2 << std::endl;
+    image2 -= min2;
+    image2 /= (max2-min2);
+    image2 *= 255;
+    image2.convertTo(image2, CV_8U);
+    cv::imwrite("heightmap_" + std::to_string(i) + ".png", image2);
   }
-  std::cout << "Depth maps rendered " << std::endl;
 
-//  cv::Mat points_projected(temp.height(), temp.width(), CV_8U);
+
+
+  /// Rasterize texture
+//  cv::Mat points_projected(temps[0].height(), temps[0].width(), CV_8U);
   kwiver::vital::vector_2d scale(texture.width(), texture.height());
   int nb=0;
   for (int f = 0; f < triangles.size(); ++f)
@@ -416,11 +386,6 @@ int main()
     kwiver::vital::vector_3d pt_a = vertices[triangles(f, 0)];
     kwiver::vital::vector_3d pt_b = vertices[triangles(f, 1)];
     kwiver::vital::vector_3d pt_c = vertices[triangles(f, 2)];
-//    std::cout << a(0) << " " << a(1) << std::endl;
-//    std::cout << b(0) << " " << b(1) << std::endl;
-//    std::cout << c(0) << " " << c(1) << std::endl;
-//    std::cout << "-----------------------------\n";
-
 
     std::vector<kwiver::vital::vector_3d> depths(images.size());
     for (int i = 0; i < depths.size(); ++i)
@@ -434,6 +399,14 @@ int main()
     }
 
 
+//       auto tmp1 = cameras[0]->project(pt_a);
+//       auto tmp2 = cameras[0]->project(pt_b);
+//       auto tmp3 = cameras[0]->project(pt_c);
+//       points_projected.at<uchar>(std::round(tmp1(1)), std::round(tmp1(0))) = 255;
+//       points_projected.at<uchar>(std::round(tmp2(1)), std::round(tmp2(0))) = 255;
+//       points_projected.at<uchar>(std::round(tmp3(1)), std::round(tmp3(0))) = 255;
+
+
     kwiver::vital::vector_2d t1 = b-a;
     kwiver::vital::vector_2d t2 = c-a;
     if ( std::abs(t1(0)*t2(1)-t1(1)*t2(0)) < 0.01)
@@ -441,36 +414,19 @@ int main()
       continue;
     }
     nb++;
-
-//   auto tmp1 = camera->project(pt_a);
-//   auto tmp2 = camera->project(pt_b);
-//   auto tmp3 = camera->project(pt_c);
-//   points_projected.at<uchar>(std::round(tmp1(1)), std::round(tmp1(0))) = 255;
-//   points_projected.at<uchar>(std::round(tmp2(1)), std::round(tmp2(0))) = 255;
-//   points_projected.at<uchar>(std::round(tmp3(1)), std::round(tmp3(0))) = 255;
-
-
     kwiver::arrows::render_triangle_from_image<unsigned short>(a, b, c, pt_a, pt_b, pt_c, cameras, temps, depths, depth_maps, texture);
   }
-
-//  cv::imwrite("projected_points.png", points_projected);
-
-  std::cout << "NB FACES = " << nb << " over " << triangles.size() << std::endl;
+//    cv::imwrite("projected_points.png", points_projected);
 
   kwiver::vital::image_container_sptr out_texture(new kwiver::vital::simple_image_container(texture));
 
-  std::cout << "depth  = " << out_texture->depth() << std::endl;
-
-
-  // write 3-channel texture
+  /// Write RGB texture
 //  ocv_io->save("texture.png", out_texture);
 
-  //---------------- write tif texture
+  /// Extract RGB from tif images
   cv::Mat tex = kwiver::arrows::ocv::image_container_to_ocv_matrix(*out_texture, kwiver::arrows::ocv::image_container::OTHER_COLOR);
-  std::cout << "tex size " << tex.size() << std::endl;
   std::vector<cv::Mat> channels;
   cv::split(tex, channels);
-  std::cout << "channels " << channels.size() << std::endl;
   std::vector<cv::Mat> rgb;
   rgb.push_back(channels[1]);
   rgb.push_back(channels[2]);
@@ -480,35 +436,34 @@ int main()
   rgb_tex.convertTo(rgb_tex, CV_8UC3);
   cv::imwrite("texture.png", rgb_tex);
 
-  std::cout << "texture written " << std::endl;
-
-  //------------------
 
 
+  /// Half-pixel shift (need to test different shifts)
+  std::vector<kwiver::vital::vector_2d> tcoords2 = mesh->tex_coords();
+
+  for (auto& tc : tcoords2)
+  {
+    tc(0) *= texture.width();
+    tc(1) *= texture.height();
+
+    tc(0) += 0.5;
+    tc(1) -= 0.5;
+
+    tc(0) /= texture.width();
+    tc(1) /= texture.height();
+  }
+  mesh->set_tex_coords(tcoords2);
 
 
-    std::vector<kwiver::vital::vector_2d> tcoords2 = mesh->tex_coords();
-
-    for (auto& tc : tcoords2)
-    {
-      tc(0) *= texture.width();
-      tc(1) *= texture.height();
-
-      tc(0) += 0.5;
-      tc(1) -= 0.5;
-
-      tc(0) /= texture.width();
-      tc(1) /= texture.height();
-    }
-    mesh->set_tex_coords(tcoords2);
-
+  /// Re-set UTM vertices
   mesh->set_vertices(std::move(v_mesh_utm));
   occlusion_mesh->set_vertices(std::move(v_occlusion_utm));
 
+  /// Write OBJ
   kwiver::vital::write_obj("texture_mesh.obj", *mesh);
 
+  /// Write material file
   std::ofstream mtl_file("./material.mtl");
-
   mtl_file << "newmtl mat\n";
   mtl_file << "Ka 1.0 1.0 1.0\n";
   mtl_file << "Kd 1.0 1.0 1.0\n";
@@ -520,12 +475,6 @@ int main()
   mtl_file.close();
 
 
-  std::cout << "image " << sizeof(kwiver::vital::image) << std::endl;
-  std::cout << "image_memory_sptr " << sizeof(kwiver::vital::image_memory_sptr) << std::endl;
-  std::cout << "image_pixel_traits " << sizeof(kwiver::vital::image_pixel_traits) << std::endl;
-  std::cout << "size_t " << sizeof(size_t) << std::endl;
-  std::cout << "ptrdiff_t " << sizeof(ptrdiff_t) << std::endl;
-  std::cout << "image container " << sizeof(kwiver::vital::simple_image_container) << std::endl;
 
   //  kwiver::vital::image_of<double> depth(400, 400);
   //  kwiver::vital::image_of<double> img(400, 400);
@@ -557,61 +506,61 @@ int main()
   return 0; //#####################################
 
 // ----- depth map 1
-  kwiver::vital::image_container_sptr res;
-  PROFILE("render_mesh_depth map",
-    res = kwiver::arrows::render_mesh_depth_map2(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_perspective>(cameras[0]));
-)
-    //  // write depthmap
-    cv::Mat image = kwiver::arrows::ocv::image_container_to_ocv_matrix(*res,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
+//  kwiver::vital::image_container_sptr res;
+//  PROFILE("render_mesh_depth map",
+//    res = kwiver::arrows::render_mesh_depth_map2(mesh, std::dynamic_pointer_cast<kwiver::vital::camera_perspective>(cameras[0]));
+//)
+//    //  // write depthmap
+//    cv::Mat image = kwiver::arrows::ocv::image_container_to_ocv_matrix(*res,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
 
-    double min, max;
-    cv::minMaxLoc(image, &min, &max, 0, 0);
-    for (int i = 0; i < image.rows; ++i)
-    {
-      for (int j= 0 ; j < image.cols; ++j)
-      {
-        if (std::isinf(image.at<double>(i, j) ))
-        {
-          image.at<double>(i, j) = 0;
-        }
-      }
-    }
-    cv::minMaxLoc(image, &min, &max, 0, 0);
-    std::cout << "min max " << min << " " << max << std::endl;
-    image -= min;
-    image /= (max-min);
-    image *= 255;
-    image.convertTo(image, CV_8U);
-    cv::imwrite("depthmap.png", image);
+//    double min, max;
+//    cv::minMaxLoc(image, &min, &max, 0, 0);
+//    for (int i = 0; i < image.rows; ++i)
+//    {
+//      for (int j= 0 ; j < image.cols; ++j)
+//      {
+//        if (std::isinf(image.at<double>(i, j) ))
+//        {
+//          image.at<double>(i, j) = 0;
+//        }
+//      }
+//    }
+//    cv::minMaxLoc(image, &min, &max, 0, 0);
+//    std::cout << "min max " << min << " " << max << std::endl;
+//    image -= min;
+//    image /= (max-min);
+//    image *= 255;
+//    image.convertTo(image, CV_8U);
+//    cv::imwrite("depthmap.png", image);
 
-// ---- height map 2
+//// ---- height map 2
 
-  kwiver::vital::image_container_sptr res2;
-  PROFILE("render_mesh_height map 2",
-    res2 = kwiver::arrows::render_mesh_height_map(mesh, cameras[0]);
-)
-    //  // write depthmap
-    cv::Mat image2 = kwiver::arrows::ocv::image_container_to_ocv_matrix(*res2,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
+//  kwiver::vital::image_container_sptr res2;
+//  PROFILE("render_mesh_height map 2",
+//    res2 = kwiver::arrows::render_mesh_height_map(mesh, cameras[0]);
+//)
+//    //  // write depthmap
+//    cv::Mat image2 = kwiver::arrows::ocv::image_container_to_ocv_matrix(*res2,  kwiver::arrows::ocv::image_container::OTHER_COLOR);
 
-    double min2, max2;
-    cv::minMaxLoc(image2, &min2, &max2, 0, 0);
-    for (int i = 0; i < image2.rows; ++i)
-    {
-      for (int j= 0 ; j < image2.cols; ++j)
-      {
-        if (std::isinf(image2.at<double>(i, j) ))
-        {
-          image2.at<double>(i, j) = min2;
-        }
-      }
-    }
-    cv::minMaxLoc(image2, &min2, &max2, 0, 0);
-    std::cout << "min max " << min2 << " " << max2 << std::endl;
-    image2 -= min2;
-    image2 /= (max2-min2);
-    image2 *= 255;
-    image2.convertTo(image2, CV_8U);
-    cv::imwrite("heightmap.png", image2);
+//    double min2, max2;
+//    cv::minMaxLoc(image2, &min2, &max2, 0, 0);
+//    for (int i = 0; i < image2.rows; ++i)
+//    {
+//      for (int j= 0 ; j < image2.cols; ++j)
+//      {
+//        if (std::isinf(image2.at<double>(i, j) ))
+//        {
+//          image2.at<double>(i, j) = min2;
+//        }
+//      }
+//    }
+//    cv::minMaxLoc(image2, &min2, &max2, 0, 0);
+//    std::cout << "min max " << min2 << " " << max2 << std::endl;
+//    image2 -= min2;
+//    image2 /= (max2-min2);
+//    image2 *= 255;
+//    image2.convertTo(image2, CV_8U);
+//    cv::imwrite("heightmap.png", image2);
 
 
 
