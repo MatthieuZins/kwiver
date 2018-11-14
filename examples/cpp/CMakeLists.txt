@@ -1,7 +1,9 @@
 
 set(SOURCE "main.cpp"
-           "how_to_part_01_images.cpp"
-           "how_to_part_02_detections.cpp"
+      "texture_mapping_pinhole.cxx"
+      "texture_mapping_rpc.cxx"
+#  "how_to_part_01_images.cpp"
+#  "how_to_part_02_detections.cpp"
 )
 
 set(kwiver_examples_libraries vital_algo
@@ -18,6 +20,7 @@ if(fletch_ENABLED_YAMLCPP)
   endif()
 endif()
 
+
 add_executable(kwiver_examples ${SOURCE})
-target_link_libraries(kwiver_examples ${kwiver_examples_libraries})
+target_link_libraries(kwiver_examples ${kwiver_examples_libraries} profiler)
 target_compile_definitions(kwiver_examples PRIVATE ${kwiver_examples_flags})

@@ -76,7 +76,6 @@ void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2, con
     {
       double attrib = new_i + A * x;
       double depth = new_i_d + A_d * x;
-
       if (use_perspect_correct)
       {
         depth = 1.0 / depth;
@@ -93,13 +92,14 @@ void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2, con
 
 
 
+
 template <class T>
 void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_2d& v2, const vital::vector_2d& v3,
                                 const vital::vector_3d& pt1, const vital::vector_3d& pt2, const vital::vector_3d& pt3,
                                 const std::vector<vital::camera_sptr> &cameras, const std::vector<vital::image>& images,
                                 const std::vector<vital::vector_3d>& depths,
                                 const std::vector<vital::image>& depth_maps,
-                                vital::image& texture)
+                                vital::image& texture, double depth_theshold)
 {
   assert(images[0].depth() == texture.depth());
 
@@ -161,7 +161,7 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
         if (pt_img(0) < 0 || pt_img(0) >= images[i].width() || pt_img(1) < 0 || pt_img(1) >= images[i].height())
           continue;
         double interpolated_depth = depths[i](0) + a * (depths[i](1)-depths[i](0)) + b * (depths[i](2)-depths[i](0));
-        if (std::abs(interpolated_depth -  bilinear_interp_safe<double>(depth_maps[i], pt_img(0), pt_img(1))) > 0.1 )
+        if (std::abs(interpolated_depth -  bilinear_interp_safe<double>(depth_maps[i], pt_img(0), pt_img(1))) > depth_theshold)
           continue;
         if (scores[i] >= score_max && scores[i] > 0)
         {
@@ -177,7 +177,7 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
 
 
 template <class T>
-double bilinear_interp_safe(const vital::image& img, double x, double y, int d)
+inline double bilinear_interp_safe(const vital::image& img, double x, double y, int d)
 {
   if (x < 0 || y < 0 || x > img.width() - 1|| y > img.height() - 1)
     return 0.0;
@@ -187,14 +187,15 @@ double bilinear_interp_safe(const vital::image& img, double x, double y, int d)
   int p1y = static_cast<int>(y);
   double normy = y - p1y;
 
-  img.at<T>(p1x, p1y);
+  ptrdiff_t w_step = img.w_step(), h_step = img.h_step();
+  const T* pix1 = reinterpret_cast<const T*>(img.first_pixel()) + img.d_step() * d + h_step * p1y + w_step * p1x;
 
-  if (normx == 0 && normy == 0) return img.at<T>(p1x, p1y, d);
-  if (normx == 0) return img.at<T>(p1x, p1y, d) + (img.at<T>(p1x, p1y + 1, d) - img.at<T>(p1x, p1y, d)) * normy;
-  if (normy == 0) return img.at<T>(p1x, p1y, d) + (img.at<T>(p1x + 1, p1y, d) - img.at<T>(p1x, p1y, d)) * normx;
+  if (normx == 0 && normy == 0) return *pix1;
+  if (normx == 0) return pix1[0] + (pix1[h_step] - pix1[0]) * normy;
+  if (normy == 0) return pix1[0] + (pix1[w_step] - pix1[0]) * normx;
 
-  double i1 = img.at<T>(p1x, p1y, d) + (img.at<T>(p1x, p1y + 1, d) - img.at<T>(p1x, p1y , d)) * normy;
-  double i2 = img.at<T>(p1x + 1, p1y, d) + (img.at<T>(p1x + 1, p1y + 1, d) - img.at<T>(p1x + 1, p1y, d)) * normy;
+  double i1 = pix1[0] + (pix1[h_step] - pix1[0]) * normy;
+  double i2 = pix1[w_step] + (pix1[w_step + h_step] - pix1[w_step]) * normy;
 
   return i1 + (i2 - i1) * normx;
 }

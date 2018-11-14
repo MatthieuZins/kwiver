@@ -143,8 +143,22 @@ void draw_uv_parameterization(const std::vector<kwiver::vital::vector_2d>& tcoor
 #include <vital/plugin_loader/plugin_manager.h>
 #include <iostream>
 
+void run_texture_mapping_rpc();
+void run_texture_mapping_pinhole();
+
+//#include <gperftools/profiler.h>
 int main()
 {
+
+//  ProfilerStart("events.log");
+  run_texture_mapping_rpc();
+//  ProfilerStop();
+//  run_texture_mapping_pinhole();
+  return 0;
+
+
+
+
   //  // use comments to execute a particular method
   kwiver::vital::plugin_manager::instance().load_all_plugins();
 
@@ -414,7 +428,7 @@ int main()
       continue;
     }
     nb++;
-    kwiver::arrows::render_triangle_from_image<unsigned short>(a, b, c, pt_a, pt_b, pt_c, cameras, temps, depths, depth_maps, texture);
+    kwiver::arrows::render_triangle_from_image<unsigned short>(a, b, c, pt_a, pt_b, pt_c, cameras, temps, depths, depth_maps, texture, 0.1);
   }
 //    cv::imwrite("projected_points.png", points_projected);
 
