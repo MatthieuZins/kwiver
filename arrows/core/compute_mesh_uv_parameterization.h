@@ -1,5 +1,5 @@
 /*ckwg +29
- * Copyright 2015-2016 by Kitware, Inc.
+ * Copyright 2018 by Kitware, SAS.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,8 +50,7 @@ namespace core {
 /// Compute a uv parameterization of a mesh
 /**
  * @brief This class computes texture coordinates for each face corner of a triangle mesh.
- * The texture coordinates are normalized and the faces are packed separately into the atlas,
- * without distortion.
+ * The texture coordinates are normalized.
  */
 
 class KWIVER_ALGO_CORE_EXPORT compute_mesh_uv_parameterization

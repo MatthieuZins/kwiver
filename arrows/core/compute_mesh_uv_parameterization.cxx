@@ -1,5 +1,5 @@
 /*ckwg +29
- * Copyright 2017-2018 by Kitware, Inc.
+ * Copyright 2018 by Kitware, SAS.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,14 +53,6 @@ struct triangle_t
   int face_id;
   int height;
   int width;
-
-//  void get_bounds(double bounds[4])
-//  {
-//    bounds[0] = std::min(a[0], std::min(b[0], c[0]));
-//    bounds[1] = std::max(a[0], std::max(b[0], c[0]));
-//    bounds[2] = std::min(a[1], std::min(b[1], c[1]));
-//    bounds[3] = std::max(a[1], std::max(b[1], c[1]));
-//  }
 };
 }
 
@@ -126,6 +118,7 @@ compute_mesh_uv_parameterization::get_configuration() const
   return config;
 }
 
+
 // Set the configuration
 void compute_mesh_uv_parameterization
 ::set_configuration(vital::config_block_sptr in_config)
@@ -149,7 +142,7 @@ bool compute_mesh_uv_parameterization
 }
 
 
-/// Compute a texture coordinates for the mesh
+/// Parameterize a mesh
 std::pair<unsigned int, unsigned int>
 compute_mesh_uv_parameterization::parameterize(kwiver::vital::mesh_sptr mesh) const
 {
@@ -183,7 +176,7 @@ compute_mesh_uv_parameterization::parameterize(kwiver::vital::mesh_sptr mesh) co
     }
     else
     {
-      // find the longest edge and assign it to AB, c is the remaining pont
+      // find the longest edge and assign it to AB, C is the other point
       vector_3d AB, AC;
       int longest_edge;
       if (pt1pt2.norm() >= pt1pt3.norm() && pt1pt2.norm() >= pt2pt3.norm())
@@ -249,12 +242,12 @@ compute_mesh_uv_parameterization::parameterize(kwiver::vital::mesh_sptr mesh) co
   // pack triangles
   std::vector<vector_2d> tcoords(mesh->num_faces() * 3);
 
+  // approximate max_width to have a more or less square texture atlas
   const int max_width = std::ceil(sqrt(total_area * 2));
 
   int current_u = d_->exterior_margin;
   int current_v = d_->exterior_margin;
   int next_v = current_v;
-
   vital::vector_2d shift(0.0, 0.0);
   int max_u = 0.0, max_v = 0.0;
   for (int f : face_indices)
