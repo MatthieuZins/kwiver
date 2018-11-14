@@ -90,6 +90,34 @@ void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2, con
   }
 }
 
+/// This renders a triangle filled with label
+template<class T>
+void render_triangle_label(const vital::vector_2d& v1, const vital::vector_2d& v2,
+                           const vital::vector_2d& v3, const T& label, vital::image& img)
+{
+  vital::triangle_scan_iterator tsi(v1, v2, v3);
+  for (tsi.reset(); tsi.next(); )
+  {
+    int y = tsi.scan_y();
+    if (y < 0 || y >= static_cast<int>(img.height()))
+      continue;
+    int min_x = tsi.start_x();
+    int max_x = tsi.end_x();
+    if (max_x < 0 || min_x >= static_cast<int>(img.width()))
+      continue;
+    if (min_x < 0)
+      min_x = 0;
+    if (max_x >= static_cast<int>(img.width()))
+      max_x = static_cast<int>(img.width()) - 1;
+
+    for (int x = min_x; x <= max_x; ++x)
+    {
+      img.at<T>(x, y) = label;
+    }
+  }
+}
+
+
 
 
 
@@ -201,6 +229,105 @@ inline double bilinear_interp_safe(const vital::image& img, double x, double y, 
 }
 
 
+
+/**
+ * @brief dilate_texture This functions performs a dilation horizontally
+ * and vertically
+ * @param texture [in/out] image to dilate
+ * @param mask [in] binary mask used for dilation
+ * @param nb_iter [in] the dilation is repeated nb_iter times
+ */
+template <class T>
+void dilate_atlas(vital::image& atlas, vital::image_of<bool> _mask, int nb_iter)
+{
+  vital::image_of<bool> mask;
+  mask.copy_from(_mask);
+
+  size_t height = atlas.height();
+  size_t width = atlas.width();
+  size_t depth = atlas.depth();
+
+  for (int n=0; n<nb_iter; ++n)
+  {
+    vital::image_of<bool> tmp;
+    tmp.copy_from(mask);
+
+    // vertically
+    for (int r=0; r < height; ++r)
+    {
+      for (int c=0; c < width; ++c)
+      {
+        if (mask(c, r) == false)
+        {
+          std::vector<T> values(depth, 0);
+          unsigned int nb = 0;
+          if ((r-1) >= 0 && mask(c, r-1))
+          {
+            for (int d=0; d < depth; ++d)
+            {
+              values[d] += atlas.at<T>(c, r-1, d);
+            }
+            nb++;
+          }
+          if ((r+1) < height && mask(c, r+1))
+          {
+            for (int d=0; d < depth; ++d)
+            {
+              values[d] += atlas.at<T>(c, r+1, d);
+            }
+            nb++;
+          }
+          if (nb > 0)
+          {
+            for (int d=0; d < depth; ++d)
+            {
+              atlas.at<T>(c, r, d) = static_cast<float>(values[d]) / nb;
+            }
+            tmp(c, r) = true;
+          }
+        }
+      }
+    }
+
+    // horizontally
+    for (int r=0; r < height; ++r)
+    {
+      for (int c=0; c < width; ++c)
+      {
+        if (mask(c, r) == false)
+        {
+          std::vector<T> values(depth, 0);
+          unsigned int nb = 0;
+          if ((c-1) >= 0 && mask(c-1, r))
+          {
+            for (int d=0; d < depth; ++d)
+            {
+              values[d] += atlas.at<T>(c-1, r, d);
+            }
+            nb++;
+          }
+          if ((c+1) < width && mask(c+1, r))
+          {
+            for (int d=0; d < depth; ++d)
+            {
+              values[d] += atlas.at<T>(c+1, r, d);
+            }
+            nb++;
+          }
+          if (nb > 0)
+          {
+            for (int d=0; d < depth; ++d)
+            {
+              atlas.at<T>(c, r, d) = static_cast<float>(values[d]) / nb;
+            }
+            tmp(c, r) = true;
+          }
+        }
+      }
+    }
+    mask.copy_from(tmp);
+  }
+}
 
 
 }

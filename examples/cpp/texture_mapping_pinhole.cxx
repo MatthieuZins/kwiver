@@ -193,8 +193,8 @@ vital::image texture_mapping_pinhole(vital::mesh_sptr mesh, const vital::camera_
 {
 
   /// Mesh uv parameterization
-  double resolution = 0.003;   // mesh unit/pixel
-  int interior_margin = 2;
+  double resolution = 0.001;   // mesh unit/pixel
+  int interior_margin = 8;
   int exterior_margin = 2;
 
   kwiver::vital::algo::compute_mesh_uv_parameterization_sptr uv_param =
@@ -219,7 +219,7 @@ vital::image texture_mapping_pinhole(vital::mesh_sptr mesh, const vital::camera_
     kwiver::vital::image_container_sptr container(new kwiver::vital::simple_image_container(depth_maps[i]));
     cv::Mat image2 = kwiver::arrows::ocv::image_container_to_ocv_matrix(*container,  kwiver::arrows::ocv::image_container::OTHER_COLOR).clone();
     double min2, max2;
-    cv::minMaxLoc(image2, &min2, &max2, 0, 0);
+    cv::minMaxLoc(image2, &min2, &max2, nullptr, nullptr);
     for (int i = 0; i < image2.rows; ++i)
     {
       for (int j= 0 ; j < image2.cols; ++j)
@@ -243,6 +243,7 @@ vital::image texture_mapping_pinhole(vital::mesh_sptr mesh, const vital::camera_
 
   /// Create empty texture
   kwiver::vital::image_of<unsigned char> texture(atlas_dim.first, atlas_dim.second, 3/* images[0].depth()*/);
+  kwiver::vital::image_of<bool> texture_label(atlas_dim.first, atlas_dim.second, 1);
   for (int i = 0; i < texture.height(); ++i)
   {
     for (int j= 0 ;j < texture.width(); ++j)
@@ -250,6 +251,7 @@ vital::image texture_mapping_pinhole(vital::mesh_sptr mesh, const vital::camera_
       for (int k = 0; k < texture.depth(); ++k)
       {
         texture(j, i, k) = 0;
+        texture_label(j, i) = false;
       }
     }
   }
@@ -289,8 +291,13 @@ vital::image texture_mapping_pinhole(vital::mesh_sptr mesh, const vital::camera_
     if (std::abs(t1(0) * t2(1) - t1(1) * t2(0)) < 0.001)
       continue;
     kwiver::arrows::render_triangle_from_image<unsigned char>(a, b, c, pt_a, pt_b, pt_c, cameras, images, depths, depth_maps, texture, 0.01);
+
+    kwiver::arrows::render_triangle_label<bool>(a, b, c, true, texture_label);
   }
 
+
+
+  kwiver::arrows::dilate_atlas<unsigned char>(texture, texture_label, 4);
 
   /// Half-pixel shift (need to test different shifts)
   for (auto& tc : tcoords)
