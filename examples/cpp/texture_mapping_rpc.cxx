@@ -54,8 +54,11 @@ void run_texture_mapping_rpc()
   /// Prepare data and call the real function
   kwiver::vital::mesh_sptr mesh;
 //  kwiver::vital::vector_3d mesh_offset = {435516.726081, 3354093.8, -47.911346};
-  kwiver::vital::vector_3d mesh_offset = {435531.480325, 3354095.24186, -36.561596}; // for jido
-  mesh = kwiver::vital::read_obj("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped2.obj");
+//  kwiver::vital::vector_3d mesh_offset = {435531.480325, 3354095.24186, -36.561596}; // for jido
+  kwiver::vital::vector_3d mesh_offset = {435516.726081, 3354093.8, -47.911346};
+//  mesh = kwiver::vital::read_obj("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped2.obj");
+  mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI4/meshes/triangulated/16_building_23.obj");
+//  mesh = kwiver::vital::read_obj("/home/matthieu/Downloads/JIDO-Jacksonville-Model/temp_plane.obj");
   /// Turn mesh into reglar faces (should be done also for the occlusion mesh)
   std::unique_ptr< kwiver::vital::mesh_regular_face_array<3> > regular_faces(new kwiver::vital::mesh_regular_face_array<3>);
   for (int i = 0; i < mesh->faces().size(); ++i)
@@ -149,8 +152,8 @@ vital::image texture_mapping_rpc(vital::mesh_sptr mesh, const vital::camera_sptr
                                  const std::vector<vital::image>& images) // return image or image_container
 {
   /// Mesh uv parameterization
-  double resolution = 0.3;   // mesh unit/pixel
-  int interior_margin = 2;
+  double resolution = 0.2;   // mesh unit/pixel
+  int interior_margin = 8;
   int exterior_margin = 2;
 
   kwiver::vital::algo::compute_mesh_uv_parameterization_sptr uv_param =
@@ -191,7 +194,7 @@ vital::image texture_mapping_rpc(vital::mesh_sptr mesh, const vital::camera_sptr
   std::vector<kwiver::vital::image> depth_maps(images.size());
   for (int i = 0; i < images.size(); ++i)
   {
-    depth_maps[i] = kwiver::arrows::render_mesh_height_map(mesh, cameras[i])->get_image();
+    depth_maps[i] = kwiver::arrows::core::render_mesh_height_map(mesh, cameras[i])->get_image();
     //  // write depthmap
 //    kwiver::vital::image_container_sptr container(new kwiver::vital::simple_image_container(depth_maps[i]));
 //    cv::Mat image2 = kwiver::arrows::ocv::image_container_to_ocv_matrix(*container,  kwiver::arrows::ocv::image_container::OTHER_COLOR).clone();
@@ -218,6 +221,7 @@ vital::image texture_mapping_rpc(vital::mesh_sptr mesh, const vital::camera_sptr
 
   /// Create empty texture
   kwiver::vital::image_of<unsigned short> texture(atlas_dim.first, atlas_dim.second, images[0].depth());
+  kwiver::vital::image_of<bool> texture_label(atlas_dim.first, atlas_dim.second, 1);
   for (int i = 0; i < texture.height(); ++i)
   {
     for (int j= 0 ;j < texture.width(); ++j)
@@ -226,6 +230,7 @@ vital::image texture_mapping_rpc(vital::mesh_sptr mesh, const vital::camera_sptr
       {
         texture(j, i, k) = 0;
       }
+      texture_label(j, i) = false;
     }
   }
   /// Fill texture
@@ -260,9 +265,12 @@ vital::image texture_mapping_rpc(vital::mesh_sptr mesh, const vital::camera_sptr
     kwiver::vital::vector_2d t2 = c-a;
     if (std::abs(t1(0) * t2(1) - t1(1) * t2(0)) < 0.001)
       continue;
-    kwiver::arrows::render_triangle_from_image<unsigned short>(a, b, c, pt_a, pt_b, pt_c, cameras, images, depths, depth_maps, texture, 0.1);
+    kwiver::arrows::render_triangle_from_image<unsigned short>(a, b, c, pt_a, pt_b, pt_c, cameras, images, depths, depth_maps, texture, 0.5);
+
+    kwiver::arrows::render_triangle<bool>(a, b, c, true, texture_label);
   }
 
+  kwiver::arrows::dilate_atlas<unsigned short>(texture, texture_label, 4);
 
   /// Half-pixel shift (need to test different shifts)
   for (auto& tc : tcoords)

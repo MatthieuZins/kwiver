@@ -151,9 +151,9 @@ int main()
 {
 
 //  ProfilerStart("events.log");
-//  run_texture_mapping_rpc();
+  run_texture_mapping_rpc();
 //  ProfilerStop();
-  run_texture_mapping_pinhole();
+//  run_texture_mapping_pinhole();
   return 0;
 
 
@@ -355,7 +355,7 @@ int main()
   std::vector<kwiver::vital::image> depth_maps(images.size());
   for (int i = 0; i < images.size(); ++i)
   {
-    depth_maps[i] = kwiver::arrows::render_mesh_height_map(mesh, cameras[i])->get_image();
+    depth_maps[i] = kwiver::arrows::core::render_mesh_height_map(mesh, cameras[i])->get_image();
     //  // write depthmap
     kwiver::vital::image_container_sptr container(new kwiver::vital::simple_image_container(depth_maps[i]));
     cv::Mat image2 = kwiver::arrows::ocv::image_container_to_ocv_matrix(*container,  kwiver::arrows::ocv::image_container::OTHER_COLOR).clone();

@@ -89,7 +89,7 @@ TEST(render_mesh_depth_map, perspective_camera)
                                                                cam_orientation.inverse(),
                                                                camera_intrinsic));
 
-  image_container_sptr depth_map = kwiver::arrows::render_mesh_depth_map(mesh, camera);
+  image_container_sptr depth_map = kwiver::arrows::core::render_mesh_depth_map(mesh, camera);
 
   // Check barycenter;
   vector_3d barycenter = (A + B + C) / 3;

@@ -214,7 +214,7 @@ vital::image texture_mapping_pinhole(vital::mesh_sptr mesh, const vital::camera_
   std::vector<kwiver::vital::image> depth_maps(images.size());
   for (int i = 0; i < images.size(); ++i)
   {
-    depth_maps[i] = kwiver::arrows::render_mesh_depth_map(mesh, std::dynamic_pointer_cast<vital::camera_perspective>(cameras[i]))->get_image();
+    depth_maps[i] = kwiver::arrows::core::render_mesh_depth_map(mesh, std::dynamic_pointer_cast<vital::camera_perspective>(cameras[i]))->get_image();
     //  // write depthmap
     kwiver::vital::image_container_sptr container(new kwiver::vital::simple_image_container(depth_maps[i]));
     cv::Mat image2 = kwiver::arrows::ocv::image_container_to_ocv_matrix(*container,  kwiver::arrows::ocv::image_container::OTHER_COLOR).clone();
@@ -251,8 +251,8 @@ vital::image texture_mapping_pinhole(vital::mesh_sptr mesh, const vital::camera_
       for (int k = 0; k < texture.depth(); ++k)
       {
         texture(j, i, k) = 0;
-        texture_label(j, i) = false;
       }
+      texture_label(j, i) = false;
     }
   }
   /// Fill texture
@@ -292,10 +292,8 @@ vital::image texture_mapping_pinhole(vital::mesh_sptr mesh, const vital::camera_
       continue;
     kwiver::arrows::render_triangle_from_image<unsigned char>(a, b, c, pt_a, pt_b, pt_c, cameras, images, depths, depth_maps, texture, 0.01);
 
-    kwiver::arrows::render_triangle_label<bool>(a, b, c, true, texture_label);
+    kwiver::arrows::render_triangle<bool>(a, b, c, true, texture_label);
   }
-
-
 
   kwiver::arrows::dilate_atlas<unsigned char>(texture, texture_label, 4);
 

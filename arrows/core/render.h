@@ -1,6 +1,7 @@
 #ifndef KWIVER_ARROWS_CORE_RENDER_H
 #define KWIVER_ARROWS_CORE_RENDER_H
 
+#include <arrows/core/kwiver_algo_core_export.h>
 #include <vital/types/camera.h>
 #include <vital/types/camera_perspective.h>
 #include <vital/types/image.h>
@@ -11,6 +12,8 @@
 namespace kwiver {
 namespace arrows {
 
+KWIVER_ALGO_CORE_EXPORT
+double check_neighbouring_pixels_depth_map(const kwiver::vital::image& image, double x, double y);
 
 template <class T>
 double bilinear_interp_safe(const vital::image& img, double x, double y, int d=0);
@@ -92,8 +95,8 @@ void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2, con
 
 /// This renders a triangle filled with label
 template<class T>
-void render_triangle_label(const vital::vector_2d& v1, const vital::vector_2d& v2,
-                           const vital::vector_2d& v3, const T& label, vital::image& img)
+void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2,
+                     const vital::vector_2d& v3, const T& label, vital::image& img)
 {
   vital::triangle_scan_iterator tsi(v1, v2, v3);
   for (tsi.reset(); tsi.next(); )
@@ -189,8 +192,15 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
         if (pt_img(0) < 0 || pt_img(0) >= images[i].width() || pt_img(1) < 0 || pt_img(1) >= images[i].height())
           continue;
         double interpolated_depth = depths[i](0) + a * (depths[i](1)-depths[i](0)) + b * (depths[i](2)-depths[i](0));
-        if (std::abs(interpolated_depth -  bilinear_interp_safe<double>(depth_maps[i], pt_img(0), pt_img(1))) > depth_theshold)
+        if (std::abs(interpolated_depth -  check_neighbouring_pixels_depth_map(depth_maps[i], pt_img(0), pt_img(1))) > depth_theshold)
+        {
+//          std::cout << "expected " << interpolated_depth << std::endl;
+//          std::cout << "expected " << pt3d.z() << std::endl;
           continue;
+        }
+//        if (std::abs(interpolated_depth -  bilinear_interp_safe<double>(depth_maps[i], pt_img(0), pt_img(1))) > depth_theshold)
+//            continue;
+
         if (scores[i] >= score_max && scores[i] > 0)
         {
           score_max = scores[i];
