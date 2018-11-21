@@ -56,7 +56,7 @@ namespace core {
  */
 KWIVER_ALGO_CORE_EXPORT
 vital::image_container_sptr render_mesh_depth_map(kwiver::vital::mesh_sptr mesh,
-                                                  kwiver::vital::camera_perspective_sptr camera);
+                                                  vital::camera_perspective_sptr camera);
 
 
 /// This function renders a height map of a triangular mesh
