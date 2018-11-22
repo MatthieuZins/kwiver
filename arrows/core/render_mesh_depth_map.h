@@ -82,6 +82,41 @@ void depth_map_to_height_map(vital::camera_perspective_sptr const& camera,
                              vital::image_of<double>& height_map);
 
 
+/// This function renders a triangle filled with label
+/**
+ * \param v1 [in] 2D triangle point
+ * \param v2 [in] 2D triangle point
+ * \param v3 [in] 2D triangle point
+ * \param label [in] value to fill the triangle with
+ * \param img [out] image in which the triangle is rendered
+ */
+template<class T>
+void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2,
+                     const vital::vector_2d& v3, const T& label, vital::image& img)
+{
+  triangle_scan_iterator tsi(v1, v2, v3);
+  for (tsi.reset(); tsi.next(); )
+  {
+    int y = tsi.scan_y();
+    if (y < 0 || y >= static_cast<int>(img.height()))
+      continue;
+    int min_x = tsi.start_x();
+    int max_x = tsi.end_x();
+    if (max_x < 0 || min_x >= static_cast<int>(img.width()))
+      continue;
+    if (min_x < 0)
+      min_x = 0;
+    if (max_x >= static_cast<int>(img.width()))
+      max_x = static_cast<int>(img.width()) - 1;
+
+    for (int x = min_x; x <= max_x; ++x)
+    {
+      img.at<T>(x, y) = label;
+    }
+  }
+}
+
+
 /// This functions renders a triangle and fills it with depth
 /**
  * \param v1 [in] 2D triangle point
