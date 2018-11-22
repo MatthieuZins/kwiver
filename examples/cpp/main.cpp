@@ -39,6 +39,18 @@
 #include <kwiversys/SystemTools.hxx>
 #include <fstream>
 
+#include <opencv2/opencv.hpp>
+
+#define PROFILE(str, ...)      \
+{                              \
+    std::cout << str << " ... \t\t" << std::flush;    \
+    clock_t profile_t0 = clock();   \
+    __VA_ARGS__;                    \
+    std::cout << double(clock() - profile_t0) / CLOCKS_PER_SEC   \
+    << " s" << std::endl;           \
+}
+
+
 // Predefine methods that show off various functionality in kwiver
 void how_to_part_01_images();
 void how_to_part_02_detections();
@@ -68,6 +80,43 @@ read_camera(const std::string& filename)
   file.close();
   return std::pair<kwiver::vital::vector_3d, kwiver::vital::rotation_d>(center, orientation);
 }
+
+void draw_uv_parameterization(const std::vector<kwiver::vital::vector_2d>& tcoords, int w, int h, const std::string &filename)
+{
+    cv::Mat image(h, w, CV_8UC3, 0.0);
+    std::vector<cv::Point2i> points(3);
+    kwiver::vital::vector_2d scale(w, h);
+    for (int f=0; f < tcoords.size(); f+=3)
+    {
+        kwiver::vital::vector_2d tcoord_0 = tcoords[f + 0];
+        kwiver::vital::vector_2d tcoord_1 = tcoords[f + 1];
+        kwiver::vital::vector_2d tcoord_2 = tcoords[f + 2];
+
+        tcoord_0.y() = 1.0 - tcoord_0.y();
+        tcoord_1.y() = 1.0 - tcoord_1.y();
+        tcoord_2.y() = 1.0 - tcoord_2.y();
+
+        tcoord_0 = tcoord_0.cwiseProduct(scale);
+        tcoord_1 = tcoord_1.cwiseProduct(scale);
+        tcoord_2 = tcoord_2.cwiseProduct(scale);
+
+        points[0].x = std::round(tcoord_0[0]);
+        points[0].y = std::round(tcoord_0[1]);
+
+        points[1].x = std::round(tcoord_1[0]);
+        points[1].y = std::round(tcoord_1[1]);
+
+        points[2].x = std::round(tcoord_2[0]);
+        points[2].y = std::round(tcoord_2[1]);
+
+        cv::Scalar random_color(rand() % 255, rand() % 255, rand() % 255);
+        cv::polylines(image, points, true, random_color);
+    }
+    cv::imwrite(filename, image);
+}
+
+
+
 }
 
 int main()
@@ -146,10 +195,30 @@ int main()
   }
   mesh->set_faces(std::move(regular_faces));
 
-  auto texture = kwiver::arrows::core::generate_texture(mesh, cameras, images);
+  kwiver::vital::image_container_sptr texture;
+  PROFILE("texture mapping ",
+  texture = kwiver::arrows::core::generate_texture<unsigned char, 3>(mesh, cameras, images, 0.001);
+      )
 
   kwiver::vital::algo::image_io_sptr ocv_io = kwiver::vital::algo::image_io::create("ocv");
   ocv_io->save("texture.png", texture);
+
+  kwiver::vital::write_obj("mesh.obj", *mesh);
+
+  draw_uv_parameterization(mesh->tex_coords(), texture->get_image().width(), texture->get_image().height(), "param.png");
+
+  /// Write material file
+  std::ofstream mtl_file("./material.mtl");
+  mtl_file << "newmtl mat\n";
+  mtl_file << "Ka 1.0 1.0 1.0\n";
+  mtl_file << "Kd 1.0 1.0 1.0\n";
+  mtl_file << "Ks 1 1 1\n";
+  mtl_file << "d 1\n";
+  mtl_file << "Ns 75\n";
+  mtl_file << "illum 1\n";
+  mtl_file << "map_Kd texture.png";
+  mtl_file.close();
+
   return 0;
 }
 
