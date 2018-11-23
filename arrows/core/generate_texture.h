@@ -54,6 +54,7 @@ inline double bilinear_interp_safe(const vital::image& img, double x, double y, 
   return i1 + (i2 - i1) * normx;
 }
 
+
 /// This function render a triangle and fill it from different image sources
 /**
  * \param v1 [in] 2D triangle point
@@ -152,6 +153,7 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
   }
 }
 
+
 /// This functions dilates the texture atlas based on a binary mask
 /**
  * \param texture [in/out] image to dilate
@@ -220,7 +222,7 @@ void dilate_atlas(vital::image& texture, vital::image_of<char> mask, int nb_iter
 /// This function generates a texture from a set of images and maps it on the mesh
 /**
  * \param mesh [in/out] the mesh to texture.
- * \param cameras [in] a list of cameras
+ * \param cameras [in] a list of cameras perspective
  * \param images [in] a list of images
  * \param resolution [in] resolution of the texture ??? or the size of the texture
  */
@@ -271,6 +273,7 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_perspective_sp
     if (!std::isinf(area_2d) && !std::isinf(area_3d))
     {
       factor = static_cast<size_t>(std::ceil(sqrt(area_3d / area_2d) / resolution));
+      break;
     }
   }
 
