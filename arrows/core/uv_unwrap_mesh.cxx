@@ -193,6 +193,11 @@ void uv_unwrap_mesh::unwrap(kwiver::vital::mesh_sptr mesh) const
     vector_2d b(AB.norm(), 0.0);
     double proj = AC.dot(AB) / AB.norm();
     vector_2d c(proj, (AC - proj * AB.normalized()).norm());
+    if (c(0) != c(0) || c(1) != c(1))
+    {
+      c(0) = 0.0;
+      c(1) = 0.0;
+    }
     // scale B and C by the resolution
     total_area += b(0) * c(1);
     double w = b(0);
@@ -225,6 +230,7 @@ void uv_unwrap_mesh::unwrap(kwiver::vital::mesh_sptr mesh) const
 
   // Estimate max width to have a more or less square texture atlas
   double max_width = (std::ceil(sqrt(total_area)));
+
   double margin = max_width * d_->spacing;    // margin between triangles
   // Update max_width with margins
   double correction = 0.0;

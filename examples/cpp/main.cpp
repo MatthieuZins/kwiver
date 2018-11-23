@@ -34,10 +34,15 @@
 #include <vital/plugin_loader/plugin_manager.h>
 #include <vital/types/camera.h>
 #include <vital/types/camera_perspective.h>
+#include <vital/types/camera_rpc.h>
 #include <vital/types/image_container.h>
 #include <arrows/core/generate_texture.h>
 #include <kwiversys/SystemTools.hxx>
 #include <fstream>
+#include <vector>
+
+#include <vital/io/camera_from_metadata.h>
+#include <arrows/ocv/image_container.h>
 
 #include <opencv2/opencv.hpp>
 
@@ -115,14 +120,23 @@ void draw_uv_parameterization(const std::vector<kwiver::vital::vector_2d>& tcoor
     cv::imwrite(filename, image);
 }
 
-
-
 }
+
+void run_pinhole();
+void run_rpc();
 
 int main()
 {
+  run_pinhole();
+//  run_rpc();
+  return 0;
+}
+
+void run_pinhole()
+{
   kwiver::vital::plugin_manager::instance().load_all_plugins();
   // use comments to execute a particular method
+
 
   /// Cameras
   kwiver::vital::camera_intrinsics_sptr camera_intrinsic;
@@ -219,6 +233,123 @@ int main()
   mtl_file << "map_Kd texture.png";
   mtl_file.close();
 
-  return 0;
+}
+
+namespace {
+kwiver::vital::camera_rpc_sptr
+loadcamera_from_tif_image(const std::string& filename)
+{
+  kwiver::vital::algo::image_io_sptr image_io = kwiver::vital::algo::image_io::create("gdal");
+
+  kwiver::vital::image_container_sptr img = image_io->load(filename);
+  kwiver::vital::metadata_sptr md = img->get_metadata();
+
+  kwiver::vital::camera_sptr camera = kwiver::vital::camera_from_metadata(md);
+
+  kwiver::vital::simple_camera_rpc* cam = dynamic_cast<kwiver::vital::simple_camera_rpc*>(camera.get());
+  cam->set_image_height(img->height());
+  cam->set_image_width(img->width());
+
+  return std::dynamic_pointer_cast<kwiver::vital::camera_rpc>(camera);
+}
+}
+
+
+void run_rpc()
+{
+  kwiver::vital::plugin_manager::instance().load_all_plugins();
+    /// Prepare data and call the real function
+    kwiver::vital::mesh_sptr mesh;
+  //  kwiver::vital::vector_3d mesh_offset = {435516.726081, 3354093.8, -47.911346};
+  //  kwiver::vital::vector_3d mesh_offset = {435531.480325, 3354095.24186, -36.561596}; // for jido
+    kwiver::vital::vector_3d mesh_offset = {435516.726081, 3354093.8, -47.911346};
+  //  mesh = kwiver::vital::read_obj("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped2.obj");
+    mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI4/meshes/triangulated/tiny.obj");
+  //  mesh = kwiver::vital::read_obj("/home/matthieu/Downloads/JIDO-Jacksonville-Model/temp_plane.obj");
+    /// Turn mesh into reglar faces (should be done also for the occlusion mesh)
+    std::unique_ptr< kwiver::vital::mesh_regular_face_array<3> > regular_faces(new kwiver::vital::mesh_regular_face_array<3>);
+    for (int i = 0; i < mesh->faces().size(); ++i)
+    {
+      kwiver::vital::mesh_regular_face<3> f;
+      f[0] = mesh->faces()(i, 0);
+      f[1] = mesh->faces()(i, 1);
+      f[2] = mesh->faces()(i, 2);
+      regular_faces->push_back(f);
+    }
+    mesh->set_faces(std::move(regular_faces));
+    /// Add offset
+    kwiver::vital::mesh_vertex_array<3>& verts = dynamic_cast<kwiver::vital::mesh_vertex_array<3>&>(mesh->vertices());
+    for (auto & v : verts)
+    {
+      v = v + mesh_offset;
+    }
+
+
+    /// Load cameras and images
+    std::vector<std::string> images_filenames;
+    images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/15FEB15WV031200015FEB15161208-P1BS-500648061070_01_P001_________AAE_0AAAAABPABP0_crop_pansharpened_processed.tif");
+    images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/01NOV15WV031100015NOV01161954-P1BS-500648062080_01_P001_________AAE_0AAAAABPABS0_crop_pansharpened_processed.tif");
+    images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/18OCT14WV031100014OCT18160722-P1BS-500648062090_01_P001_________AAE_0AAAAABPABS0_crop_pansharpened_processed.tif");
+    images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/21JAN15WV031100015JAN21161253-P1BS-500648062050_01_P001_________AAE_0AAAAABPABO0_crop_pansharpened_processed.tif");
+
+    // images
+    std::vector<kwiver::vital::image> images(images_filenames.size());
+    kwiver::vital::algo::image_io_sptr image_tif_io = kwiver::vital::algo::image_io::create("gdal");
+
+    /*images[0] = */image_tif_io->load(images_filenames[0]); //->get_image();
+
+//    for (int i = 0; i < images.size(); ++i)
+//    {
+//      images[i] = image_tif_io->load(images_filenames[i])->get_image();
+//    }
+
+    // cameras
+
+//  std::vector<kwiver::vital::camera_rpc_sptr> cameras(images_filenames.size());
+//  for (int i = 0; i < cameras.size(); ++i)
+//  {
+//    cameras[i] = loadcamera_from_tif_image(images_filenames[i]);
+//  }
+
+//  auto const& texture = kwiver::arrows::core::generate_texture<unsigned short, 8>(mesh, cameras, images, 0.25);
+
+
+
+//    /// Write textured mesh
+
+//    /// Extract RGB from tif images
+//    cv::Mat tex = kwiver::arrows::ocv::image_container_to_ocv_matrix(*texture, kwiver::arrows::ocv::image_container::OTHER_COLOR);
+//    std::vector<cv::Mat> channels;
+//    cv::split(tex, channels);
+//    std::vector<cv::Mat> rgb;
+//    rgb.push_back(channels[1]);
+//    rgb.push_back(channels[2]);
+//    rgb.push_back(channels[4]);
+//    cv::Mat rgb_tex;
+//    cv::merge(rgb, rgb_tex);
+//    rgb_tex.convertTo(rgb_tex, CV_8UC3);
+//    cv::imwrite("texture.png", rgb_tex);
+
+
+//    /// Write OBJ
+//    /// Remove offset
+//    kwiver::vital::mesh_vertex_array<3>& verts2 = dynamic_cast<kwiver::vital::mesh_vertex_array<3>&>(mesh->vertices());
+//    for (auto & v : verts2)
+//    {
+//      v = v - mesh_offset;
+//    }
+//    kwiver::vital::write_obj("texture_mesh.obj", *mesh);
+
+//    /// Write material file
+//    std::ofstream mtl_file("./material.mtl");
+//    mtl_file << "newmtl mat\n";
+//    mtl_file << "Ka 1.0 1.0 1.0\n";
+//    mtl_file << "Kd 1.0 1.0 1.0\n";
+//    mtl_file << "Ks 1 1 1\n";
+//    mtl_file << "d 1\n";
+//    mtl_file << "Ns 75\n";
+//    mtl_file << "illum 1\n";
+//    mtl_file << "map_Kd texture.png";
+//    mtl_file.close();
 }
 
