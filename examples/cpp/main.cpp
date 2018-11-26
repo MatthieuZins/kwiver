@@ -127,8 +127,8 @@ void run_rpc();
 
 int main()
 {
-  run_pinhole();
-//  run_rpc();
+//  run_pinhole();
+  run_rpc();
   return 0;
 }
 
@@ -296,60 +296,60 @@ void run_rpc()
     std::vector<kwiver::vital::image> images(images_filenames.size());
     kwiver::vital::algo::image_io_sptr image_tif_io = kwiver::vital::algo::image_io::create("gdal");
 
-    /*images[0] = */image_tif_io->load(images_filenames[0]); //->get_image();
+    images[0] = image_tif_io->load(images_filenames[0])->get_image();
 
-//    for (int i = 0; i < images.size(); ++i)
-//    {
-//      images[i] = image_tif_io->load(images_filenames[i])->get_image();
-//    }
+    for (int i = 0; i < images.size(); ++i)
+    {
+      images[i] = image_tif_io->load(images_filenames[i])->get_image();
+    }
 
     // cameras
 
-//  std::vector<kwiver::vital::camera_rpc_sptr> cameras(images_filenames.size());
-//  for (int i = 0; i < cameras.size(); ++i)
-//  {
-//    cameras[i] = loadcamera_from_tif_image(images_filenames[i]);
-//  }
+  std::vector<kwiver::vital::camera_rpc_sptr> cameras(images_filenames.size());
+  for (int i = 0; i < cameras.size(); ++i)
+  {
+    cameras[i] = loadcamera_from_tif_image(images_filenames[i]);
+  }
 
-//  auto const& texture = kwiver::arrows::core::generate_texture<unsigned short, 8>(mesh, cameras, images, 0.25);
-
-
-
-//    /// Write textured mesh
-
-//    /// Extract RGB from tif images
-//    cv::Mat tex = kwiver::arrows::ocv::image_container_to_ocv_matrix(*texture, kwiver::arrows::ocv::image_container::OTHER_COLOR);
-//    std::vector<cv::Mat> channels;
-//    cv::split(tex, channels);
-//    std::vector<cv::Mat> rgb;
-//    rgb.push_back(channels[1]);
-//    rgb.push_back(channels[2]);
-//    rgb.push_back(channels[4]);
-//    cv::Mat rgb_tex;
-//    cv::merge(rgb, rgb_tex);
-//    rgb_tex.convertTo(rgb_tex, CV_8UC3);
-//    cv::imwrite("texture.png", rgb_tex);
+  auto const& texture = kwiver::arrows::core::generate_texture<unsigned short, 8>(mesh, cameras, images, 0.25);
 
 
-//    /// Write OBJ
-//    /// Remove offset
-//    kwiver::vital::mesh_vertex_array<3>& verts2 = dynamic_cast<kwiver::vital::mesh_vertex_array<3>&>(mesh->vertices());
-//    for (auto & v : verts2)
-//    {
-//      v = v - mesh_offset;
-//    }
-//    kwiver::vital::write_obj("texture_mesh.obj", *mesh);
 
-//    /// Write material file
-//    std::ofstream mtl_file("./material.mtl");
-//    mtl_file << "newmtl mat\n";
-//    mtl_file << "Ka 1.0 1.0 1.0\n";
-//    mtl_file << "Kd 1.0 1.0 1.0\n";
-//    mtl_file << "Ks 1 1 1\n";
-//    mtl_file << "d 1\n";
-//    mtl_file << "Ns 75\n";
-//    mtl_file << "illum 1\n";
-//    mtl_file << "map_Kd texture.png";
-//    mtl_file.close();
+    /// Write textured mesh
+
+    /// Extract RGB from tif images
+    cv::Mat tex = kwiver::arrows::ocv::image_container_to_ocv_matrix(*texture, kwiver::arrows::ocv::image_container::OTHER_COLOR);
+    std::vector<cv::Mat> channels;
+    cv::split(tex, channels);
+    std::vector<cv::Mat> rgb;
+    rgb.push_back(channels[1]);
+    rgb.push_back(channels[2]);
+    rgb.push_back(channels[4]);
+    cv::Mat rgb_tex;
+    cv::merge(rgb, rgb_tex);
+    rgb_tex.convertTo(rgb_tex, CV_8UC3);
+    cv::imwrite("texture.png", rgb_tex);
+
+
+    /// Write OBJ
+    /// Remove offset
+    kwiver::vital::mesh_vertex_array<3>& verts2 = dynamic_cast<kwiver::vital::mesh_vertex_array<3>&>(mesh->vertices());
+    for (auto & v : verts2)
+    {
+      v = v - mesh_offset;
+    }
+    kwiver::vital::write_obj("texture_mesh.obj", *mesh);
+
+    /// Write material file
+    std::ofstream mtl_file("./material.mtl");
+    mtl_file << "newmtl mat\n";
+    mtl_file << "Ka 1.0 1.0 1.0\n";
+    mtl_file << "Kd 1.0 1.0 1.0\n";
+    mtl_file << "Ks 1 1 1\n";
+    mtl_file << "d 1\n";
+    mtl_file << "Ns 75\n";
+    mtl_file << "illum 1\n";
+    mtl_file << "map_Kd texture.png";
+    mtl_file.close();
 }
 
