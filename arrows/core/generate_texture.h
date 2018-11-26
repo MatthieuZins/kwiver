@@ -94,16 +94,19 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
     points[i].col(1) = cameras[i]->project(pt2);
     points[i].col(2) = cameras[i]->project(pt3);
 
-    std::cout << points[i].col(0) << std::endl;
-    std::cout << points[i].col(1) << std::endl;
-    std::cout << points[i].col(2) << std::endl;
     vital::vector_2d ab = points[i].col(1) - points[i].col(0);
     vital::vector_2d ac = points[i].col(2) - points[i].col(0);
-    double score = (ab(0)*ac(1) - ab(1)*ac(0));
+    double score = -(ab(0) * ac(1) - ab(1) * ac(0));
     scores[i] = std::max(score, 0.0);
   }
 
   triangle_scan_iterator tsi(v1, v2, v3);
+  vital::matrix_3x3d triangle;
+  vital::matrix_3x3d area_c, area_a;
+  triangle << v1, v2, v3, 1, 1, 1;
+  area_c << v1, v2, v2, 1, 1, 1;  // triangle abp
+  area_a << v2, v3, v3, 1, 1, 1;  // triangle bcp
+  double inv_area = 1.0 / triangle.determinant();
   for (tsi.reset(); tsi.next(); )
   {
     int y = tsi.scan_y();
@@ -112,20 +115,17 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
     int min_x = std::max(0, tsi.start_x());
     int max_x = std::min(static_cast<int>(texture.width()) - 1, tsi.end_x());
 
-    vital::vector_2d v1v2 = v2 - v1;
-    vital::vector_2d v1v3 = v3 - v1;
-
-    vital::vector_3d pt1pt2 = pt2 - pt1;
-    vital::vector_3d pt1pt3 = pt3 - pt1;
+    area_c(1, 2) = y;
+    area_a(1, 2) = y;
     for (int x = min_x; x <= max_x; ++x)
     {
-      vital::vector_2d coord(x, y);
-      coord -= v1;
-      double a = (v1v3(0) * coord(1) - v1v3(1) * coord(0)) / (v1v3(0) * v1v2(1) - v1v3(1) * v1v2(0));     //can be simplified
-      double b = (v1v2(0) * coord(1) - v1v2(1) * coord(0)) / (v1v2(0) * v1v3(1) - v1v2(1) * v1v3(0));
-
+      area_c(0, 2) = x;
+      area_a(0, 2) = x;
+      vital::vector_3d bary_coords(area_a.determinant() * inv_area, 0, area_c.determinant() * inv_area);
+      bary_coords(1) = 1 - bary_coords(0) - bary_coords(2);
       // Corresponding 3d point
-      vital::vector_3d pt3d = pt1 + a * pt1pt2 + b * pt1pt3;
+      vital::vector_3d pt3d = bary_coords(0) * pt1 + bary_coords(1) * pt2 + bary_coords(2) * pt3;
+
       double score_max = 0.0;
       int max_score_index = -1;
       vital::vector_2d max_score_img_pt = {0, 0};
@@ -137,10 +137,11 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
           continue;
 
         // visibility test from the camera i
-        double interpolated_depth = depths_pt1[i] + a * (depths_pt2[i] - depths_pt1[i]) + b * (depths_pt3[i] - depths_pt1[i]);
+        double interpolated_depth = bary_coords(0) * depths_pt1[i] + bary_coords(1) * depths_pt2[i] + bary_coords(2) * depths_pt3[i];
 
-//        if (std::abs(interpolated_depth -  bilinear_interp_safe<double>(depth_maps[i], pt_img(0), pt_img(1))) > depth_theshold)
-//          continue;
+        if (std::abs(interpolated_depth -  bilinear_interp_safe<double>(depth_maps[i], pt_img(0), pt_img(1))) > depth_theshold)
+          continue;
+
         if (scores[i] > score_max)
         {
           score_max = scores[i];
@@ -151,7 +152,6 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
       // Fill the pixel with data from the image with the highest score
       if (max_score_index >= 0)
       {
-        std::cout << "fill\n";
         for (size_t d = 0; d < texture.depth(); ++d)
           texture.at<T>(x, y, d) = bilinear_interp_safe<T>(images[max_score_index], max_score_img_pt(0), max_score_img_pt(1), d);
       }
