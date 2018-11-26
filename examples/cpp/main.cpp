@@ -261,11 +261,12 @@ void run_rpc()
     /// Prepare data and call the real function
     kwiver::vital::mesh_sptr mesh;
   //  kwiver::vital::vector_3d mesh_offset = {435516.726081, 3354093.8, -47.911346};
-  //  kwiver::vital::vector_3d mesh_offset = {435531.480325, 3354095.24186, -36.561596}; // for jido
-    kwiver::vital::vector_3d mesh_offset = {435516.726081, 3354093.8, -47.911346};
-  //  mesh = kwiver::vital::read_obj("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped2.obj");
-    mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI4/meshes/triangulated/tiny.obj");
-  //  mesh = kwiver::vital::read_obj("/home/matthieu/Downloads/JIDO-Jacksonville-Model/temp_plane.obj");
+    kwiver::vital::vector_3d mesh_offset = {435531.480325, 3354095.24186, -36.561596}; // for jido
+//    kwiver::vital::vector_3d mesh_offset = {435516.726081, 3354093.8, -47.911346};
+    mesh = kwiver::vital::read_obj("/home/matthieu/Downloads/JIDO-Jacksonville-Model/Jacksonville_OBJ_Buildings_Only_offset_cropped2.obj");
+//    mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI4/meshes/triangulated/tiny.obj");
+//    mesh = kwiver::vital::read_obj("/media/matthieu/DATA/core3d_results/20180928/AOI4/meshes/triangulated/16_building_23.obj");
+  //  mesh = kwiver::vital::read_obj("/home/ma²²tthieu/Downloads/JIDO-Jacksonville-Model/temp_plane.obj");
     /// Turn mesh into reglar faces (should be done also for the occlusion mesh)
     std::unique_ptr< kwiver::vital::mesh_regular_face_array<3> > regular_faces(new kwiver::vital::mesh_regular_face_array<3>);
     for (int i = 0; i < mesh->faces().size(); ++i)
@@ -291,6 +292,12 @@ void run_rpc()
     images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/01NOV15WV031100015NOV01161954-P1BS-500648062080_01_P001_________AAE_0AAAAABPABS0_crop_pansharpened_processed.tif");
     images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/18OCT14WV031100014OCT18160722-P1BS-500648062090_01_P001_________AAE_0AAAAABPABS0_crop_pansharpened_processed.tif");
     images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/21JAN15WV031100015JAN21161253-P1BS-500648062050_01_P001_________AAE_0AAAAABPABO0_crop_pansharpened_processed.tif");
+    images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/23APR17WV021100017APR23163440-P1BS-501504473010_01_P002_________AAE_0AAAAABIABF0_crop_pansharpened_processed.tif");
+//    images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/27DEC14WV031100014DEC27161109-P1BS-500648062070_01_P001_________AAE_0AAAAABPABS0_crop_pansharpened_processed.tif");
+//    images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/27DEC14WV031100014DEC27161109-P1BS-500648062070_01_P001_________AAE_0AAAAABPABS0_crop_pansharpened_processed.tif");
+//    images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/22MAR17WV021200017MAR22161624-P1BS-501504474020_01_P003_________AAE_0AAAAABIABE0_crop_pansharpened_processed.tif");
+//    images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/11FEB16WV031100016FEB11163042-P1BS-501504472070_01_P001_________AAE_0AAAAABPABP0_crop_pansharpened_processed.tif");
+//    images_filenames.push_back("/media/matthieu/DATA/core3d_results/20180928/AOI4/images/14MAY15WV031200015MAY14160906-P1BS-501504473050_01_P001_________AAE_0AAAAABPABS0_crop_pansharpened_processed.tif");
 
     // images
     std::vector<kwiver::vital::image> images(images_filenames.size());

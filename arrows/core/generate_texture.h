@@ -408,7 +408,7 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_rpc_sptr> cons
     }
   }
 
-  /** convert to LATLONG **/
+  // convert points to lat long coordinates
   std::unique_ptr< kwiver::vital::mesh_vertex_array<3> > vertices_utm(new kwiver::vital::mesh_vertex_array<3>(mesh->num_verts()));
   *vertices_utm = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
   std::unique_ptr< kwiver::vital::mesh_vertex_array<3> > vertices_latlong(new kwiver::vital::mesh_vertex_array<3>(mesh->num_verts()));
@@ -420,13 +420,10 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_rpc_sptr> cons
   for (unsigned int i = 0; i < vertices_utm->size(); ++i)
   {
     (*vertices_latlong)[i] = (*vertices_utm)[i];
-    std::cout << (*vertices_latlong)[i] << std::endl;
     auto res = kwiver::vital::geo_conv((*vertices_latlong)[i].head<2>(), src_coord_sys, dest_coord_sys);
     (*vertices_latlong)[i].head<2>() = res;
-    std::cout << (*vertices_latlong)[i] << std::endl;
   }
   mesh->set_vertices(std::move(vertices_latlong));
-
 
 
   // Render the depth maps of the mesh seen by the different cameras
@@ -441,18 +438,19 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_rpc_sptr> cons
     tc.y() = 1.0 - tc.y();
     tc *= factor;
   }
-  vital::image_of<T> texture(factor, factor, N); /// unsigned char and 3 should be templte parameters
+  vital::image_of<T> texture(factor, factor, N);
   vital::transform_image(texture, [](T){ return 0; });
   kwiver::vital::image_of<char> texture_label(factor, factor, 1);
   vital::transform_image(texture_label, [](char){ return 0; });
 
   // Compute the depth of each points w.r.t each camera
+  kwiver::vital::mesh_vertex_array<3>& new_vertices = dynamic_cast< kwiver::vital::mesh_vertex_array<3>& >(mesh->vertices());
   std::vector< std::vector<double> > per_camera_point_height(mesh->num_verts(), std::vector<double>(cameras.size(), 0.0));
   for (unsigned int v = 0; v < mesh->num_verts(); ++v)
   {
     for (unsigned int c = 0; c < cameras.size(); ++c)
     {
-      per_camera_point_height[v][c] = mesh->vertices()(v, 2); //vertices[v][2];
+      per_camera_point_height[v][c] = new_vertices[v][2];
     }
   }
 
@@ -467,28 +465,20 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_rpc_sptr> cons
     unsigned int p1 = triangles(f, 0);
     unsigned int p2 = triangles(f, 1);
     unsigned int p3 = triangles(f, 2);
-//    vital::vector_3d const& pt_0 = vertices[p1];
-//    vital::vector_3d const& pt_1 = vertices[p2];
-//    vital::vector_3d const& pt_2 = vertices[p3];
-
-    vital::vector_3d pt_0(mesh->vertices()(p1, 0), mesh->vertices()(p1, 1), mesh->vertices()(p1, 2));
-    vital::vector_3d pt_1(mesh->vertices()(p2, 0), mesh->vertices()(p2, 1), mesh->vertices()(p2, 2));
-    vital::vector_3d pt_2(mesh->vertices()(p3, 0), mesh->vertices()(p3, 1), mesh->vertices()(p3, 2));
-
-
-
+    vital::vector_3d const& pt_0 = new_vertices[p1];
+    vital::vector_3d const& pt_1 = new_vertices[p2];
+    vital::vector_3d const& pt_2 = new_vertices[p3];
 
     render_triangle_from_image<T>(tcoords[f * 3], tcoords[f * 3 + 1], tcoords[f * 3 + 2],
-                                              pt_0, pt_1, pt_2, cameras_base, images,
-                                              per_camera_point_height[p1],
-                                              per_camera_point_height[p2],
-                                              per_camera_point_height[p3],
-                                              depth_maps, texture, 0.1);
+                                  pt_0, pt_1, pt_2, cameras_base, images,
+                                  per_camera_point_height[p1],
+                                  per_camera_point_height[p2],
+                                  per_camera_point_height[p3],
+                                  depth_maps, texture, 0.5);
 
     kwiver::arrows::core::render_triangle<bool>(tcoords[f * 3], tcoords[f * 3 + 1], tcoords[f * 3 + 2], true, texture_label);
   }
-
-//  kwiver::arrows::core::dilate_atlas<T>(texture, texture_label, 4);
+  kwiver::arrows::core::dilate_atlas<T>(texture, texture_label, 4);
 
   // Update texture coordinates
   for (auto& tc : tcoords)
@@ -498,10 +488,8 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_rpc_sptr> cons
     tc /= factor;
     tc[1] = 1.0 - tc[1];
   }
-
   mesh->set_tex_coords(tcoords);
   mesh->set_vertices(std::move(vertices_utm));
-
   return std::make_shared<vital::simple_image_container>(texture);
 }
 
