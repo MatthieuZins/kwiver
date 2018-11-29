@@ -20,7 +20,7 @@ namespace core {
 
 
 template <class T>
-void dilate_atlas(vital::image& atlas, vital::image_of<bool> _mask, int nb_iter);
+void dilate_atlas(vital::image& atlas, vital::image_of<char> mask, int nb_iter);
 
 
 /// This function samples an image at a non-integer location with bilinear interpolation
@@ -45,17 +45,17 @@ inline double bilinear_interp_safe(const vital::image& img, double x, double y, 
   const T* pix1 = reinterpret_cast<const T*>(img.first_pixel()) + img.d_step() * d + h_step * p1y + w_step * p1x;
 
   if (normx < 1e-9 && normy < 1e-9) return *pix1;
-  if (normx < 1e-9) return static_cast<T>(pix1[0] + (static_cast<double>(pix1[h_step]) - static_cast<double>(pix1[0])) * normy);
-  if (normy < 1e-9) return static_cast<T>(pix1[0] + (static_cast<double>(pix1[w_step]) - static_cast<double>(pix1[0])) * normx);
+  if (normx < 1e-9) return static_cast<T>(pix1[0] + (pix1[h_step] - pix1[0]) * normy);
+  if (normy < 1e-9) return static_cast<T>(pix1[0] + (pix1[w_step] - pix1[0]) * normx);
 
-  double i1 = pix1[0] + (static_cast<double>(pix1[h_step]) - static_cast<double>(pix1[0])) * normy;
-  double i2 = pix1[w_step] + (static_cast<double>(pix1[w_step + h_step]) - static_cast<double>(pix1[w_step])) * normy;
+  double i1 = pix1[0] + (pix1[h_step] - pix1[0]) * normy;
+  double i2 = pix1[w_step] + (pix1[w_step + h_step] - pix1[w_step]) * normy;
 
   return i1 + (i2 - i1) * normx;
 }
 
 
-/// This function render a triangle and fill it from different image sources
+/// This function renders a triangle and fills it with data from different images
 /**
  * \param v1 [in] 2D triangle point
  * \param v2 [in] 2D triangle point
@@ -82,8 +82,7 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
                                 const std::vector<vital::image>& depth_maps,
                                 vital::image& texture, double depth_theshold)
 {
-  assert(images[0].depth() == texture.depth());
-
+  // Compute a score for each image
   std::vector<double> scores(images.size(), 0.0);
   std::vector<vital::matrix_2x3d> points(images.size());
   for (size_t i = 0; i < images.size(); ++i)
@@ -136,7 +135,6 @@ void render_triangle_from_image(const vital::vector_2d& v1, const vital::vector_
 
         // visibility test from the camera i
         double interpolated_depth = bary_coords(0) * depths_pt1[i] + bary_coords(1) * depths_pt2[i] + bary_coords(2) * depths_pt3[i];
-
         if (std::abs(interpolated_depth -  bilinear_interp_safe<double>(depth_maps[i], pt_img(0), pt_img(1))) > depth_theshold)
           continue;
 
@@ -170,6 +168,7 @@ void dilate_atlas(vital::image& texture, vital::image_of<char> mask, int nb_iter
   int height = static_cast<int>(texture.height());
   int width = static_cast<int>(texture.width());
 
+  // lambda to copy a pixel with any depth
   auto copy_pixel = [&texture](unsigned int x_d, unsigned int y_d, unsigned int x_s, unsigned int y_s)
   {
     T* dest = &texture.at<T>(x_d, y_d, 0);
@@ -179,7 +178,7 @@ void dilate_atlas(vital::image& texture, vital::image_of<char> mask, int nb_iter
       *dest = *src;
     }
   };
-  // horizontal
+  // horizontal dilate
   for (int n = 0; n < nb_iter; ++n)
   {
     for (unsigned int y = 0; y < height; ++y)
@@ -200,7 +199,7 @@ void dilate_atlas(vital::image& texture, vital::image_of<char> mask, int nb_iter
         }
       }
     }
-    // vertical
+    // vertical dilate
     for (unsigned int x = 0; x < width; ++x)
     {
       for (unsigned int y = 0; y < height - 1; ++y)
@@ -249,24 +248,18 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_perspective_sp
   {
     uv_unwrap_mesh unwrap;
     vital::config_block_sptr config = unwrap.get_configuration();
-    config->set_value<double>("spacing", 0.005);
     unwrap.set_configuration(config);
     unwrap.unwrap(mesh);
   }
 
   auto tcoords = mesh->tex_coords();
-
-  size_t factor = 1;
   // Rescale tcoords to real pixel values
+  size_t factor = 1;
   for (unsigned int f = 0; f < mesh->num_faces(); ++f)
   {
-    auto const& tc1 = tcoords[f * 3 + 0];
-    auto const& tc2 = tcoords[f * 3 + 1];
-    auto const& tc3 = tcoords[f * 3 + 2];
-    vital::vector_2d a2 = tc2 - tc1;
-    vital::vector_2d b2 = tc3 - tc1;
-    double area_2d = a2(0) * b2(1) - a2(1) * b2(0);
-
+    vital::matrix_3x3d points_2d_h;
+    points_2d_h << tcoords[f * 3 + 0], tcoords[f * 3 + 1], tcoords[f * 3 + 2], 1, 1, 1;
+    double area_2d = points_2d_h.determinant();
     auto const& v1 = vertices[triangles(f, 0)];
     auto const& v2 = vertices[triangles(f, 1)];
     auto const& v3 = vertices[triangles(f, 2)];
@@ -280,6 +273,11 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_perspective_sp
       break;
     }
   }
+  for (auto& tc : tcoords)
+  {
+    tc.y() = 1.0 - tc.y();
+    tc *= factor;
+  }
 
   // Render the depth maps of the mesh seen by the different cameras
   std::vector<vital::image> depth_maps(images.size());
@@ -287,16 +285,6 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_perspective_sp
   {
     depth_maps[i] = render_mesh_depth_map(mesh, cameras[i])->get_image();
   }
-
-  for (auto& tc : tcoords)
-  {
-    tc.y() = 1.0 - tc.y();
-    tc *= factor;
-  }
-  vital::image_of<T> texture(factor, factor, N); /// unsigned char and 3 should be templte parameters
-  vital::transform_image(texture, [](T){ return 0; });
-  kwiver::vital::image_of<char> texture_label(factor, factor, 1);
-  vital::transform_image(texture_label, [](char){ return 0; });
 
   // Compute the depth of each points w.r.t each camera
   std::vector< std::vector<double> > per_camera_point_depth(mesh->num_verts(), std::vector<double>(cameras.size(), 0.0));
@@ -314,6 +302,10 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_perspective_sp
     cameras_base[k] = cameras[k];
   }
 
+  vital::image_of<T> texture(factor, factor, N);
+  vital::transform_image(texture, [](T){ return 0; });
+  kwiver::vital::image_of<char> texture_label(factor, factor, 1);
+  vital::transform_image(texture_label, [](char){ return 0; });
   for (unsigned int f = 0; f < mesh->num_faces(); ++f)
   {
     unsigned int p1 = triangles(f, 0);
@@ -324,13 +316,12 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_perspective_sp
     vital::vector_3d const& pt_2 = vertices[p3];
 
     render_triangle_from_image<T>(tcoords[f * 3], tcoords[f * 3 + 1], tcoords[f * 3 + 2],
-                                              pt_0, pt_1, pt_2, cameras_base, images,
-                                              per_camera_point_depth[p1],
-                                              per_camera_point_depth[p2],
-                                              per_camera_point_depth[p3],
-                                              depth_maps, texture, 0.1);
-
-    kwiver::arrows::core::render_triangle<bool>(tcoords[f * 3], tcoords[f * 3 + 1], tcoords[f * 3 + 2], true, texture_label);
+                                  pt_0, pt_1, pt_2, cameras_base, images,
+                                  per_camera_point_depth[p1],
+                                  per_camera_point_depth[p2],
+                                  per_camera_point_depth[p3],
+                                  depth_maps, texture, 0.05);
+    kwiver::arrows::core::render_triangle<bool>(tcoords[f * 3], tcoords[f * 3 + 1], tcoords[f * 3 + 2], 1, texture_label);
   }
 
   kwiver::arrows::core::dilate_atlas<T>(texture, texture_label, 4);
@@ -338,24 +329,19 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_perspective_sp
   // Update texture coordinates
   for (auto& tc : tcoords)
   {
-    tc[0] += 0.5;
+    tc[0] += 0.5;   // half-pixel shift
     tc[1] += 0.5;
     tc /= factor;
     tc[1] = 1.0 - tc[1];
   }
-
   mesh->set_tex_coords(tcoords);
+
   return std::make_shared<vital::simple_image_container>(texture);
 }
 
 
-
 }
 }
 }
-
-
-
-
 
 #endif // KWIVER_ARROWS_CORE_GENERATE_TEXTURE_H
