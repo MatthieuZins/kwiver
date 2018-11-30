@@ -7,7 +7,9 @@ set(SOURCE "main.cpp"
 set(kwiver_examples_libraries vital_algo
                               kwiver_algo_ocv
                               kwiver_algo_vxl
-                              kwiversys )
+                              kwiversys
+                              #profiler
+                              )
 
 if(fletch_ENABLED_YAMLCPP)
   add_subdirectory( kpf )
