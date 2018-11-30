@@ -50,7 +50,7 @@
 #include <vital/util/transform_image.h>
 
 #include <iostream>
-#include <algorithm>
+#include <numeric>
 
 
 namespace kwiver {
