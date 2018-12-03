@@ -138,7 +138,6 @@ void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2, con
                      vital::image_of<double>& depth_img,
                      vital::image_of<T>& img)
 {
-  triangle_scan_iterator tsi(v1, v2, v3);
   double attrib_v1_d = static_cast<double>(attrib_v1);
   double attrib_v2_d = static_cast<double>(attrib_v2);
   double attrib_v3_d = static_cast<double>(attrib_v3);
@@ -147,18 +146,13 @@ void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2, con
   auto Va = triangle_attribute_vector(v1, v2, v3, attrib_v1_d, attrib_v2_d, attrib_v3_d);
   // Linear interpolation depth
   auto Vd = triangle_attribute_vector(v1, v2, v3, depth_v1, depth_v2, depth_v3);
-
-  for (tsi.reset(); tsi.next(); )
+  vital::vector_4i bounds(0, 0, static_cast<int>(img.width())-1, static_cast<int>(img.height())-1);
+  for (auto it : triangle_scan_iterator(v1, v2, v3, bounds))
   {
-    int y = tsi.scan_y();
-    if (y < 0 || y >= static_cast<int>(img.height()))
-      continue;
-    int min_x = std::max(0, tsi.start_x());
-    int max_x = std::min(static_cast<int>(img.width()) - 1, tsi.end_x());
-
+    int y = it.y();
     double new_i = Va.y() * y + Va.z();
     double new_i_d = Vd.y() * y + Vd.z();
-    for (int x = min_x; x <= max_x; ++x)
+    for (auto x : it)
     {
       double attrib = new_i + Va.x() * x;
       double depth = new_i_d + Vd.x() * x;
@@ -190,21 +184,14 @@ void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2, con
                      vital::image_of<double>& depth_img,
                      vital::image_of<T>& img)
 {
-  triangle_scan_iterator tsi(v1, v2, v3);
-
   // Linear interpolation depth
   auto Vd = triangle_attribute_vector(v1, v2, v3, depth_v1, depth_v2, depth_v3);
-
-  for (tsi.reset(); tsi.next(); )
+  vital::vector_4i bounds(0, 0, static_cast<int>(img.width())-1, static_cast<int>(img.height())-1);
+  for (auto it : triangle_scan_iterator(v1, v2, v3, bounds))
   {
-    int y = tsi.scan_y();
-    if (y < 0 || y >= static_cast<int>(img.height()))
-      continue;
-    int min_x = std::max(0, tsi.start_x());
-    int max_x = std::min(static_cast<int>(img.width()) - 1, tsi.end_x());
-
+    int y = it.y();
     double new_i = Vd.y() * y + Vd.z();
-    for (int x = min_x; x <= max_x; ++x)
+    for (auto x : it)
     {
       double depth = new_i + Vd.x() * x;
       if (depth < depth_img(x, y))

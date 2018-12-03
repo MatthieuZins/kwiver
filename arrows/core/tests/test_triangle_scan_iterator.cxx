@@ -51,18 +51,45 @@ namespace
 const vector_2d pt1(0, 0);
 const vector_2d pt2(10, 0);
 const vector_2d pt3(5, 10);
+const int x_pos[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4,
+                     5, 6, 7, 8, 9, 2, 3, 4, 5, 6, 7, 8, 2, 3, 4, 5, 6, 7, 8, 3, 4, 5, 6, 7,
+                     3, 4, 5, 6, 7, 4, 5, 6, 4, 5, 6, 5, 5};
+const int y_pos[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2,
+                     2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6,
+                     6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 10};
+const kwiver::vital::vector_4i bounds(3, 3, 7, 7);
+const int x_pos_bounded[] = {3, 4, 5, 6, 7, 3, 4, 5, 6, 7, 3, 4, 5, 6, 7, 3, 4, 5, 6, 7, 4, 5, 6};
+const int y_pos_bounded[] = {3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 7, 7, 7};
 }
 
 // ----------------------------------------------------------------------------
 TEST(triangle_scan_iterator, iterate)
 {
-  kwiver::arrows::core::triangle_scan_iterator iter(pt1, pt2, pt3);
-
-  for (iter.reset(); iter.next(); )
+  int i = 0;
+  for (auto it : kwiver::arrows::core::triangle_scan_iterator(pt1, pt2, pt3))
   {
-    int d = static_cast<int>(std::ceil(static_cast<double>(iter.scan_y()) / 2));
-    EXPECT_EQ(0 + d, iter.start_x());
-    EXPECT_EQ(10 - d, iter.end_x());
+    int y = it.y();
+    for (auto x : it)
+    {
+      EXPECT_EQ(y, y_pos[i]);
+      EXPECT_EQ(x, x_pos[i]);
+      ++i;
+    }
   }
+}
 
+// ----------------------------------------------------------------------------
+TEST(triangle_scan_iterator, iterate_bounded)
+{
+  int i = 0;
+  for (auto it : kwiver::arrows::core::triangle_scan_iterator(pt1, pt2, pt3, bounds))
+  {
+    int y = it.y();
+    for (auto x : it)
+    {
+      EXPECT_EQ(y, y_pos_bounded[i]);
+      EXPECT_EQ(x, x_pos_bounded[i]);
+      ++i;
+    }
+  }
 }

@@ -42,13 +42,18 @@ void min_max(double a, double b, double c, double &min, double &max)
   min = std::min(std::min(a, b), c);
   max = std::max(std::max(a, b), c);
 }
+
 }
 
 namespace kwiver {
 namespace arrows {
 namespace core {
 
-void triangle_scan_iterator::reset()
+
+/// Constructor for triangle_scan_iterator from the three points of the triangle and optional bounds
+triangle_scan_iterator::triangle_scan_iterator(const vital::vector_2d &pt1, const vital::vector_2d &pt2,
+                                               const vital::vector_2d &pt3, const vital::vector_4i &image_bounds) :
+  a(pt1), b(pt2), c(pt3), bounds(image_bounds)
 {
   double min, max;
   min_max(a(0), b(0), c(0), min, max);
@@ -59,7 +64,7 @@ void triangle_scan_iterator::reset()
   y0 = static_cast<int>(std::ceil(min));
   y1 = static_cast<int>(std::floor(max));
 
-  scan_y_ = y0 - 1;
+  scan_y_ = y0;
 
   g = ((a + b + c) / 3).array().floor();
 
@@ -85,13 +90,13 @@ void triangle_scan_iterator::reset()
       data[i][j] *= tmp;
     }
   }
+  update_scan_line_range();
 }
 
-bool triangle_scan_iterator::next()
-{
-  if (++scan_y_ > y1)
-    return false;
 
+/// Update the range of the current scanline
+void triangle_scan_iterator::update_scan_line_range()
+{
   double xmin = x0 - g(0);
   double xmax = x1 - g(0);
   for (auto & i : data)
@@ -115,7 +120,41 @@ bool triangle_scan_iterator::next()
   }
   start_x_ = static_cast<int>(std::ceil(xmin + g(0)));
   end_x_ = static_cast<int>(std::floor(xmax + g(0)));
-  return true;
+}
+
+
+/// Return an iterator to the first scanline of the triangle (inside the bounds)
+triangle_scan_iterator triangle_scan_iterator::begin()
+{
+  scan_y_ = std::min(y1 + 1, std::max(bounds[1], y0));
+  if (scan_y_ > bounds[3])
+    scan_y_ = y1 + 1;
+  update_scan_line_range();
+  return *this;
+}
+
+/// Update the iterator to the next scanline
+triangle_scan_iterator const& triangle_scan_iterator::operator++()
+{
+  ++scan_y_;
+  if (scan_y_ > y1 || scan_y_ > bounds[3])
+  {
+    scan_y_ = y1 + 1;
+  }
+  else
+  {
+    update_scan_line_range();
+  }
+  return *this;
+}
+
+
+/// Return an iterator pointing to the end
+triangle_scan_iterator triangle_scan_iterator::end()
+{
+  triangle_scan_iterator end = *this;
+  end.scan_y_ = y1 + 1;
+  return end;
 }
 
 }

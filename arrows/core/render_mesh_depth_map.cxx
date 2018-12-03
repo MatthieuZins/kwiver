@@ -191,21 +191,14 @@ void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2, con
                      double depth_v1, double depth_v2, double depth_v3,
                      vital::image_of<double>& depth_img)
 {
-  triangle_scan_iterator tsi(v1, v2, v3);
-
   // Linear interpolation depth
   auto Vd = triangle_attribute_vector(v1, v2, v3, depth_v1, depth_v2, depth_v3);
-
-  for (tsi.reset(); tsi.next(); )
+  vital::vector_4i bounds(0, 0, static_cast<int>(depth_img.width())-1, static_cast<int>(depth_img.height())-1);
+  for (auto it : triangle_scan_iterator(v1, v2, v3, bounds))
   {
-    int y = tsi.scan_y();
-    if (y < 0 || y >= static_cast<int>(depth_img.height()))
-      continue;
-    int min_x = std::max(0, tsi.start_x());
-    int max_x = std::min(static_cast<int>(depth_img.width()) - 1, tsi.end_x());
-
+    int y = it.y();
     double new_i = Vd.y() * y + Vd.z();
-    for (int x = min_x; x <= max_x; ++x)
+    for (auto x : it)
     {
       double depth = new_i + Vd.x() * x;
       if (depth < depth_img(x, y))
