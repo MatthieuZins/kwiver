@@ -109,6 +109,7 @@ void render_triangle(const vital::vector_2d& v1, const vital::vector_2d& v2, con
   * \returns a 3D vector V such that the dot product of V and (x,y,1) is the
   *          interpolated attribute value at location (x,y)
   */
+KWIVER_ALGO_CORE_EXPORT
 vital::vector_3d
 triangle_attribute_vector(vital::vector_2d const& v1,
                           vital::vector_2d const& v2,

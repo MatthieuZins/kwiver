@@ -39,12 +39,14 @@
 #include <vital/types/image_container.h>
 #include <vital/types/mesh.h>
 #include <vital/types/vector.h>
+#include <vital/util/transform_image.h>
 #include <memory>
 
 using namespace kwiver::vital;
 
 namespace
 {
+  // 3D data for depth and height map tests
   const vector_3d A(-5.0, -5.0, -2);
   const vector_3d B( 5.0, -5.0, -2);
   const vector_3d C( 0.0,  5.0, 1.0);
@@ -56,6 +58,15 @@ namespace
   const std::vector<vector_3d> vertices = {A, B, C, D, E, F};
   const mesh_regular_face<3> face1 = std::vector<unsigned int>({0, 1, 2});
   const mesh_regular_face<3> face2 = std::vector<unsigned int>({3, 4, 5});
+
+  // 2D data for triangle rendering tests
+  kwiver::vital::vector_2d a(1, 1), b(900, 1), c(450, 900);
+  double depth_a(5), depth_b(7), depth_c(17);
+  double attrib_a(15), attrib_b(34), attrib_c(2);
+  int const_value(55);
+  kwiver::vital::vector_2d bary = (a + b + c) / 3;
+  double depth_bary = (depth_a + depth_b + depth_c) / 3;
+  double attrib_bary = (attrib_a + attrib_b + attrib_c) / 3;
 
   double check_neighbouring_pixels(const kwiver::vital::image& image, double x, double y)
   {
@@ -270,4 +281,62 @@ TEST(render_mesh_height_map, camera_rpc)
   EXPECT_NEAR( real_height_C, measured_height_C, 1e-2 );
 
   EXPECT_NEAR( real_height_bary, measured_height_bary, 1e-2 );
+}
+
+
+TEST(render_triangle, interpolate_depth)
+{
+  // test render_triangle version which just updates a depth map
+  kwiver::vital::image_of<double> depth_img(1000, 1000);
+  transform_image(depth_img, [](double){ return std::numeric_limits<double>::infinity(); } );
+  kwiver::arrows::core::render_triangle(a, b, c, depth_a, depth_b, depth_c, depth_img);
+  EXPECT_NEAR(depth_a, depth_img(a.x(), a.y()), 1e-2);
+  EXPECT_NEAR(depth_b, depth_img(b.x(), b.y()), 1e-2);
+  EXPECT_NEAR(depth_c, depth_img(c.x(), c.y()), 1e-2);
+  EXPECT_NEAR(depth_bary, check_neighbouring_pixels(depth_img, bary.x(), bary.y()), 1e-2);
+}
+
+
+TEST(render_triangle, interpolate_depth_and_fill)
+{
+  // test render_triangle version which updates a depth map and fill another image with a constant value
+  kwiver::vital::image_of<double> depth_img(1000, 1000);
+  transform_image(depth_img, [](double){ return std::numeric_limits<double>::infinity(); } );
+  kwiver::vital::image_of<int> img(1000, 1000);
+  transform_image(img, [](int){ return 0; } );
+
+  kwiver::arrows::core::render_triangle(a, b, c, depth_a, depth_b, depth_c, const_value, depth_img, img);
+  EXPECT_NEAR(depth_a, depth_img(a.x(), a.y()), 1e-2);
+  EXPECT_NEAR(depth_b, depth_img(b.x(), b.y()), 1e-2);
+  EXPECT_NEAR(depth_c, depth_img(c.x(), c.y()), 1e-2);
+  EXPECT_NEAR(depth_bary, check_neighbouring_pixels(depth_img, bary.x(), bary.y()), 1e-2);
+
+  EXPECT_EQ(const_value, img(a.x(), a.y()));
+  EXPECT_EQ(const_value, img(b.x(), b.y()));
+  EXPECT_EQ(const_value, img(c.x(), c.y()));
+  EXPECT_EQ(const_value, img(bary.x(), bary.y()));
+}
+
+
+TEST(render_triangle, interpolate_depth_and_attributes)
+{
+  // test render_triangle version which updates a depth map and fill another image
+  // by interpolating vertices attributes
+  kwiver::vital::image_of<double> depth_img(1000, 1000);
+  transform_image(depth_img, [](double){ return std::numeric_limits<double>::infinity(); } );
+  kwiver::vital::image_of<double> img(1000, 1000);
+  transform_image(img, [](double){ return 0; } );
+
+  kwiver::arrows::core::render_triangle(a, b, c, depth_a, depth_b, depth_c,
+                                        attrib_a, attrib_b, attrib_c,
+                                        depth_img, img);
+  EXPECT_NEAR(depth_a, depth_img(a.x(), a.y()), 1e-2);
+  EXPECT_NEAR(depth_b, depth_img(b.x(), b.y()), 1e-2);
+  EXPECT_NEAR(depth_c, depth_img(c.x(), c.y()), 1e-2);
+  EXPECT_NEAR(depth_bary, check_neighbouring_pixels(depth_img, bary.x(), bary.y()), 1e-2);
+
+  EXPECT_NEAR(attrib_a, img(a.x(), a.y()), 1e-2);
+  EXPECT_NEAR(attrib_b, img(b.x(), b.y()), 1e-2);
+  EXPECT_NEAR(attrib_c, img(c.x(), c.y()), 1e-2);
+  EXPECT_NEAR(attrib_bary, check_neighbouring_pixels(img, bary.x(), bary.y()), 1e-2);
 }
