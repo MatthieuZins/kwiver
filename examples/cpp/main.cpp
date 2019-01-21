@@ -107,7 +107,7 @@ int main()
     frames.push_back(images[i]->get_image());
   }
 
-  auto mesh = read_obj(current_dir + "mesh.obj");
+  auto mesh = read_obj(current_dir + "mesh_simplified_saved1.obj");
   std::unique_ptr< kwiver::vital::mesh_regular_face_array<3> > regular_faces(new kwiver::vital::mesh_regular_face_array<3>);
   for (int i = 0; i < mesh->faces().size(); ++i)
   {
@@ -122,7 +122,7 @@ int main()
 
 
 
-  auto texture = kwiver::arrows::core::generate_texture<unsigned char, 3>(mesh, cameras, frames, 0.00071);
+  auto texture = kwiver::arrows::core::generate_texture<unsigned char, 3>(mesh, cameras, frames, 0.003);
 
   /// Write textured mesh
   ocv_io->save("texture.png", texture);

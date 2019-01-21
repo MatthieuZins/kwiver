@@ -327,7 +327,8 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_perspective_sp
   {
     uv_unwrap_mesh unwrap;
     vital::config_block_sptr config = unwrap.get_configuration();
-    config->set_value("spacing", 0.0003);
+//    config->set_value("spacing", 0.0003);
+    config->set_value("spacing", 0.0008);
     unwrap.set_configuration(config);
     unwrap.unwrap(mesh);
   }
