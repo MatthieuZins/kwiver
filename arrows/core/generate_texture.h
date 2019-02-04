@@ -162,10 +162,22 @@ void render_triangle_from_images(vital::vector_2d const& v1, vital::vector_2d co
   // Compute a score for each image
   std::vector<double> scores(images.size(), 0.0);
   vital::matrix_3x3d points;
+  Eigen::Matrix<double, 3, 4> P;
+//  P << 614.9111228122165, -716.9308678560329, 8.581178223819599, -123.74560188875819, 183.510718022273, 1.82584953097341, -718.8989309128399, -101.826985722386, 0.9998621, 0.00752379, 0.01480755, -0.269034716;
+  // better
+//  P << 609.6954091642638, -721.4215973249585, -1.2512585456597716, -123.04180574734988, 180.3842015882277, 7.64479801920308, -719.6514740348144, -101.01668787418492, 0.9999453885620024, 0.00012436537838650646, 0.010451302995668944, -0.26938691240587315;
   for (size_t i = 0; i < images.size(); ++i)
   {
-    points << cameras[i]->project(pt1), cameras[i]->project(pt2), cameras[i]->project(pt3), 1, 1, 1;
-    scores[i] = std::max(-points.determinant(), 0.0);
+//    points << (P * pt1.homogeneous()).hnormalized(), (P * pt2.homogeneous()).hnormalized(), (P * pt3.homogeneous()).hnormalized(), 1, 1, 1;
+    if (std::dynamic_pointer_cast<vital::camera_perspective>(cameras[i])->depth(pt1) <= 0 ||
+        std::dynamic_pointer_cast<vital::camera_perspective>(cameras[i])->depth(pt2) <= 0 ||
+        std::dynamic_pointer_cast<vital::camera_perspective>(cameras[i])->depth(pt3) <= 0 )
+      scores[i] = 0.0;
+    else
+    {
+      points << cameras[i]->project(pt1), cameras[i]->project(pt2), cameras[i]->project(pt3), 1, 1, 1;
+      scores[i] = std::max(std::abs(-points.determinant()), 0.0);
+    }
   }
 
   triangle_scan_iterator tsi(v1, v2, v3);
@@ -200,6 +212,7 @@ void render_triangle_from_images(vital::vector_2d const& v1, vital::vector_2d co
       for (size_t i = 0; i < images.size(); ++i)
       {
         // Corresponding point in image i
+//        vital::vector_2d pt_img = (P * pt3d.homogeneous()).hnormalized();
         vital::vector_2d pt_img = cameras[i]->project(pt3d);
         points_2d[i] = pt_img;
         // border check from the camera i

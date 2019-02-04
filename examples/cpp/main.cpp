@@ -64,11 +64,12 @@ int main()
 
   // use comments to execute a particular method
 
-  std::string current_dir = "/media/matthieu/DATA/Head_Reconstruction/";
+//  std::string current_dir = "/media/matthieu/DATA/Head_Reconstruction/";
 //  std::string current_dir = "/media/matthieu/DATA/MAPTk++/test7/";
-  std::string krtd_dir = "output/krtd/";
+  std::string current_dir = "/home/matthieu/Dev/lidar-to-mesh/build/";
 //  std::string frames_dir = "frames/";
-  std::string frames_dir = "new_crops/";
+  std::string krtd_dir = "/home/matthieu/Dev/lidar-to-mesh/src/krtd/";
+  std::string frames_dir = "/media/matthieu/DATA/la_doua/gopro/as-kitti-undistorted/image_0/";
 
   std::ifstream frames_file(current_dir + "frames_name_list.txt");
 
@@ -86,12 +87,13 @@ int main()
   int sampling_rate = 515;
   while(std::getline(frames_file, line))
   {
-    if (i==0 || i==440 || i == 184 || i == 259 || i == 348) // i % sampling_rate == 0) // i >= first_image_to_use && i < first_image_to_use + nb_images_to_use)
+//    if (i==0 || i == 39|| i==440 || i == 184 || i == 259 || i == 348) // i % sampling_rate == 0) // i >= first_image_to_use && i < first_image_to_use + nb_images_to_use)
     {
       std::string name = kwiversys::SystemTools::GetFilenameWithoutExtension(line);
       std::cout << name << std::endl;
-      cameras.push_back(read_krtd_file(current_dir + krtd_dir + name + ".krtd"));
-      images.push_back(ocv_io->load(current_dir + frames_dir + name + ".png"));
+      cameras.push_back(read_krtd_file(krtd_dir + name + ".krtd"));
+      images.push_back(ocv_io->load(frames_dir + name + ".jpg"));
+      std::cout << "camera " << i  << " -----------------------------\n";
     }
     i++;
   }
@@ -100,9 +102,18 @@ int main()
   {
 //    std::dynamic_pointer_cast<simple_camera_intrinsics>(c->intrinsics())->set_image_height(1080);
 //    std::dynamic_pointer_cast<simple_camera_intrinsics>(c->intrinsics())->set_image_width(1920);
-    std::dynamic_pointer_cast<simple_camera_intrinsics>(c->intrinsics())->set_image_height(951);
-    std::dynamic_pointer_cast<simple_camera_intrinsics>(c->intrinsics())->set_image_width(891);
+//    std::dynamic_pointer_cast<simple_camera_intrinsics>(c->intrinsics())->set_image_height(951);
+//    std::dynamic_pointer_cast<simple_camera_intrinsics>(c->intrinsics())->set_image_width(891);
+
+    // KITTI
+//    std::dynamic_pointer_cast<simple_camera_intrinsics>(c->intrinsics())->set_image_height(375);
+//    std::dynamic_pointer_cast<simple_camera_intrinsics>(c->intrinsics())->set_image_width(1242);
+
+      std::dynamic_pointer_cast<simple_camera_intrinsics>(c->intrinsics())->set_image_height(950);
+      std::dynamic_pointer_cast<simple_camera_intrinsics>(c->intrinsics())->set_image_width(2460);
+
   }
+
 
   // get vital::image
   std::vector<kwiver::vital::image> frames;
@@ -111,7 +122,8 @@ int main()
     frames.push_back(images[i]->get_image());
   }
 
-  auto mesh = read_obj(current_dir + "mesh_smooth2.obj");
+//  auto mesh = read_obj(current_dir + "mesh_smooth2.obj");
+  auto mesh = read_obj(current_dir + "decimated_mesh_ready_for_texture_2.obj");
   std::unique_ptr< kwiver::vital::mesh_regular_face_array<3> > regular_faces(new kwiver::vital::mesh_regular_face_array<3>);
   for (int i = 0; i < mesh->faces().size(); ++i)
   {
@@ -126,7 +138,7 @@ int main()
 
 
 
-  auto texture = kwiver::arrows::core::generate_texture<unsigned char, 3>(mesh, cameras, frames, 0.003);
+  auto texture = kwiver::arrows::core::generate_texture<unsigned char, 3>(mesh, cameras, frames, 0.0075);
 
   /// Write textured mesh
   ocv_io->save("texture.png", texture);
