@@ -323,13 +323,13 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_perspective_sp
     }
   }
 
-  // adjust texture coordinates for filling the texture image
+  // Adjust the coordinates that are used to fill the texture image
   for (auto& tc : tcoords)
   {
     // flip Y because vital::image has origin at the top-left corner
     tc[1] = 1.0 - tc[1];
     tc *= scale;
-    // subtract 0.5 because integer coordinates are at the center of pixels
+    // subtract 0.5 because integer coordinates are at the center of the pixels
     tc[0] -= 0.5;
     tc[1] -= 0.5;
   }
