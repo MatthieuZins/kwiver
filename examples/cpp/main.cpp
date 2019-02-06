@@ -222,8 +222,8 @@ int main2()
 
 int main()
 {
-  main2();
-  return 0;
+//  main2();
+//  return 0;
 
   kwiver::vital::plugin_manager::instance().load_all_plugins();
   // use comments to execute a particular method
@@ -305,7 +305,7 @@ int main()
   PROFILE("texture mapping ",
       //texture = kwiver::arrows::core::generate_texture<unsigned char>(mesh, cameras, images, 0.00088484);
 //          texture = kwiver::arrows::core::generate_texture<unsigned char>(mesh, cameras, images, 0.003);
-          texture = kwiver::arrows::core::generate_texture<unsigned char>(mesh, cameras, images,  0.0004);
+          texture = kwiver::arrows::core::generate_texture<unsigned char>(mesh, cameras, images,  0.0008);
 //      texture = kwiver::arrows::core::generate_texture<unsigned char>(mesh, cameras, images,  0.00088484);
       )
 
