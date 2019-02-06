@@ -240,7 +240,7 @@ void render_texture_from_images(vital::vector_2d const& v1, vital::vector_2d con
                                 vital::image_of<double> const& points_image,
                                 vital::image_of<T>& texture)
 {
-  triangle_square_iterator tsi(v1, v2,v3);
+  triangle_bb_iterator tsi(v1, v2,v3);
   for (tsi.reset(); tsi.next(); )
   {
     int y = tsi.scan_y();
