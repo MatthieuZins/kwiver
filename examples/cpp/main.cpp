@@ -181,6 +181,7 @@ int main()
   /// Mesh
   kwiver::vital::mesh_sptr mesh;
 //  mesh = kwiver::vital::read_obj("/home/matthieu/data_cube_texture/cube.obj");
+//  mesh = kwiver::vital::read_obj("/home/matthieu/data_plane/f16_small_3.obj");
   mesh = kwiver::vital::read_obj("/home/matthieu/data_plane/f16.obj");
 //  mesh = kwiver::vital::read_obj("/home/matthieu/data_towers/towers.obj");
 
@@ -198,7 +199,10 @@ int main()
 
   kwiver::vital::image_container_sptr texture;
   PROFILE("texture mapping ",
-  texture = kwiver::arrows::core::generate_texture<unsigned char>(mesh, cameras, images, 0.001);
+      //texture = kwiver::arrows::core::generate_texture<unsigned char>(mesh, cameras, images, 0.00088484);
+//          texture = kwiver::arrows::core::generate_texture<unsigned char>(mesh, cameras, images, 0.003);
+          texture = kwiver::arrows::core::generate_texture<unsigned char>(mesh, cameras, images,  0.0004);
+//      texture = kwiver::arrows::core::generate_texture<unsigned char>(mesh, cameras, images,  0.00088484);
       )
 
   kwiver::vital::algo::image_io_sptr ocv_io = kwiver::vital::algo::image_io::create("ocv");

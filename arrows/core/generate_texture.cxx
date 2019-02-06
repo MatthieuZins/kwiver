@@ -73,7 +73,7 @@ void adjust_cameras_contributions(std::vector<vital::vector_2d> const& tex_coord
 {
   for (unsigned int i = 2; i < tex_coords.size(); i+=3)
   {
-    triangle_scan_iterator tsi(tex_coords[i-2], tex_coords[i-1], tex_coords[i]);
+    triangle_square_iterator tsi(tex_coords[i-2], tex_coords[i-1], tex_coords[i]);
     for (tsi.reset(); tsi.next(); )
     {
       int y = tsi.scan_y();
@@ -113,7 +113,7 @@ void render_triangle_scores(vital::vector_2d const& v1, vital::vector_2d const& 
     scores[i] = std::max(-points.determinant(), 0.0);
   }
 
-  triangle_scan_iterator tsi(v1, v2, v3);
+  triangle_square_iterator tsi(v1, v2, v3);
   vital::vector_2d vt1(v2 - v1), vt2(v3 - v1);
   vital::vector_2d vn1(-vt1[1], vt1[0]), vn2(vt2[1], -vt2[0]);
   double inv_area = 1.0 / (vt1[0] * vt2[1] - vt1[1] * vt2[0]);

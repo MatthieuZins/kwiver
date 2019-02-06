@@ -44,6 +44,121 @@ namespace arrows {
 namespace core {
 
 
+namespace {
+bool is_point_inside_triangle(const Eigen::Vector2d& p,
+                              const Eigen::Vector2d& a,
+                              const Eigen::Vector2d& b,
+                              const Eigen::Vector2d& c)
+{
+    Eigen::Vector2d AB = b - a;
+    Eigen::Vector2d AC = c - a;
+    Eigen::Vector2d AP = p - a;
+
+    double inv_total_area = 1.0 / (AB[0] * AC[1] - AB[1] * AC[0]);
+    double area_1 = inv_total_area * (AB[0] * AP[1] - AB[1] * AP[0]);
+    double area_2 = inv_total_area * (AP[0] * AC[1] - AP[1] * AC[0]);
+
+    return area_1 >= 0 && area_2 >= 0 && (area_1+area_2) <= 1;
+}
+
+double dist_point_line(vital::vector_2d const& p, vital::vector_2d const& x0, vital::vector_2d const& x1)
+{
+  vital::vector_2d v = x1 - x0;
+  vital::vector_2d n(-v[1], v[0]);
+  n.normalize();
+  vital::vector_2d x0p = p - x0;
+  return std::abs(n.dot(x0p));
+}
+
+}
+
+class KWIVER_ALGO_CORE_EXPORT triangle_square_iterator
+{
+public:
+  triangle_square_iterator(vital::vector_2d const& pt1,
+                           vital::vector_2d const& pt2,
+                           vital::vector_2d const& pt3) :
+    a(pt1), b(pt2), c(pt3)
+  {
+    reset();
+  }
+
+  void update_xrange()
+  {
+    int left = tl_corner[0];
+    int right = br_corner[0];
+
+    while (left < right) {
+      if (is_point_inside_triangle({left, cur_line}, a, b, c))
+      {
+        break;
+      }
+      else if (dist_point_line({left, cur_line}, a, b) <= 0.707 ||
+               dist_point_line({left, cur_line}, b, c) <= 0.707 ||
+               dist_point_line({left, cur_line}, c, a) <= 0.707)
+      {
+         break;
+      }
+      else
+      {
+        ++left;
+      }
+    }
+    while (right > left)
+    {
+      if (is_point_inside_triangle({right, cur_line}, a, b, c))
+      {
+        break;
+      }
+      else if (dist_point_line({right, cur_line}, a, b) <= 0.707 ||
+               dist_point_line({right, cur_line}, b, c) <= 0.707 ||
+               dist_point_line({right, cur_line}, c, a) <= 0.707)
+      {
+        break;
+      }
+      else
+      {
+        --right;
+      }
+    }
+    x_min = left;
+    x_max = right;
+  }
+
+  void reset() {
+    tl_corner[0] = std::floor(std::min(std::min(a[0], b[0]), c[0]));
+    tl_corner[1] = std::floor(std::min(std::min(a[1], b[1]), c[1]));
+
+    br_corner[0] = std::ceil(std::max(std::max(a[0], b[0]), c[0]));
+    br_corner[1] = std::ceil(std::max(std::max(a[1], b[1]), c[1]));
+
+    cur_line = tl_corner[1]-1;
+  }
+
+  bool next() {
+    if (cur_line < br_corner[1]) {
+      cur_line++;
+      update_xrange();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  int scan_y() const { return cur_line; }
+
+  int start_x() const { return x_min; }
+
+  int end_x() const { return x_max; }
+
+private:
+  vital::vector_2d a, b, c;
+  vital::vector_2i tl_corner, br_corner;
+  int cur_line;
+  int x_min, x_max;
+};
+
+
 /// Provides access to the pixels of a triangle using scanlines
 class KWIVER_ALGO_CORE_EXPORT triangle_scan_iterator
 {
