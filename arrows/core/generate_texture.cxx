@@ -152,6 +152,27 @@ void render_triangle_scores(vital::vector_2d const& v1, vital::vector_2d const& 
   }
 }
 
+vital::vector_2d find_largest_face_dimensions(std::vector<vital::vector_2d> const& tcoords, unsigned int nb_faces)
+{
+  // Find the bounding box dimension of the largest face
+  double max_w = std::numeric_limits<double>::min();
+  double max_h = std::numeric_limits<double>::min();
+  for (unsigned int f = 0; f < nb_faces; ++f)
+  {
+    vital::vector_2d tc0 = tcoords[f * 3];
+    vital::vector_2d tc1 = tcoords[f * 3 + 1];
+    vital::vector_2d tc2 = tcoords[f * 3 + 2];
+
+    double w = std::max(tc0.x(), std::max(tc1.x(), tc2.x()))
+               - std::min(tc0.x(), std::min(tc1.x(), tc2.x()));
+    double h = std::max(tc0.y(), std::max(tc1.y(), tc2.y()))
+               - std::min(tc0.y(), std::min(tc1.y(), tc2.y()));
+
+    if (w > max_w)  max_w = w;
+    if (h > max_h)  max_h = h;
+  }
+  return vital::vector_2d(max_w, max_h);
+}
 
 vital::vector_2d find_largest_face_dimensions(std::vector<vital::vector_2d> const& coords, unsigned int nb_faces)
 {

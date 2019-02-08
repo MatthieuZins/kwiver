@@ -300,6 +300,9 @@ void render_texture_from_images(vital::vector_2d const& v1, vital::vector_2d con
   }
 }
 
+KWIVER_ALGO_CORE_EXPORT
+vital::vector_2d find_largest_face_dimensions(std::vector<vital::vector_2d> const& tcoords, unsigned int nb_faces);
+
 
 
 /// This function generates a texture from a set of images and maps it on the mesh
@@ -430,6 +433,7 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_perspective_sp
 
   return std::make_shared<vital::simple_image_container>(texture);
 }
+
 
 
 }
