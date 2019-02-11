@@ -107,8 +107,14 @@ void render_triangle_scores(vital::vector_2d const& v1, vital::vector_2d const& 
   vital::matrix_3x3d points;
   for (size_t i = 0; i < cameras.size(); ++i)
   {
-    points << cameras[i]->project(pt1), cameras[i]->project(pt2), cameras[i]->project(pt3), 1, 1, 1;
-    scores[i] = std::max(-points.determinant(), 0.0);
+    if (std::dynamic_pointer_cast<vital::camera_perspective>(cameras[i])->depth(pt1) <= 0 ||
+        std::dynamic_pointer_cast<vital::camera_perspective>(cameras[i])->depth(pt2) <= 0 ||
+        std::dynamic_pointer_cast<vital::camera_perspective>(cameras[i])->depth(pt3) <= 0 )
+          scores[i] = 0.0;
+    else{
+      points << cameras[i]->project(pt1), cameras[i]->project(pt2), cameras[i]->project(pt3), 1, 1, 1;
+      scores[i] = std::abs(-points.determinant());
+    }
   }
 
   triangle_bb_iterator tsi(v1, v2, v3);
@@ -162,28 +168,6 @@ vital::vector_2d find_largest_face_dimensions(std::vector<vital::vector_2d> cons
     vital::vector_2d tc0 = tcoords[f * 3];
     vital::vector_2d tc1 = tcoords[f * 3 + 1];
     vital::vector_2d tc2 = tcoords[f * 3 + 2];
-
-    double w = std::max(tc0.x(), std::max(tc1.x(), tc2.x()))
-               - std::min(tc0.x(), std::min(tc1.x(), tc2.x()));
-    double h = std::max(tc0.y(), std::max(tc1.y(), tc2.y()))
-               - std::min(tc0.y(), std::min(tc1.y(), tc2.y()));
-
-    if (w > max_w)  max_w = w;
-    if (h > max_h)  max_h = h;
-  }
-  return vital::vector_2d(max_w, max_h);
-}
-
-vital::vector_2d find_largest_face_dimensions(std::vector<vital::vector_2d> const& coords, unsigned int nb_faces)
-{
-  // Find the bounding box dimension of the largest face
-  double max_w = std::numeric_limits<double>::min();
-  double max_h = std::numeric_limits<double>::min();
-  for (unsigned int f = 0; f < nb_faces; ++f)
-  {
-    vital::vector_2d tc0 = coords[f * 3];
-    vital::vector_2d tc1 = coords[f * 3 + 1];
-    vital::vector_2d tc2 = coords[f * 3 + 2];
 
     double w = std::max(tc0.x(), std::max(tc1.x(), tc2.x()))
                - std::min(tc0.x(), std::min(tc1.x(), tc2.x()));

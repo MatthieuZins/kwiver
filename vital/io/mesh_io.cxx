@@ -449,6 +449,8 @@ write_obj(const std::string& filename, const mesh& mesh)
 void
 write_obj(std::ostream& os, const mesh& mesh)
 {
+  os << "mtllib material.mtl\nusemtl mat\n";
+
   const mesh_vertex_array_base& verts = mesh.vertices();
   for (unsigned int v=0; v<verts.size(); ++v)
   {

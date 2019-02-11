@@ -1,4 +1,4 @@
-/*ckwg +29
+﻿/*ckwg +29
  * Copyright 2018 by Kitware, SAS.
  * All rights reserved.
  *
@@ -331,6 +331,9 @@ generate_texture(vital::mesh_sptr mesh, std::vector<vital::camera_perspective_sp
   if (mesh->has_tex_coords() == 0)
   {
     uv_unwrap_mesh unwrap;
+    vital::config_block_sptr config = unwrap.get_configuration();
+    config->set_value("spacing", 0.0005);
+    unwrap.set_configuration(config);
     unwrap.unwrap(mesh);
   }
 
