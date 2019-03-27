@@ -138,7 +138,8 @@ void render_triangle_scores(vital::vector_2d const& v1, vital::vector_2d const& 
         points_image(x, y, i*2) = pt_img(0);
         points_image(x, y, i*2+1) = pt_img(1);
         // border check from the camera i
-        if (pt_img(0) < 0 || pt_img(0) >= cameras[i]->image_width() || pt_img(1) < 0 || pt_img(1) >= cameras[i]->image_height())
+        if (pt_img(0) < 0 || pt_img(0) >= cameras[i]->image_width() || pt_img(1) < 0 || pt_img(1) >= cameras[i]->image_height()
+            || pt_img(0) < 151 || pt_img(1) > 560)
         {
           scores_image(x, y, i) = 0.0;
           continue;
